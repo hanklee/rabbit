@@ -1,0 +1,53 @@
+<rabbit>
+
+
+    <!--
+    MYSQL, must configure the datasource
+    REDIS, must configure the redis
+    MIX, must configure the datasource and cache
+    -->
+    <mode>REDIS</mode>
+
+    <!--  Mix mode or MYSQL mode  -->
+
+    <datasources>
+        <!--
+        <datasource name="test" default="true">
+            <driver>com.mysql.jdbc.Driver</driver>
+            <url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull</url>
+            <user>root</user>
+            <password>hank</password>
+        </datasource>
+        -->
+    </datasources>
+
+
+    <cache>
+        <afterCacheClass></afterCacheClass>
+        <!--
+        <key_prefix>r_</key_prefix>
+        <sync_time>900000</sync_time>
+        <cluster>false</cluster>
+        <redis>
+            <hosts>
+                <password>tcteC$cwDG</password>
+                <host port="6379">127.0.0.1</host>
+            </hosts>
+        </redis>
+        -->
+        <!--
+        <memcache></memcache>
+        -->
+    </cache>
+
+
+    <!-- REDIS mode -->
+
+    <redis>
+        <hosts>
+            <password>f%E1rdS!</password>
+            <host port="6379">120.25.220.114</host>
+        </hosts>
+    </redis>
+
+</rabbit>

@@ -1,0 +1,43 @@
+<dbobjects>
+    <!--
+    <dbobject>
+        <class_name>com.burstyx.rabbit.example.Hero</class_name>
+        <table_name>heroes</table_name>
+        <exclude_field>rank</exclude_field>
+    </dbobject>
+
+    <dbobject>
+        <class_name>com.burstyx.rabbit.example.Material</class_name>
+        <table_name>materials</table_name>
+    </dbobject>
+
+    <dbobject>
+        <class_name>com.burstyx.rabbit.example.Material</class_name>
+
+        <! 用于更新缓存匹配之用 >
+        <cache_key>heroId</cache_key>
+        <table_name mark="true">heroes_bag</table_name>
+    </dbobject>
+
+    <dbobject datasource="test">
+        <class_name>com.burstyx.rabbit.example.MyTest</class_name>
+        <table_name>myTest</table_name>
+    </dbobject>
+    -->
+
+    <!-- redis dbobject -->
+    <dbobject>
+        <class_name>com.lixianling.rabbit.MyDBObject</class_name>
+        <table_name mark="true">myobjects</table_name>
+        <table_field>id:name:email</table_field>
+        <unique_field>name</unique_field>
+        <incr_field>id</incr_field>
+    </dbobject>
+
+    <dbobject>
+        <class_name>com.lixianling.rabbit.MyDBObject2</class_name>
+        <table_name mark="true">myobjects2</table_name>
+        <table_field>id:name:email</table_field>
+        <key_field>id</key_field>
+    </dbobject>
+</dbobjects>
