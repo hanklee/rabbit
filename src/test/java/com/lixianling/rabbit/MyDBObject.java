@@ -23,31 +23,6 @@ public class MyDBObject extends RedisObject {
     public String email;
 
 
-    public static class MyDBObjectHandle implements JedisHandler<MyDBObject> {
-
-
-        private String name;
-
-        public MyDBObjectHandle(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public MyDBObject handle(Jedis connection) throws RedisException {
-
-            MyDBObject obj = new MyDBObject();
-            String uniqueValue = connection.hget(obj.getTableName(), this.name);
-//                System.out.println();
-            if (uniqueValue == null)
-                throw new RedisException("not found");
-            String key = obj.getTableName() + ":" + uniqueValue;
-//                System.out.println(key);
-            String value = connection.get(key);
-            obj.JsonToObj(new JSONObject(value));
-            return obj;
-        }
-    }
-
     public static void main(String[] args) throws Exception {
         MyDBObject obj = new MyDBObject();
         obj.id = 1;
@@ -58,16 +33,41 @@ public class MyDBObject extends RedisObject {
         System.out.println(obj.uniqueValue());
 
         RedisDAO dao = new RedisDAO(RedisManager.getPool());
+//        dao.delete(obj);
 //        dao.insert(obj);
-        MyDBObject obj1 = dao.query(new MyDBObjectHandle("hank"));
+        final String queryName = "hank";
+        MyDBObject obj1 = dao.query(new JedisHandler<MyDBObject>() {
+            @Override
+            public MyDBObject handle(Jedis connection) throws RedisException {
+                MyDBObject obj = new MyDBObject();
+                String uniqueValue = connection.hget(obj.getTableName(), queryName);
+//                System.out.println();
+                if (uniqueValue == null)
+                    throw new RedisException("not found");
+                String key = obj.getTableName() + ":" + uniqueValue;
+//                System.out.println(key);
+                String value = connection.get(key);
+                if (value == null)
+                    throw new RedisException("not found");
+                obj.JsonToObj(new JSONObject(value));
+                return obj;
+            }
+        });
 
         System.out.println(obj1.toJson().toString());
 
         obj1.name = "hank2";
 
+        MyDBObject obj2 = new MyDBObject();
+        obj2.id = 4;
+
+        System.out.println(dao.get(obj2));
+
 //        dao.update(obj1);
 
+//        System.out.println(dao.get(obj2));
 
-//        dao.delete(obj);
+
+//        dao.delete(dao.get(obj2));
     }
 }

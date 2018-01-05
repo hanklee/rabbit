@@ -11,6 +11,7 @@ import com.lixianling.rabbit.conf.RedisConfig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import redis.clients.jedis.Protocol;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
@@ -119,13 +120,9 @@ public final class RabbitManager {
             list = dd.getElementsByTagName("cache");
             if (list.getLength() > 0) {
                 Element element = (Element) list.item(0);
-                list = element.getElementsByTagName("redis");
-                if (list.getLength() > 0) {
-                    Element tE = (Element) list.item(0);
+                if (element.hasChildNodes()){
                     CacheConfig cacheConfig = new CacheConfig();
-                    cacheConfig.redisConfig = new RedisConfig();
                     cacheConfig.cache = CacheManager.REDIS_CACHE_NAME;
-
                     cacheConfig.afterCacheClass = null;
                     list = dd.getElementsByTagName("afterCacheClass");
                     if (list.getLength() > 0) {
@@ -139,39 +136,17 @@ public final class RabbitManager {
 //                    System.out.println("after cache class:"+afterClass);
                         }
                     }
-
                     NodeList subList = dd.getElementsByTagName("key_prefix");
                     if (subList.getLength() > 0) {
                         cacheConfig.cachePrefix = subList.item(0).getTextContent();
                     }
-                    subList = tE.getElementsByTagName("sync_time");
+                    subList = dd.getElementsByTagName("sync_time");
                     if (subList.getLength() > 0) {
                         cacheConfig.syncTime = Long.valueOf(subList.item(0).getTextContent());
                     } else {
                         cacheConfig.syncTime = CacheConfig.DEFAULT.syncTime;
                     }
-
-                    subList = tE.getElementsByTagName("cluster");
-                    cacheConfig.redisConfig.cluster = subList.getLength() > 0 && "true".equals(subList.item(0).getTextContent());
-
-                    subList = tE.getElementsByTagName("password");
-                    if (subList.getLength() > 0) {
-                        cacheConfig.redisConfig.password = subList.item(0).getTextContent();
-                    } else {
-                        cacheConfig.redisConfig.password = null;
-                    }
-
-                    cacheConfig.redisConfig.hosts = new ArrayList<RedisConfig.Host>();
-                    subList = tE.getElementsByTagName("host");
-                    for (int i = 0; i < subList.getLength(); i++) {
-                        RedisConfig.Host host = new RedisConfig.Host();
-                        Element hostE = (Element) subList.item(i);
-                        host.port = Integer.valueOf(hostE.getAttribute("port"));
-                        host.host = hostE.getTextContent();
-                        cacheConfig.redisConfig.hosts.add(host);
-                    }
                     rabbitConfig.cacheConfig = cacheConfig;
-
                 } else {
                     rabbitConfig.cacheConfig = CacheConfig.DEFAULT;
                 }
@@ -187,12 +162,7 @@ public final class RabbitManager {
                 NodeList subList = tE.getElementsByTagName("cluster");
                 redisConfig.cluster = subList.getLength() > 0 && "true".equals(subList.item(0).getTextContent());
 
-                subList = tE.getElementsByTagName("password");
-                if (subList.getLength() > 0) {
-                    redisConfig.password = subList.item(0).getTextContent();
-                } else {
-                    redisConfig.password = null;
-                }
+
 
                 redisConfig.hosts = new ArrayList<RedisConfig.Host>();
                 subList = tE.getElementsByTagName("host");
@@ -200,6 +170,16 @@ public final class RabbitManager {
                     RedisConfig.Host host = new RedisConfig.Host();
                     Element hostE = (Element) subList.item(i);
                     host.port = Integer.valueOf(hostE.getAttribute("port"));
+                    if (hostE.hasAttribute("index")) {
+                        host.index = Integer.valueOf(hostE.getAttribute("index"));
+                    } else {
+                        host.index = Protocol.DEFAULT_DATABASE;
+                    }
+                    if (hostE.hasAttribute("password")) {
+                        host.password = hostE.getAttribute("password");
+                    } else {
+                        host.password = null;
+                    }
                     host.host = hostE.getTextContent();
                     redisConfig.hosts.add(host);
                 }
@@ -354,7 +334,7 @@ public final class RabbitManager {
         }
 
         if (RABBIT_CONFIG.redisConfig != null) {
-            System.out.println(RABBIT_CONFIG.redisConfig.password);
+            System.out.println(RABBIT_CONFIG.redisConfig.hosts.size());
         }
 
         System.out.println(RABBIT_CONFIG.cacheConfig.cachePrefix);

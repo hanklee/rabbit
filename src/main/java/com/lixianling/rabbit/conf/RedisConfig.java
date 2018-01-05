@@ -14,12 +14,14 @@ import java.util.Map;
  */
 public class RedisConfig {
     public List<Host> hosts;
-    public String password;
+//    public String password;
     public boolean cluster;
 
     public static class Host {
         public String host;
         public int port;
+        public int index;
+        public String password;
     }
 
     /**

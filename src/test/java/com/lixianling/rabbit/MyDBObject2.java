@@ -43,7 +43,7 @@ public class MyDBObject2 extends RedisObject {
 
         dao.update(obj);
 
-        final int id = 1;
+        final int id = obj.id;
         MyDBObject2 obj1 = dao.query(new JedisHandler<MyDBObject2>() {
             @Override
             public MyDBObject2 handle(Jedis connection) throws RedisException {

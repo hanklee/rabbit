@@ -30,7 +30,19 @@
         <class_name>com.lixianling.rabbit.MyDBObject</class_name>
         <table_name mark="true">myobjects</table_name>
         <table_field>id:name:email</table_field>
+        <!--
+
+        REDIS
+        this field value will recorded in a map named table for query
+
+        -->
         <unique_field>name</unique_field>
+        <!--
+
+        REDIS:
+        same key_field but be key string using increase number
+
+         -->
         <incr_field>id</incr_field>
     </dbobject>
 
@@ -38,6 +50,12 @@
         <class_name>com.lixianling.rabbit.MyDBObject2</class_name>
         <table_name mark="true">myobjects2</table_name>
         <table_field>id:name:email</table_field>
+        <!--
+
+        REDIS
+        key field is use for generating key string for redis key
+
+         -->
         <key_field>id</key_field>
     </dbobject>
 </dbobjects>

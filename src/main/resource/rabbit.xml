@@ -21,7 +21,6 @@
         -->
     </datasources>
 
-
     <cache>
         <afterCacheClass></afterCacheClass>
         <!--
@@ -45,8 +44,7 @@
 
     <redis>
         <hosts>
-            <password>f%E1rdS!</password>
-            <host port="6379">120.25.220.114</host>
+            <host port="6379" index="1" password="f%E1rdS!">192.168.1.131</host>
         </hosts>
     </redis>
 

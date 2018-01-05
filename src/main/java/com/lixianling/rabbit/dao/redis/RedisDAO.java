@@ -17,7 +17,7 @@ import java.util.Collection;
 
 /**
  * @author Xianling Li(hanklee)
- *         $Id: RedisDAO.java 41 2016-01-09 17:39:32Z hank $
+ * $Id: RedisDAO.java 41 2016-01-09 17:39:32Z hank $
  */
 public class RedisDAO extends DAO {
 
@@ -54,13 +54,16 @@ public class RedisDAO extends DAO {
                                 }
 
                                 Field keyField = DBObjectManager.getInsertIncrKeyField(table);
-                                connection.hdel(table, robj2.uniqueValue());
-                                String keyValue = keyField.get(obj).toString();
-                                connection.hset(table, uniqueValue, keyValue);
+                                if (keyField != null) {
+                                    connection.hdel(table, robj2.uniqueValue());
+                                    String keyValue = keyField.get(obj).toString();
+                                    connection.hset(table, uniqueValue, keyValue);
+                                }
+//                                else {
+//                                    String keyValue = connection.get(obj.toKeyString(obj.getTableName()));
+//                                }
                             }
                         }
-
-//
 
                         connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
                     } catch (Exception e) {
@@ -184,6 +187,28 @@ public class RedisDAO extends DAO {
     public void delete(Collection<? extends DBObject> objs, String table_name) throws DBException {
         for (DBObject obj : objs) {
             delete(obj, table_name);
+        }
+    }
+
+    public RedisObject get(final RedisObject obj) throws DBException {
+        try {
+            return new JedisExecute<RedisObject>(pool) {
+                @Override
+                public RedisObject execute(Jedis connection) throws RedisException {
+                    try {
+                        String value =  connection.get(obj.toKeyString(obj.getTableName()));
+                        if (value ==null)
+                            throw new RedisException("not found!");
+                        DBObject clone = obj.clone();
+                        clone.JsonToObj(new JSONObject(value));
+                        return (RedisObject) clone;
+                    } catch (DBException e) {
+                        throw new RedisException(e.reason());
+                    }
+                }
+            }.run();
+        } catch (RedisException e) {
+            throw new DBException(e.reason());
         }
     }
 

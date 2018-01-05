@@ -19,7 +19,7 @@ import java.util.Set;
 
 /**
  * @author Xianling Li(hanklee)
- *         $Id: RedisManager.java 41 2016-01-09 17:39:32Z hank $
+ * $Id: RedisManager.java 41 2016-01-09 17:39:32Z hank $
  */
 public final class RedisManager {
     private static final JedisPool pool;
@@ -31,7 +31,7 @@ public final class RedisManager {
         commands = new RabbitJedisCommands(pool);
     }
 
-    protected static void register(){
+    protected static void register() {
         // nothing to do
     }
 
@@ -45,22 +45,21 @@ public final class RedisManager {
                 if (!config.cacheConfig.redisConfig.cluster) {
                     RedisConfig.Host host = config.cacheConfig.redisConfig.hosts.get(0);
 //                System.err.println("AUTH password:" + config.password);
-                    return init(host.host, host.port, config.cacheConfig.redisConfig.password);
+                    return init(host.host, host.port, host.index, host.password);
                 }
             }
-        } else if  (config.mode == RabbitConfig.Mode.REDIS) {
+        } else if (config.mode == RabbitConfig.Mode.REDIS) {
             System.err.println("Using redis to dao!");
             if (!config.redisConfig.cluster) {
                 RedisConfig.Host host = config.redisConfig.hosts.get(0);
-                return init(host.host, host.port, config.redisConfig.password);
+                return init(host.host, host.port, host.index, host.password);
             }
         }
         return null;
     }
 
 
-
-    public static JedisPool init(String ip, int port, String pwd) {
+    public static JedisPool init(String ip, int port, int db, String pwd) {
         JedisPoolConfig config = new JedisPoolConfig();
         if (pwd == null || pwd.trim().length() == 0) {
             pwd = null;
@@ -75,7 +74,7 @@ public final class RedisManager {
         config.setMaxWaitMillis(1000 * 10);
         //在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
         config.setTestOnBorrow(true);
-        return new JedisPool(config, ip, port, Protocol.DEFAULT_TIMEOUT, pwd);
+        return new JedisPool(config, ip, port, Protocol.DEFAULT_TIMEOUT, pwd, db);
 //            commands = new RabbitJedis(pool);
     }
 
