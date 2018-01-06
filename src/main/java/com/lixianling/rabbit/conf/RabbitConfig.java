@@ -14,8 +14,7 @@ public final class RabbitConfig {
     public enum Mode {
         MYSQL,REDIS,MIX
     }
-    public final static String DEFAULT_CACHE_KEY_FIELD = "system";
-    public CacheConfig cacheConfig;
+
     public Map<String, DataSourceConf> dataSources;
     public RedisConfig redisConfig;
     public Mode mode;

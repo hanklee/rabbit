@@ -35,6 +35,10 @@ public abstract class DAO {
         delete(obj, obj.getTableName());
     }
 
+    public DBObject getObject(DBObject obj) throws DBException {
+        return getObject(obj, obj.getTableName());
+    }
+
     /*
       abstract method
     */
@@ -44,6 +48,8 @@ public abstract class DAO {
     public abstract void delete(DBObject obj, String table) throws DBException;
 
     public abstract void insert(DBObject obj, String table) throws DBException;
+
+    public abstract DBObject getObject(DBObject obj,String table) throws DBException;
 
     /*
 

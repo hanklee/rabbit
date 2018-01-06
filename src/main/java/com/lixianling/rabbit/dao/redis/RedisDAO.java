@@ -6,8 +6,12 @@ package com.lixianling.rabbit.dao.redis;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
+import com.lixianling.rabbit.manager.DataSourceManager;
+import com.lixianling.rabbit.manager.RabbitManager;
+import com.lixianling.rabbit.manager.RedisManager;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -22,6 +26,15 @@ import java.util.Collection;
 public class RedisDAO extends DAO {
 
     private JedisPool pool;
+
+    public RedisDAO(){
+        if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX
+                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.REDIS ) {
+            this.pool = RedisManager.getPool();
+        } else {
+            throw new RuntimeException("must config the redis in rabbit.xml file.");
+        }
+    }
 
     public RedisDAO(JedisPool pool) {
         this.pool = pool;
@@ -40,28 +53,21 @@ public class RedisDAO extends DAO {
                             throw new RedisException("Not found data.");
                         }
 
-                        if (obj instanceof RedisObject) {
-                            DBObject clone = obj.clone();
-                            clone.JsonToObj(new JSONObject(value));
-                            RedisObject robj = (RedisObject) obj;
-                            RedisObject robj2 = (RedisObject) clone;
-                            String uniqueValue = robj.uniqueValue();
-                            if (uniqueValue != null
-                                    && !uniqueValue.equals(robj2.uniqueValue())) {
-                                String hasKey = connection.hget(table, uniqueValue);
-                                if (hasKey != null) {
-                                    throw new RedisException("Unique key '" + uniqueValue + "' has exits");
-                                }
+                        DBObject clone = obj.clone();
+                        clone.JsonToObj(new JSONObject(value));
+                        String uniqueValue = obj.uniqueValue();
+                        if (uniqueValue != null
+                                && !uniqueValue.equals(clone.uniqueValue())) {
+                            String hasKey = connection.hget(table, uniqueValue);
+                            if (hasKey != null) {
+                                throw new RedisException("Unique key '" + uniqueValue + "' has exits");
+                            }
 
-                                Field keyField = DBObjectManager.getInsertIncrKeyField(table);
-                                if (keyField != null) {
-                                    connection.hdel(table, robj2.uniqueValue());
-                                    String keyValue = keyField.get(obj).toString();
-                                    connection.hset(table, uniqueValue, keyValue);
-                                }
-//                                else {
-//                                    String keyValue = connection.get(obj.toKeyString(obj.getTableName()));
-//                                }
+                            Field keyField = DBObjectManager.getInsertIncrKeyField(table);
+                            if (keyField != null) {
+                                connection.hdel(table, clone.uniqueValue());
+                                String keyValue = keyField.get(obj).toString();
+                                connection.hset(table, uniqueValue, keyValue);
                             }
                         }
 
@@ -85,14 +91,10 @@ public class RedisDAO extends DAO {
                 public Void execute(Jedis connection) throws RedisException {
                     try {
                         connection.del(obj.toKeyString(table));
-
-                        if (obj instanceof RedisObject) {
-                            RedisObject robj = (RedisObject) obj;
-                            String uniqueValue = robj.uniqueValue();
-                            if (uniqueValue != null) {
-                                //                                transaction.hset(table, uniqueValue, incrId.toString());
-                                connection.hdel(table, uniqueValue);
-                            }
+                        String uniqueValue = obj.uniqueValue();
+                        if (uniqueValue != null) {
+                            //                                transaction.hset(table, uniqueValue, incrId.toString());
+                            connection.hdel(table, uniqueValue);
                         }
                     } catch (DBException e) {
                         throw new RedisException(e.reason());
@@ -112,15 +114,13 @@ public class RedisDAO extends DAO {
             new JedisExecute<Void>(pool) {
                 @Override
                 public Void execute(Jedis connection) throws RedisException {
-                    if (obj instanceof RedisObject) {
-                        RedisObject robj = (RedisObject) obj;
-                        String uniqueValue = robj.uniqueValue();
-                        if (uniqueValue != null) {
-                            //                                transaction.hset(table, uniqueValue, incrId.toString());
-                            String hasKey = connection.hget(table, uniqueValue);
-                            if (hasKey != null) {
-                                throw new RedisExistException("Unique key '" + uniqueValue + "' has exist");
-                            }
+
+                    String uniqueValue = obj.uniqueValue();
+                    if (uniqueValue != null) {
+                        //                                transaction.hset(table, uniqueValue, incrId.toString());
+                        String hasKey = connection.hget(table, uniqueValue);
+                        if (hasKey != null) {
+                            throw new RedisExistException("Unique key '" + uniqueValue + "' has exist");
                         }
                     }
 
@@ -138,13 +138,10 @@ public class RedisDAO extends DAO {
                                 keyField.set(obj, incrId.toString());
                             }
 
-                            if (obj instanceof RedisObject) {
-                                RedisObject robj = (RedisObject) obj;
-                                String uniqueValue = robj.uniqueValue();
-                                if (uniqueValue != null) {
-                                    //                                transaction.hset(table, uniqueValue, incrId.toString());
-                                    connection.hset(table, uniqueValue, incrId.toString());
-                                }
+                            uniqueValue = obj.uniqueValue();
+                            if (uniqueValue != null) {
+                                //                                transaction.hset(table, uniqueValue, incrId.toString());
+                                connection.hset(table, uniqueValue, incrId.toString());
                             }
                         } else {
                             String value = connection.get(obj.toKeyString(table));
@@ -190,18 +187,19 @@ public class RedisDAO extends DAO {
         }
     }
 
-    public RedisObject get(final RedisObject obj) throws DBException {
+    @Override
+    public DBObject getObject(final DBObject obj,final String table) throws DBException {
         try {
-            return new JedisExecute<RedisObject>(pool) {
+            return new JedisExecute<DBObject>(pool) {
                 @Override
-                public RedisObject execute(Jedis connection) throws RedisException {
+                public DBObject execute(Jedis connection) throws RedisException {
                     try {
-                        String value =  connection.get(obj.toKeyString(obj.getTableName()));
-                        if (value ==null)
+                        String value = connection.get(obj.toKeyString(table));
+                        if (value == null)
                             throw new RedisException("not found!");
                         DBObject clone = obj.clone();
                         clone.JsonToObj(new JSONObject(value));
-                        return (RedisObject) clone;
+                        return clone;
                     } catch (DBException e) {
                         throw new RedisException(e.reason());
                     }

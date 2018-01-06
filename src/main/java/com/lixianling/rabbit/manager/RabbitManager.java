@@ -4,7 +4,6 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.conf.CacheConfig;
 import com.lixianling.rabbit.conf.DataSourceConf;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.conf.RedisConfig;
@@ -117,47 +116,47 @@ public final class RabbitManager {
                 }
             }
 
-            list = dd.getElementsByTagName("cache");
-            if (list.getLength() > 0) {
-                Element element = (Element) list.item(0);
-                if (element.hasChildNodes()){
-                    CacheConfig cacheConfig = new CacheConfig();
-                    cacheConfig.cache = CacheManager.REDIS_CACHE_NAME;
-                    cacheConfig.afterCacheClass = null;
-                    list = dd.getElementsByTagName("afterCacheClass");
-                    if (list.getLength() > 0) {
-                        String afterClass = list.item(0).getTextContent();
-                        if (afterClass.length() > 0) {
-                            try {
-                                cacheConfig.afterCacheClass = Class.forName(afterClass);
-                            } catch (Exception ex) {
-//                        rabbitConfig.afterCacheClass = null;
-                            }
-//                    System.out.println("after cache class:"+afterClass);
-                        }
-                    }
-                    NodeList subList = dd.getElementsByTagName("key_prefix");
-                    if (subList.getLength() > 0) {
-                        cacheConfig.cachePrefix = subList.item(0).getTextContent();
-                    }
-                    subList = dd.getElementsByTagName("sync_time");
-                    if (subList.getLength() > 0) {
-                        cacheConfig.syncTime = Long.valueOf(subList.item(0).getTextContent());
-                    } else {
-                        cacheConfig.syncTime = CacheConfig.DEFAULT.syncTime;
-                    }
-                    rabbitConfig.cacheConfig = cacheConfig;
-                } else {
-                    rabbitConfig.cacheConfig = CacheConfig.DEFAULT;
-                }
-            }
+//            list = dd.getElementsByTagName("cache");
+//            if (list.getLength() > 0) {
+//                Element element = (Element) list.item(0);
+//                if (element.hasChildNodes()){
+//                    CacheConfig cacheConfig = new CacheConfig();
+//                    cacheConfig.cache = CacheManager.REDIS_CACHE_NAME;
+//                    cacheConfig.afterCacheClass = null;
+//                    list = dd.getElementsByTagName("afterCacheClass");
+//                    if (list.getLength() > 0) {
+//                        String afterClass = list.item(0).getTextContent();
+//                        if (afterClass.length() > 0) {
+//                            try {
+//                                cacheConfig.afterCacheClass = Class.forName(afterClass);
+//                            } catch (Exception ex) {
+////                        rabbitConfig.afterCacheClass = null;
+//                            }
+////                    System.out.println("after cache class:"+afterClass);
+//                        }
+//                    }
+//                    NodeList subList = dd.getElementsByTagName("key_prefix");
+//                    if (subList.getLength() > 0) {
+//                        cacheConfig.cachePrefix = subList.item(0).getTextContent();
+//                    }
+//                    subList = dd.getElementsByTagName("sync_time");
+//                    if (subList.getLength() > 0) {
+//                        cacheConfig.syncTime = Long.valueOf(subList.item(0).getTextContent());
+//                    } else {
+//                        cacheConfig.syncTime = CacheConfig.DEFAULT.syncTime;
+//                    }
+//                    rabbitConfig.cacheConfig = cacheConfig;
+//                } else {
+//                    rabbitConfig.cacheConfig = CacheConfig.DEFAULT;
+//                }
+//            }
+
+            RedisConfig redisConfig = new RedisConfig();
 
             list = dd.getElementsByTagName("redis");
 
             if (list.getLength() > 0) {
                 Element tE = (Element) list.item(0);
-
-                RedisConfig redisConfig = new RedisConfig();
 
                 NodeList subList = tE.getElementsByTagName("cluster");
                 redisConfig.cluster = subList.getLength() > 0 && "true".equals(subList.item(0).getTextContent());
@@ -183,16 +182,15 @@ public final class RabbitManager {
                     host.host = hostE.getTextContent();
                     redisConfig.hosts.add(host);
                 }
-
-                rabbitConfig.redisConfig = redisConfig;
-
-                rabbitConfig.redisConfig.classToTable = new HashMap<String, String>();
-                rabbitConfig.redisConfig.tableField = new HashMap<String, String>();
-                rabbitConfig.redisConfig.tableUniqueField = new HashMap<String, String>();
-                rabbitConfig.redisConfig.tableIncrField = new HashMap<String, String>();
-                rabbitConfig.redisConfig.tableKeyField = new HashMap<String, String>();
-                rabbitConfig.redisConfig.tableToClass = new HashMap<String, String>();
             }
+            rabbitConfig.redisConfig = redisConfig;
+
+            rabbitConfig.redisConfig.classToTable = new HashMap<String, String>();
+            rabbitConfig.redisConfig.tableField = new HashMap<String, String>();
+            rabbitConfig.redisConfig.tableUniqueField = new HashMap<String, String>();
+            rabbitConfig.redisConfig.tableIncrField = new HashMap<String, String>();
+            rabbitConfig.redisConfig.tableKeyField = new HashMap<String, String>();
+            rabbitConfig.redisConfig.tableToClass = new HashMap<String, String>();
 
 
             Document objectXML = parseXML(DBOBJECT_CONF_FILE, false);
@@ -203,6 +201,13 @@ public final class RabbitManager {
                 Element tE = (Element) list.item(i);
                 if (rabbitConfig.mode == RabbitConfig.Mode.MIX
                         || rabbitConfig.mode == RabbitConfig.Mode.MYSQL) {
+                    if (rabbitConfig.mode == RabbitConfig.Mode.MIX) {
+                        registerObj2Redis(tE,rabbitConfig);
+                    }
+                    String tredis = tE.getAttribute("redis");
+                    if ("true".equals(tredis)) {
+                        continue;
+                    }
                     String tDatasource = tE.getAttribute("datasource");
                     if (tDatasource == null || tDatasource.length() < 1) {
                         tDatasource = defaultName;
@@ -238,54 +243,7 @@ public final class RabbitManager {
                         }
                     }
                 } else {
-                    NodeList subList = tE.getElementsByTagName("class_name");
-                    if (subList.getLength() > 0) {
-                        String class_name = subList.item(0).getTextContent();
-                        NodeList subList2 = tE.getElementsByTagName("table_name");
-                        Element tableE = (Element) subList2.item(0);
-                        String tMark = tableE.getAttribute("mark");
-                        String table_name = tableE.getTextContent();
-                        rabbitConfig.redisConfig.tableToClass.put(table_name, class_name);
-                        if ("true".equals(tMark)) {
-                            rabbitConfig.redisConfig.classToTable.put(class_name, table_name);
-                        }
-
-                        NodeList subList3 = tE.getElementsByTagName("table_field");
-
-                        if (subList3.getLength() > 0) {
-                            String exclude_field = subList3.item(0).getTextContent();
-                            rabbitConfig.redisConfig.tableField.put(table_name, exclude_field);
-                        } else {
-                            rabbitConfig.redisConfig.tableField.put(table_name, "");
-                        }
-
-                        subList3 = tE.getElementsByTagName("unique_field");
-
-                        if (subList3.getLength() > 0) {
-                            String exclude_field = subList3.item(0).getTextContent();
-                            rabbitConfig.redisConfig.tableUniqueField.put(table_name, exclude_field);
-                        } else {
-                            rabbitConfig.redisConfig.tableUniqueField.put(table_name, "");
-                        }
-
-                        subList3 = tE.getElementsByTagName("incr_field");
-
-                        if (subList3.getLength() > 0) {
-                            String exclude_field = subList3.item(0).getTextContent();
-                            rabbitConfig.redisConfig.tableIncrField.put(table_name, exclude_field);
-                        } else {
-                            rabbitConfig.redisConfig.tableIncrField.put(table_name, "");
-                        }
-
-                        subList3 = tE.getElementsByTagName("key_field");
-
-                        if (subList3.getLength() > 0) {
-                            String exclude_field = subList3.item(0).getTextContent();
-                            rabbitConfig.redisConfig.tableKeyField.put(table_name, exclude_field);
-                        } else {
-                            rabbitConfig.redisConfig.tableKeyField.put(table_name, "");
-                        }
-                    }
+                    registerObj2Redis(tE,rabbitConfig);
                 }
             }
         } catch (Exception ex) {
@@ -293,6 +251,57 @@ public final class RabbitManager {
         }
         rabbitConfig.dataSources = dataSources;
         return rabbitConfig;
+    }
+
+    private static void registerObj2Redis(Element tE,RabbitConfig rabbitConfig) throws Exception{
+        NodeList subList = tE.getElementsByTagName("class_name");
+        if (subList.getLength() > 0) {
+            String class_name = subList.item(0).getTextContent();
+            NodeList subList2 = tE.getElementsByTagName("table_name");
+            Element tableE = (Element) subList2.item(0);
+            String tMark = tableE.getAttribute("mark");
+            String table_name = tableE.getTextContent();
+            rabbitConfig.redisConfig.tableToClass.put(table_name, class_name);
+            if ("true".equals(tMark)) {
+                rabbitConfig.redisConfig.classToTable.put(class_name, table_name);
+            }
+
+            NodeList subList3 = tE.getElementsByTagName("table_field");
+
+            if (subList3.getLength() > 0) {
+                String exclude_field = subList3.item(0).getTextContent();
+                rabbitConfig.redisConfig.tableField.put(table_name, exclude_field);
+            } else {
+                rabbitConfig.redisConfig.tableField.put(table_name, "");
+            }
+
+            subList3 = tE.getElementsByTagName("unique_field");
+
+            if (subList3.getLength() > 0) {
+                String exclude_field = subList3.item(0).getTextContent();
+                rabbitConfig.redisConfig.tableUniqueField.put(table_name, exclude_field);
+            } else {
+                rabbitConfig.redisConfig.tableUniqueField.put(table_name, "");
+            }
+
+            subList3 = tE.getElementsByTagName("incr_field");
+
+            if (subList3.getLength() > 0) {
+                String exclude_field = subList3.item(0).getTextContent();
+                rabbitConfig.redisConfig.tableIncrField.put(table_name, exclude_field);
+            } else {
+                rabbitConfig.redisConfig.tableIncrField.put(table_name, "");
+            }
+
+            subList3 = tE.getElementsByTagName("key_field");
+
+            if (subList3.getLength() > 0) {
+                String exclude_field = subList3.item(0).getTextContent();
+                rabbitConfig.redisConfig.tableKeyField.put(table_name, exclude_field);
+            } else {
+                rabbitConfig.redisConfig.tableKeyField.put(table_name, "");
+            }
+        }
     }
 
     private static Document parseXML(String filename,
@@ -305,10 +314,10 @@ public final class RabbitManager {
         factory.setExpandEntityReferences(false);
 
         // Create the builder and parse the file
-
         InputStream in = getInputStream(filename);
-
-        return factory.newDocumentBuilder().parse(in);
+        Document doc = factory.newDocumentBuilder().parse(in);
+        in.close();
+        return doc;
     }
 
     private static InputStream getInputStream(String filename) {
@@ -337,6 +346,5 @@ public final class RabbitManager {
             System.out.println(RABBIT_CONFIG.redisConfig.hosts.size());
         }
 
-        System.out.println(RABBIT_CONFIG.cacheConfig.cachePrefix);
     }
 }

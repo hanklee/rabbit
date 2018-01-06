@@ -14,9 +14,9 @@ import redis.clients.jedis.Jedis;
 
 /**
  * @author Xianling Li(hanklee)
- *         $Id: MyDBObject2.java 40 2016-01-08 17:11:07Z hank $
+ *         $Id: RedisDBObject2.java 40 2016-01-08 17:11:07Z hank $
  */
-public class MyDBObject2 extends RedisObject {
+public class RedisDBObject2 extends RedisObject {
 
     public int id;
     public String name;
@@ -25,10 +25,10 @@ public class MyDBObject2 extends RedisObject {
 
     public static void main(String[] args) throws Exception {
 
-        MyDBObject test = new MyDBObject();
+        RedisDBObject test = new RedisDBObject();
         System.out.println(test.getTableName());
 
-        MyDBObject2 obj = new MyDBObject2();
+        RedisDBObject2 obj = new RedisDBObject2();
         obj.id = 1;
         obj.name = "hank";
         obj.email = "hank.dev@gmail.com";
@@ -36,7 +36,7 @@ public class MyDBObject2 extends RedisObject {
         System.out.println(obj.toKeyString(obj.getTableName()));
         System.out.println(obj.uniqueValue());
 
-        RedisDAO dao = new RedisDAO(RedisManager.getPool());
+        RedisDAO dao = new RedisDAO();
         dao.insert(obj);
 
         obj.name = "hank2";
@@ -44,10 +44,10 @@ public class MyDBObject2 extends RedisObject {
         dao.update(obj);
 
         final int id = obj.id;
-        MyDBObject2 obj1 = dao.query(new JedisHandler<MyDBObject2>() {
+        RedisDBObject2 obj1 = dao.query(new JedisHandler<RedisDBObject2>() {
             @Override
-            public MyDBObject2 handle(Jedis connection) throws RedisException {
-                MyDBObject2 obj = new MyDBObject2();
+            public RedisDBObject2 handle(Jedis connection) throws RedisException {
+                RedisDBObject2 obj = new RedisDBObject2();
                 String key = obj.getTableName() + ":" + id;
                 String value = connection.get(key);
                 if (value == null)

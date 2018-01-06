@@ -6,8 +6,11 @@ package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.dao.DAO;
+import com.lixianling.rabbit.manager.DataSourceManager;
+import com.lixianling.rabbit.manager.RabbitManager;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 
@@ -26,6 +29,15 @@ public class SQLDAO extends DAO {
     protected QueryRunner innerRunner;
 
     protected GenKeyQueryRunner innerInsertRunner;
+
+    public SQLDAO(){
+        if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX
+                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MYSQL ) {
+            setQueryRunner(DataSourceManager.getQueryRunner());
+        } else {
+            throw new RuntimeException("must config the data source in rabbit.xml file.");
+        }
+    }
 
     public SQLDAO(QueryRunner queryRunner) {
         setQueryRunner(queryRunner);
@@ -109,6 +121,23 @@ public class SQLDAO extends DAO {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
+    public DBObject getObject(DBObject obj,String table) throws DBException {
+        String sql = SQLBuilder.getObjectSQLByTable(table);
+        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
+        Object[] objs = new Object[primary_keys.size()];
+        int count = 0;
+        for (String primary_key : primary_keys) {
+            objs[count] = obj.getValueByField(primary_key);
+            count++;
+        }
+        try {
+            return innerRunner.query(sql,MapToDBObject.newRsHandler(obj.getClass()),objs);
+        } catch (SQLException e) {
             throw new DBException(e.getMessage());
         }
     }

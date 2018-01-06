@@ -23,26 +23,6 @@ import java.lang.reflect.Field;
  */
 public abstract class RedisObject extends DBObject {
 
-    /**
-     *
-     * for index
-     *
-     * if you want redis set $table_name, $unique_value, $key_id,
-     * overwrite this method
-     *
-     * @return
-     */
-    public String uniqueValue() {
-        Field field = DBObjectManager.getUniqueField(getTableName());
-        if (field != null) {
-            try {
-                Object value = field.get(this);
-                return String.valueOf(value);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
+
 
 }

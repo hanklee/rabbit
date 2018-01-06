@@ -1,27 +1,33 @@
 /**
  * Copyright 2015 The rabbit Project
- * Created Date: 2016-01-06 22:45
+ * Created Date: 2016-01-06 23:16
  */
-package com.lixianling.rabbit.dao.sql;
+package com.lixianling.rabbit.dao.redis;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.dao.CacheDAO;
+import com.lixianling.rabbit.dao.sql.SQLDAO;
 import com.lixianling.rabbit.dao.DAO;
+import com.lixianling.rabbit.dao.MixDAO;
+import com.lixianling.rabbit.manager.RedisManager;
 import org.apache.commons.dbutils.QueryRunner;
 
 import java.util.Collection;
 
 /**
+ *
  * @author Xianling Li(hanklee)
- *         $Id: SQLNOCacheDAO.java 38 2016-01-07 17:07:06Z hank $
+ * $Id: RedisMixDAO.java 39 2016-01-08 12:04:37Z hank $
  */
-public class SQLNOCacheDAO extends CacheDAO {
+public class RedisMixDAO extends MixDAO {
 
+//    protected CacheDAO cacheDao; // cache operation interface
     private DAO dao;
+    private DAO backDao;
 
-    public SQLNOCacheDAO(final QueryRunner queryRunner) {
-        this.dao = new SQLDAO(queryRunner);
+    public RedisMixDAO(final QueryRunner queryRunner) {
+        dao = new RedisDAO(RedisManager.getPool());
+        backDao = new SQLDAO(queryRunner);
     }
 
     @Override
@@ -32,11 +38,18 @@ public class SQLNOCacheDAO extends CacheDAO {
     @Override
     public void delete(DBObject obj, String table) throws DBException {
         this.dao.delete(obj, table);
+        this.backDao.delete(obj,table);
     }
 
     @Override
     public void insert(DBObject obj, String table) throws DBException {
         this.dao.insert(obj, table);
+        this.backDao.insert(obj,table);
+    }
+
+    @Override
+    public DBObject getObject(DBObject obj, String table) throws DBException {
+        return this.dao.getObject(obj,table);
     }
 
     @Override
@@ -54,34 +67,14 @@ public class SQLNOCacheDAO extends CacheDAO {
         this.dao.delete(objs, table_name);
     }
 
-
     @Override
-    public void cleanData(String table, String key) throws DBException {
-        // no implement
+    public void syncObject(DBObject obj, String table) throws DBException {
+        DBObject nobj = this.dao.getObject(obj);
+        this.backDao.update(nobj,table);
     }
 
     @Override
-    public void cleanData(String table) throws DBException {
-        // no implement
-    }
-
-    @Override
-    public void cleanDataByKey(String table) throws DBException {
-        // no implement
-    }
-
-    @Override
-    public void cleanDataToDB(String table, String myKey, DAO dao) throws DBException {
-        // no implement
-    }
-
-    @Override
-    public void cleanDataToDB(String table, DAO dao) throws DBException {
-        // no implement
-    }
-
-    @Override
-    public void cleanDataToDBByKey(String key, DAO dao) throws DBException {
-        // no implement
+    public void syncTable(String table) throws DBException {
+        // FIXME not implements
     }
 }

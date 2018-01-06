@@ -1,33 +1,44 @@
 <dbobjects>
     <!--
     <dbobject>
-        <class_name>com.burstyx.rabbit.example.Hero</class_name>
+        <class_name>com.lixianling.rabbit.example.Hero</class_name>
         <table_name>heroes</table_name>
         <exclude_field>rank</exclude_field>
     </dbobject>
 
     <dbobject>
-        <class_name>com.burstyx.rabbit.example.Material</class_name>
+        <class_name>com.lixianling.rabbit.example.Material</class_name>
         <table_name>materials</table_name>
     </dbobject>
 
     <dbobject>
-        <class_name>com.burstyx.rabbit.example.Material</class_name>
-
-        <! 用于更新缓存匹配之用 >
-        <cache_key>heroId</cache_key>
+        <class_name>com.lixianling.rabbit.example.Material</class_name>
         <table_name mark="true">heroes_bag</table_name>
     </dbobject>
+-->
 
     <dbobject datasource="test">
-        <class_name>com.burstyx.rabbit.example.MyTest</class_name>
+        <class_name>com.lixianling.rabbit.sql.MyTest</class_name>
+        <!--
+
+        mark true : the class will refer to the table name
+        beware may be one class can refer to two tables
+
+        -->
         <table_name>myTest</table_name>
     </dbobject>
-    -->
+
 
     <!-- redis dbobject -->
-    <dbobject>
-        <class_name>com.lixianling.rabbit.MyDBObject</class_name>
+    <!--
+
+    in MIX mode and MYSQL mode
+
+    redis attribute must set true,otherwise the rabbit will check the database whether has the table
+
+    -->
+    <dbobject redis="true">
+        <class_name>com.lixianling.rabbit.RedisDBObject</class_name>
         <table_name mark="true">myobjects</table_name>
         <table_field>id:name:email</table_field>
         <!--
@@ -46,8 +57,8 @@
         <incr_field>id</incr_field>
     </dbobject>
 
-    <dbobject>
-        <class_name>com.lixianling.rabbit.MyDBObject2</class_name>
+    <dbobject redis="true">
+        <class_name>com.lixianling.rabbit.RedisDBObject2</class_name>
         <table_name mark="true">myobjects2</table_name>
         <table_field>id:name:email</table_field>
         <!--

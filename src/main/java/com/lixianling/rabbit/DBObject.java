@@ -4,7 +4,6 @@
  */
 package com.lixianling.rabbit;
 
-import com.lixianling.rabbit.manager.CacheManager;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import org.json.JSONArray;
@@ -290,24 +289,55 @@ public abstract class DBObject extends JSONObj {
     }
 
 
-    /*
+//    /*
+//
+//                 REDIS KEY method
+//
+//     */
+//    public String updateKEY(final String table) throws DBException {
+//        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
+//                + CacheManager.UPDATE_CACHE_OP + this.toKeyString(table);
+//    }
+//
+//    public String deleteKEY(final String table) throws DBException {
+//        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
+//                + CacheManager.DELETE_CACHE_OP + this.toKeyString(table);
+//    }
+//
+//    public String insertKEY(final String table) throws DBException {
+//        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
+//                + CacheManager.INSERT_CACHE_OP + this.toKeyString(table);
+//    }
 
-                 REDIS KEY method
 
+    /**
+     *
+     * reference : http://redis.io/topics/twitter-clone
+     * <p/>
+     * 1: get key id : next_$table_name_id
+     * <p/>
+     * 2: hmset $table_name:$key_id ....
+     * <p/>
+     * 3: if object has unique value , set $table_name, $unique_value, $key_id
+     *
+     * for index
+     *
+     * if you want redis set $table_name, $unique_value, $key_id,
+     * overwrite this method
+     *
+     * @return string unique value
      */
-    public String updateKEY(final String table) throws DBException {
-        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
-                + CacheManager.UPDATE_CACHE_OP + this.toKeyString(table);
-    }
-
-    public String deleteKEY(final String table) throws DBException {
-        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
-                + CacheManager.DELETE_CACHE_OP + this.toKeyString(table);
-    }
-
-    public String insertKEY(final String table) throws DBException {
-        return CacheManager.CACHE_SUFFIX + this.getCacheKeyFieldValue(table)
-                + CacheManager.INSERT_CACHE_OP + this.toKeyString(table);
+    public String uniqueValue() {
+        Field field = DBObjectManager.getUniqueField(getTableName());
+        if (field != null) {
+            try {
+                Object value = field.get(this);
+                return String.valueOf(value);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
 

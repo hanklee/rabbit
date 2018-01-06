@@ -43,10 +43,15 @@ if handler return false the MapToObject return null
 2.0.beta
 
 2.0.1  move BoneCP to HikariCP, add no-sql(redis,elasticsearch,mongodb) support.
-
 DBObjectDAO change name to SQLDAO
 
-add Redis DAO operation
+Add Redis DAO operation
+
+Remove cache Operation, MIXDao directly operate the db (mostly is redis for fast), can sync to other db(mostly is Mysql).
+
+Remove cache DAO, Cache operation and a mean while sync to database is not good idea.
+
+MIX mode is data operate in redis , mysql backup the data.
 
 //todo list
 

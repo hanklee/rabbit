@@ -55,7 +55,8 @@ public final class DataSourceManager {
                 config.setJdbcUrl(dataSourceConf.url);
                 config.setUsername(dataSourceConf.user);
                 config.setPassword(dataSourceConf.password);
-                config.setDataSourceClassName(dataSourceConf.driver);
+                config.setDriverClassName(dataSourceConf.driver);
+//                config.setDataSourceClassName(dataSourceConf.driver);
                 config.setConnectionTestQuery("SELECT 1");
                 config.addDataSourceProperty("cachePrepStmts", "true");
                 config.addDataSourceProperty("prepStmtCacheSize", "250");

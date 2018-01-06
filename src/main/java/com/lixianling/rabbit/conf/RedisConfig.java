@@ -15,7 +15,7 @@ import java.util.Map;
 public class RedisConfig {
     public List<Host> hosts;
 //    public String password;
-    public boolean cluster;
+    public boolean cluster = false;
 
     public static class Host {
         public String host;
