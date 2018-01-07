@@ -22,6 +22,6 @@ public class DataSourceConf {
     // table and class relationship
     public Map<String, String> tableToClass;
     public Map<String, String> tableExcludes;
-    public Map<String, String> tableToCacheKeyField;
+//    public Map<String, String> tableToCacheKeyField;
     public Map<String, String> classToTable;
 }

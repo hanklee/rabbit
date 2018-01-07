@@ -50,7 +50,7 @@ public final class DBObjectManager {
     private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>();
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>();
 
-    private static Map<String, String> TableCacheKeyFields = new ConcurrentHashMap<String, String>();
+//    private static Map<String, String> TableCacheKeyFields = new ConcurrentHashMap<String, String>();
 
 
     private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>();
@@ -199,7 +199,7 @@ public final class DBObjectManager {
         // 缓存cache key
         // redis 缓存结构key:　$table_name_$cache_key_field_(upd|del|ins)_*
         // 默认system
-        TableCacheKeyFields.putAll(config.tableToCacheKeyField);
+//        TableCacheKeyFields.putAll(config.tableToCacheKeyField);
     }
 
     private static void registerTables(RedisConfig config) {
@@ -422,10 +422,5 @@ public final class DBObjectManager {
             return sb.toString();
         }
     }
-
-    public static String getCacheKeyFieldByTable(String table_name) {
-        return TableCacheKeyFields.get(table_name);
-    }
-
 
 }

@@ -9,17 +9,25 @@ import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
-import com.lixianling.rabbit.manager.DataSourceManager;
 import com.lixianling.rabbit.manager.RabbitManager;
 import com.lixianling.rabbit.manager.RedisManager;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
 
+import static com.lixianling.rabbit.DBException.CODE_EXIST_VALUE;
+import static com.lixianling.rabbit.DBException.CODE_NOTFOUND;
+
 /**
+ * if dbobject has key filed , redis will increase number store in next_xxx_id
+ * all id number store in xxxx_ids
+ * <p>
+ * if not nothing process
+ *
  * @author Xianling Li(hanklee)
  * $Id: RedisDAO.java 41 2016-01-09 17:39:32Z hank $
  */
@@ -27,9 +35,12 @@ public class RedisDAO extends DAO {
 
     private JedisPool pool;
 
-    public RedisDAO(){
+    public final static String TABLE_IDS = "_ids";
+    public final static String TABLE_NEXT_ID = "_next_id";
+
+    public RedisDAO() {
         if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX
-                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.REDIS ) {
+                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.REDIS) {
             this.pool = RedisManager.getPool();
         } else {
             throw new RuntimeException("must config the redis in rabbit.xml file.");
@@ -50,9 +61,11 @@ public class RedisDAO extends DAO {
 
                         String value = connection.get(obj.toKeyString(table));
                         if (value == null) {
-                            throw new RedisException("Not found data.");
+                            throw new RedisException("Not found data.",CODE_NOTFOUND);
                         }
-
+                        obj.beforeUpdate(connection);
+                        Pipeline pipeline = connection.pipelined();
+                        pipeline.multi();
                         DBObject clone = obj.clone();
                         clone.JsonToObj(new JSONObject(value));
                         String uniqueValue = obj.uniqueValue();
@@ -60,18 +73,18 @@ public class RedisDAO extends DAO {
                                 && !uniqueValue.equals(clone.uniqueValue())) {
                             String hasKey = connection.hget(table, uniqueValue);
                             if (hasKey != null) {
-                                throw new RedisException("Unique key '" + uniqueValue + "' has exits");
+                                throw new RedisException("Unique key '" + uniqueValue + "' has exits", CODE_EXIST_VALUE);
                             }
 
                             Field keyField = DBObjectManager.getInsertIncrKeyField(table);
                             if (keyField != null) {
-                                connection.hdel(table, clone.uniqueValue());
+                                pipeline.hdel(table, clone.uniqueValue());
                                 String keyValue = keyField.get(obj).toString();
-                                connection.hset(table, uniqueValue, keyValue);
+                                pipeline.hset(table, uniqueValue, keyValue);
                             }
                         }
-
-                        connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
+                        pipeline.set(obj.toKeyString(table), obj.toDBJson(table).toString());
+                        pipeline.exec();
                     } catch (Exception e) {
                         throw new RedisException(e.getMessage());
                     }
@@ -79,7 +92,9 @@ public class RedisDAO extends DAO {
                 }
             }.run();
         } catch (RedisException e) {
-            e.printStackTrace();
+            throw e;
+        }catch (Exception e) {
+            throw new DBException(e.getMessage());
         }
     }
 
@@ -90,14 +105,21 @@ public class RedisDAO extends DAO {
                 @Override
                 public Void execute(Jedis connection) throws RedisException {
                     try {
-                        connection.del(obj.toKeyString(table));
+                        obj.beforeDelete(connection);
+                        Pipeline pipeline = connection.pipelined();
+                        pipeline.multi();
+                        pipeline.del(obj.toKeyString(table));
                         String uniqueValue = obj.uniqueValue();
                         if (uniqueValue != null) {
                             //                                transaction.hset(table, uniqueValue, incrId.toString());
-                            connection.hdel(table, uniqueValue);
+
+                            pipeline.hdel(table, uniqueValue);
                         }
-                    } catch (DBException e) {
-                        throw new RedisException(e.reason());
+//                        pipeline.srem(table + TABLE_IDS, obj.toKeyString(table));
+                        pipeline.zrem(table + TABLE_IDS, obj.toKeyString(table));
+                        pipeline.exec();
+                    } catch (Exception e) {
+                        throw new RedisException(e.getMessage());
                     }
                     return null;
                 }
@@ -120,16 +142,16 @@ public class RedisDAO extends DAO {
                         //                                transaction.hset(table, uniqueValue, incrId.toString());
                         String hasKey = connection.hget(table, uniqueValue);
                         if (hasKey != null) {
-                            throw new RedisExistException("Unique key '" + uniqueValue + "' has exist");
+                            throw new RedisException("Unique key '" + uniqueValue + "' has exist", CODE_EXIST_VALUE);
                         }
                     }
-
+                    Pipeline pipeline = connection.pipelined();
                     try {
-
+                        obj.beforeInsert(connection);
+                        Long incrId = connection.incr(table + TABLE_NEXT_ID);
                         Field keyField = DBObjectManager.getInsertIncrKeyField(table);
                         //                    Transaction transaction = connection.multi();
                         if (keyField != null) {
-                            Long incrId = connection.incr("next_" + table + "_id");
                             if (keyField.getType().equals(Integer.TYPE)) {
                                 keyField.set(obj, incrId.intValue());
                             } else if (keyField.getType().equals(Long.TYPE)) {
@@ -138,23 +160,28 @@ public class RedisDAO extends DAO {
                                 keyField.set(obj, incrId.toString());
                             }
 
+                            pipeline.multi();
+//                            pipeline.sadd(table + TABLE_IDS, obj.getKeyStringByRegisterKey(table));
                             uniqueValue = obj.uniqueValue();
                             if (uniqueValue != null) {
                                 //                                transaction.hset(table, uniqueValue, incrId.toString());
-                                connection.hset(table, uniqueValue, incrId.toString());
+                                pipeline.hset(table, uniqueValue, incrId.toString());
                             }
                         } else {
                             String value = connection.get(obj.toKeyString(table));
                             if (value != null) {
-                                throw new RedisExistException("Has exist data.");
+                                throw new RedisException("Has exist data.", CODE_EXIST_VALUE);
                             }
+                            pipeline.multi();
                         }
-                        //                    transaction.set(obj.toKeyString(table), obj.toDBJson(table).toString());
-                        //                    transaction.exec();
-//                        System.out.println("table key:"+obj.getKeyStringByRegisterKey(table));
-                        connection.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
-                    } catch (Exception e) {
-//                        e.printStackTrace();
+                        pipeline.zadd(table + TABLE_IDS, incrId, obj.getKeyStringByRegisterKey(table));
+                        pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
+                        pipeline.exec();
+                    } catch (RedisException e) {
+                        throw e;
+                    } catch (DBException e) {
+                        throw new RedisException(e.reason(),e.code());
+                    }catch (Exception e) {
                         throw new RedisException(e.getMessage());
                     }
                     return null;
@@ -162,7 +189,7 @@ public class RedisDAO extends DAO {
             }.run();
         } catch (RedisException e) {
 //            e.printStackTrace();
-            throw new DBException(e.reason());
+            throw new DBException(e.reason(),e.code());
         }
     }
 
@@ -188,7 +215,7 @@ public class RedisDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(final DBObject obj,final String table) throws DBException {
+    public DBObject getObject(final DBObject obj, final String table) throws DBException {
         try {
             return new JedisExecute<DBObject>(pool) {
                 @Override

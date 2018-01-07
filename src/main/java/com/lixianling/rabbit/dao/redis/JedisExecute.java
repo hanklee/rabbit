@@ -30,7 +30,7 @@ public abstract class JedisExecute<T> {
             //释放redis对象
 //            pool.returnBrokenResource(jedis);
 //            pool.returnResource(jedis);
-            throw new RedisException(e.reason());
+            throw e;
         } catch (Exception e) {
             //释放redis对象
             pool.returnBrokenResource(jedis);

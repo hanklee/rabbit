@@ -16,11 +16,25 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: DBObject.java 39 2016-01-08 12:04:37Z hank $
  */
 public abstract class DBObject extends JSONObj {
+
+    /**
+     * Operation extends method
+     */
+    public void beforeInsert(Object ignored) throws DBException {
+        //nothing to do
+    }
+
+    public void beforeUpdate(Object ignored) throws DBException {
+        //nothing to do
+    }
+
+    public void beforeDelete(Object ignored) throws DBException {
+        //nothing to do
+    }
 
     /**
      * clone just copy the attribute value include, int, string, long, bool,
@@ -69,24 +83,6 @@ public abstract class DBObject extends JSONObj {
             _keyString = getKeyStringByRegisterKey(table_name);
         }
         return _keyString;
-    }
-
-    public String getCacheKeyFieldValue(String table_name) {
-        String field = DBObjectManager.getCacheKeyFieldByTable(table_name);
-        if (field == null || RabbitConfig.DEFAULT_CACHE_KEY_FIELD.equals(field)) {
-            return RabbitConfig.DEFAULT_CACHE_KEY_FIELD;
-        }
-        Map<String, Field> allFields = getAllFields();
-        Field field1 = allFields.get(field);
-        if (field1 != null) {
-            try {
-                Object value = field1.get(this);
-                return String.valueOf(value);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return RabbitConfig.DEFAULT_CACHE_KEY_FIELD;
     }
 
     public Map<String, Object> ObjToMap(Set<String> attrs) {
@@ -160,8 +156,7 @@ public abstract class DBObject extends JSONObj {
             }
         } else {
             // no Primary Keys
-            sb.append(":").append(getCacheKeyFieldValue(table_name))
-                    .append(":").append(DBObjectManager.idGenerator.generateLongId());
+            sb.append(":").append(DBObjectManager.idGenerator.generateLongId());
         }
         return sb.toString();
     }
@@ -311,7 +306,6 @@ public abstract class DBObject extends JSONObj {
 
 
     /**
-     *
      * reference : http://redis.io/topics/twitter-clone
      * <p/>
      * 1: get key id : next_$table_name_id
@@ -319,9 +313,9 @@ public abstract class DBObject extends JSONObj {
      * 2: hmset $table_name:$key_id ....
      * <p/>
      * 3: if object has unique value , set $table_name, $unique_value, $key_id
-     *
+     * <p>
      * for index
-     *
+     * <p>
      * if you want redis set $table_name, $unique_value, $key_id,
      * overwrite this method
      *
@@ -342,9 +336,7 @@ public abstract class DBObject extends JSONObj {
 
 
     /**
-     *
      * DBObject builder
-     *
      */
     public static class DBObjectBuilder {
 

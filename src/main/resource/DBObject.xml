@@ -17,7 +17,7 @@
     </dbobject>
 -->
 
-    <dbobject datasource="test">
+    <dbobject datasource="test" mode="sql,redis">
         <class_name>com.lixianling.rabbit.sql.MyTest</class_name>
         <!--
 
@@ -37,7 +37,7 @@
     redis attribute must set true,otherwise the rabbit will check the database whether has the table
 
     -->
-    <dbobject redis="true">
+    <dbobject mode="redis">
         <class_name>com.lixianling.rabbit.RedisDBObject</class_name>
         <table_name mark="true">myobjects</table_name>
         <table_field>id:name:email</table_field>
@@ -57,7 +57,7 @@
         <incr_field>id</incr_field>
     </dbobject>
 
-    <dbobject redis="true">
+    <dbobject mode="redis">
         <class_name>com.lixianling.rabbit.RedisDBObject2</class_name>
         <table_name mark="true">myobjects2</table_name>
         <table_field>id:name:email</table_field>
