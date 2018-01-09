@@ -4,7 +4,9 @@
  */
 package com.lixianling.rabbit.conf;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Xianling Li(hanklee)
@@ -15,7 +17,8 @@ public final class RabbitConfig {
         MYSQL,REDIS,MIX
     }
 
-    public Map<String, DataSourceConf> dataSources;
+    public Map<String, DataSourceConfig> dataSources;
     public RedisConfig redisConfig;
     public Mode mode;
+    public DBObjectConfig dbObjectConfig;
 }

@@ -4,7 +4,8 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.conf.DataSourceConf;
+import com.lixianling.rabbit.conf.DBObjectConfig;
+import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.conf.RedisConfig;
 import org.w3c.dom.Document;
@@ -16,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -61,7 +63,9 @@ public final class RabbitManager {
      */
     private static RabbitConfig readConfig() {
         RabbitConfig rabbitConfig = new RabbitConfig();
-        rabbitConfig.dataSources = new HashMap<String, DataSourceConf>();
+        rabbitConfig.dbObjectConfig = new DBObjectConfig();
+
+        rabbitConfig.dataSources = new HashMap<String, DataSourceConfig>();
         try {
             Document dd = parseXML(RABBIT_CONF_FILE, false);
 
@@ -71,7 +75,7 @@ public final class RabbitManager {
                 Element tE = (Element) list.item(i);
                 String name = tE.getAttribute("name");
                 String def = tE.getAttribute("default");
-                DataSourceConf df = new DataSourceConf();
+                DataSourceConfig df = new DataSourceConfig();
                 df.name = name;
                 if (def != null && "true".equals(def)) {
                     df._default = true;
@@ -97,9 +101,6 @@ public final class RabbitManager {
                     df.driver = subList.item(0).getTextContent();
                 }
 
-                df.tableToClass = new HashMap<String, String>();
-                df.tableExcludes = new HashMap<String, String>();
-                df.classToTable = new HashMap<String, String>();
                 rabbitConfig.dataSources.put(name, df);
             }
 
@@ -147,13 +148,6 @@ public final class RabbitManager {
                 }
             }
             rabbitConfig.redisConfig = redisConfig;
-            rabbitConfig.redisConfig.classToTable = new HashMap<String, String>();
-            rabbitConfig.redisConfig.tableField = new HashMap<String, String>();
-            rabbitConfig.redisConfig.tableUniqueField = new HashMap<String, String>();
-            rabbitConfig.redisConfig.tableIncrField = new HashMap<String, String>();
-            rabbitConfig.redisConfig.tableKeyField = new HashMap<String, String>();
-            rabbitConfig.redisConfig.tableToClass = new HashMap<String, String>();
-
 
             Document objectXML = parseXML(DBOBJECT_CONF_FILE, false);
 
@@ -161,102 +155,62 @@ public final class RabbitManager {
 
             for (int i = 0; i < list.getLength(); i++) {
                 Element tE = (Element) list.item(i);
-                String omode = tE.getAttribute("mode");
-                String[] omodes = omode.split(",");
-                for (String _temp:omodes) {
-                    if ("redis".equals(_temp)) {
-                        registerObj2Redis(tE, rabbitConfig);
-                    } else if("mysql".equals(_temp)){
-                        registerObj2Mysql(tE,rabbitConfig,defaultName);
-                    }
+                DBObjectConfig.DBObjectSet dbset = new DBObjectConfig.DBObjectSet();
+                dbset.mode = tE.getAttribute("mode");
+                String tDatasource = tE.getAttribute("datasource");
+                if (tDatasource == null || tDatasource.length() < 1) {
+                    tDatasource = defaultName;
                 }
+                dbset.datasource = tDatasource;
+
+                NodeList subList = tE.getElementsByTagName("class_name");
+                if (subList.getLength() > 0) {
+                    String class_name = subList.item(0).getTextContent();
+                    NodeList subList2 = tE.getElementsByTagName("table_name");
+                    Element tableE = (Element) subList2.item(0);
+                    String tMark = tableE.getAttribute("mark");
+                    String table_name = tableE.getTextContent();
+                    dbset.class_name = class_name;
+                    dbset.table_name = table_name;
+                    dbset.mark_table = tMark;
+
+                }
+
+                NodeList subList3 = tE.getElementsByTagName("exclude_field");
+                if (subList3.getLength() > 0) {
+                    dbset.exclude_field = subList3.item(0).getTextContent();
+                } else {
+                    dbset.exclude_field = "";
+                }
+
+                subList3 = tE.getElementsByTagName("table_field");
+                if (subList3.getLength() > 0) {
+                    dbset.table_field = subList3.item(0).getTextContent();
+                } else {
+                    dbset.table_field = "";
+                }
+
+                subList3 = tE.getElementsByTagName("incr_field");
+                if (subList3.getLength() > 0) {
+                    dbset.incr_field = subList3.item(0).getTextContent();
+                } else {
+                    dbset.incr_field = "";
+                }
+
+                subList3 = tE.getElementsByTagName("key_field");
+                if (subList3.getLength() > 0) {
+                    dbset.key_field = subList3.item(0).getTextContent();
+                } else {
+                    dbset.key_field = "";
+                }
+
+                rabbitConfig.dbObjectConfig.dbObjectSets.add(dbset);
 
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return rabbitConfig;
-    }
-
-    private static void registerObj2Mysql(Element tE, RabbitConfig rabbitConfig,String defaultName) throws Exception {
-        String tDatasource = tE.getAttribute("datasource");
-        if (tDatasource == null || tDatasource.length() < 1) {
-            tDatasource = defaultName;
-        }
-        DataSourceConf df = rabbitConfig.dataSources.get(tDatasource);
-        NodeList subList = tE.getElementsByTagName("class_name");
-        if (subList.getLength() > 0) {
-            String class_name = subList.item(0).getTextContent();
-            NodeList subList2 = tE.getElementsByTagName("table_name");
-            Element tableE = (Element) subList2.item(0);
-            String tMark = tableE.getAttribute("mark");
-            String table_name = tableE.getTextContent();
-            df.tableToClass.put(table_name, class_name);
-            if ("true".equals(tMark)) {
-                df.classToTable.put(class_name, table_name);
-            }
-
-            NodeList subList3 = tE.getElementsByTagName("exclude_field");
-
-            if (subList3.getLength() > 0) {
-                String exclude_field = subList3.item(0).getTextContent();
-                df.tableExcludes.put(table_name, exclude_field);
-            } else {
-                df.tableExcludes.put(table_name, "");
-            }
-
-        }
-    }
-
-    private static void registerObj2Redis(Element tE, RabbitConfig rabbitConfig) throws Exception {
-        NodeList subList = tE.getElementsByTagName("class_name");
-        if (subList.getLength() > 0) {
-            String class_name = subList.item(0).getTextContent();
-            NodeList subList2 = tE.getElementsByTagName("table_name");
-            Element tableE = (Element) subList2.item(0);
-            String tMark = tableE.getAttribute("mark");
-            String table_name = tableE.getTextContent();
-            rabbitConfig.redisConfig.tableToClass.put(table_name, class_name);
-            if ("true".equals(tMark)) {
-                rabbitConfig.redisConfig.classToTable.put(class_name, table_name);
-            }
-
-            NodeList subList3 = tE.getElementsByTagName("table_field");
-
-            if (subList3.getLength() > 0) {
-                String exclude_field = subList3.item(0).getTextContent();
-                rabbitConfig.redisConfig.tableField.put(table_name, exclude_field);
-            } else {
-                rabbitConfig.redisConfig.tableField.put(table_name, "");
-            }
-
-            subList3 = tE.getElementsByTagName("unique_field");
-
-            if (subList3.getLength() > 0) {
-                String exclude_field = subList3.item(0).getTextContent();
-                rabbitConfig.redisConfig.tableUniqueField.put(table_name, exclude_field);
-            } else {
-                rabbitConfig.redisConfig.tableUniqueField.put(table_name, "");
-            }
-
-            subList3 = tE.getElementsByTagName("incr_field");
-
-            if (subList3.getLength() > 0) {
-                String exclude_field = subList3.item(0).getTextContent();
-                rabbitConfig.redisConfig.tableIncrField.put(table_name, exclude_field);
-            } else {
-                rabbitConfig.redisConfig.tableIncrField.put(table_name, "");
-            }
-
-            subList3 = tE.getElementsByTagName("key_field");
-
-            if (subList3.getLength() > 0) {
-                String exclude_field = subList3.item(0).getTextContent();
-                rabbitConfig.redisConfig.tableKeyField.put(table_name, exclude_field);
-            } else {
-                rabbitConfig.redisConfig.tableKeyField.put(table_name, "");
-            }
-        }
     }
 
     private static Document parseXML(String filename,
@@ -288,10 +242,10 @@ public final class RabbitManager {
 //        File file = new File(".");
 //        System.out.println(file.getAbsolutePath());
         System.out.println(RABBIT_CONFIG.mode);
-        Map<String, DataSourceConf> data = RABBIT_CONFIG.dataSources;
+        Map<String, DataSourceConfig> data = RABBIT_CONFIG.dataSources;
         for (String key : data.keySet()) {
             System.out.println(key);
-            DataSourceConf conf = data.get(key);
+            DataSourceConfig conf = data.get(key);
             System.out.println(conf.url);
             System.out.println(conf.driver);
             System.out.println(conf._default + "," + conf.password + "," + conf.user);

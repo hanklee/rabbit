@@ -6,7 +6,8 @@ package com.lixianling.rabbit.manager;
 
 import com.google.common.collect.ImmutableMap;
 import com.lixianling.rabbit.IdGenerator;
-import com.lixianling.rabbit.conf.DataSourceConf;
+import com.lixianling.rabbit.conf.DBObjectConfig;
+import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.conf.RedisConfig;
 import com.lixianling.rabbit.dao.sql.SQLBuilder;
@@ -30,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * there are some cache in the class;
  *
  * @author Xianling Li(hanklee)
- *         $Id: DBObjectManager.java 40 2016-01-08 17:11:07Z hank $
+ * $Id: DBObjectManager.java 40 2016-01-08 17:11:07Z hank $
  */
 public final class DBObjectManager {
     private static final String TABLE_SUFFIX_ALL_NO_INCR = "_all_no_incr";
@@ -55,7 +56,7 @@ public final class DBObjectManager {
 
     private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>();
 
-    private static Map<String, Field> TableUniqueField = new ConcurrentHashMap<String, Field>();
+//    private static Map<String, Field> TableUniqueField = new ConcurrentHashMap<String, Field>();
 
     public static IdGenerator idGenerator;
 
@@ -80,99 +81,114 @@ public final class DBObjectManager {
         try {
             md = MessageDigest.getInstance("MD5");
             idGenerator = new IdGenerator.DefaultIdGenerator();
-            if (config.mode == RabbitConfig.Mode.MIX
-                    || config.mode == RabbitConfig.Mode.MYSQL) {
-                for (String name : config.dataSources.keySet()) {
-                    DataSourceConf df = config.dataSources.get(name);
-                    registerTables(DataSourceManager.getQueryRunner(name), df);
-                }
-            } else if (config.mode == RabbitConfig.Mode.REDIS) {
-                registerTables(config.redisConfig);
-            }
+            registerTables(config);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private static void registerTables(QueryRunner queryRunner,
-                                       DataSourceConf config) throws SQLException {
+    /**
+     * register dbobject to relate database
+     * @param config
+     * @throws SQLException
+     */
+    private static void registerTables(RabbitConfig config) throws SQLException{
+        for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
 
+            if ("redis".equals(dbset.mode)) {
+                registerRedisTables(config,dbset);
+            } else if ("mysql".equals(dbset.mode)) {
+                registerMySQLTables(config,dbset);
+            } else if ("mix".equals(dbset.mode)) {
+                registerRedisTables(config,dbset);
+                registerMySQLTables(config,dbset);
+            }
+
+        }
+    }
+
+    private static void registerMySQLTables(RabbitConfig rabbitConfig, DBObjectConfig.DBObjectSet dbset) throws SQLException {
         // 获取数据源table相关的columns(类的属性与之相关)
         String key;
         Connection con = null;
         ResultSet rs = null;
+        QueryRunner queryRunner = DataSourceManager.getQueryRunner(dbset.datasource);
+        String table = dbset.table_name;
         try {
             con = queryRunner.getDataSource().getConnection();
-            for (String table : config.tableToClass.keySet()) {
-                try {
-                    String incrKey = null;
-                    Set<String> keys = new HashSet<String>();
-                    Set<String> no_incr_key_columns = new HashSet<String>();
-                    Set<String> no_key_columns = new HashSet<String>();
-                    Set<String> all_columns = new HashSet<String>();
+            try {
+                String incrKey = null;
+                Set<String> keys = new HashSet<String>();
+                Set<String> no_incr_key_columns = new HashSet<String>();
+                Set<String> no_key_columns = new HashSet<String>();
+                Set<String> all_columns = new HashSet<String>();
 
-                    rs = con.getMetaData().getPrimaryKeys(null, null, table);
-                    while (rs.next()) { // column name in the NO. 4
-                        key = rs.getString(4);   //rs.getString("COLUMN_NAME");
-                        keys.add(key);
-                    }
-                    rs.close();
-
-                    rs = con.getMetaData().getColumns(null, null, table, null);
-                    while (rs.next()) { // column name in the NO. 4
-                        String name = rs.getString(4); //rs.getString("COLUMN_NAME");
-                        all_columns.add(name);
-                        if (keys.contains(name)) {
-                            if (!"YES".equals(rs.getString("IS_AUTOINCREMENT"))) {
-                                no_incr_key_columns.add(name);
-                            } else {
-                                incrKey = name;
-                            }
-//                    System.out.println(rs.getString("IS_AUTOINCREMENT")); "YES"
-                            // nothing
-                        } else {
-                            no_incr_key_columns.add(name);
-                            no_key_columns.add(name);
-                        }
-                    }
-
-                    // 所有键值除了自增长的关键值
-                    ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columns);
-                    // 所有键值除了关键值
-                    ObjectColumnsCache.put(table + TABLE_SUFFIX_NO_KEY, no_key_columns);
-                    // 所有键值
-                    ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columns);
-                    // 所有关键值
-                    ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
-
-                    String className = config.tableToClass.get(table);
-
-                    Class clazz = Class.forName(className);
-
-                    // 缓存table类的属性
-                    registerTableClassField(clazz);
-
-                    Set<String> excludes = new HashSet<String>();
-                    String[] sss = config.tableExcludes.get(table).split(OBJECT_ATTR_EXCLUDE_SPLIT_KEY);
-                    Collections.addAll(excludes, sss);
-
-                    no_key_columns.removeAll(excludes); // remove update attribute
-
-                    // must register json attribute and then json register key
-                    DBObjectManager.registerJSONAttr(table, all_columns.toArray(new String[all_columns.size()]));
-                    DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
-                    DBObjectManager.registerTableClass(table, clazz);
-
-                    // 缓存table自增长的关键值
-                    if (incrKey != null) {
-                        Field field = ObjectFieldCache.get(clazz).get(incrKey);
-                        if (field != null) {
-                            TableInsertIncrKeyField.put(table, field);
-                        }
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+                rs = con.getMetaData().getPrimaryKeys(null, null, table);
+                while (rs.next()) { // column name in the NO. 4
+                    key = rs.getString(4);   //rs.getString("COLUMN_NAME");
+                    keys.add(key);
                 }
+                rs.close();
+
+                rs = con.getMetaData().getColumns(null, null, table, null);
+                while (rs.next()) { // column name in the NO. 4
+                    String name = rs.getString(4); //rs.getString("COLUMN_NAME");
+                    all_columns.add(name);
+                    if (keys.contains(name)) {
+                        if (!"YES".equals(rs.getString("IS_AUTOINCREMENT"))) {
+                            no_incr_key_columns.add(name);
+                        } else {
+                            incrKey = name;
+                        }
+//                    System.out.println(rs.getString("IS_AUTOINCREMENT")); "YES"
+                        // nothing
+                    } else {
+                        no_incr_key_columns.add(name);
+                        no_key_columns.add(name);
+                    }
+                }
+
+                // 所有键值除了自增长的关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columns);
+                // 所有键值除了关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_NO_KEY, no_key_columns);
+                // 所有键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columns);
+                // 所有关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
+
+                String className = dbset.class_name;
+
+                Class clazz = Class.forName(className);
+
+                // 缓存table类的属性
+                registerTableClassField(clazz);
+
+                Set<String> excludes = new HashSet<String>();
+                String[] sss = dbset.exclude_field.split(OBJECT_ATTR_EXCLUDE_SPLIT_KEY);
+                Collections.addAll(excludes, sss);
+
+                no_key_columns.removeAll(excludes); // remove update attribute
+
+                // must register json attribute and then json register key
+                DBObjectManager.registerJSONAttr(table, all_columns.toArray(new String[all_columns.size()]));
+                DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
+                DBObjectManager.registerTableClass(table, clazz);
+
+                // 缓存table自增长的关键值
+                if (incrKey != null) {
+                    Field field = ObjectFieldCache.get(clazz).get(incrKey);
+                    if (field != null) {
+                        TableInsertIncrKeyField.put(table, field);
+                    }
+                }
+
+                // 缓存table相关的类
+                if ("true".equals(dbset.mark_table)) {
+                    setTableNameByClass(clazz, table);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         } finally {
             if (rs != null)
@@ -181,20 +197,8 @@ public final class DBObjectManager {
         }
 
         // 缓存table相关的sql语句
-        for (String table : config.tableToClass.keySet()) {
-            SQLBuilder.registerTable(table);
-        }
+        SQLBuilder.registerTable(table);
 
-        // 缓存table相关的类
-        for (String className : config.classToTable.keySet()) {
-            try {
-                Class clazz = Class.forName(className);
-                String table = config.classToTable.get(className);
-                setTableNameByClass(clazz, table);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
 
         // 缓存cache key
         // redis 缓存结构key:　$table_name_$cache_key_field_(upd|del|ins)_*
@@ -202,74 +206,52 @@ public final class DBObjectManager {
 //        TableCacheKeyFields.putAll(config.tableToCacheKeyField);
     }
 
-    private static void registerTables(RedisConfig config) {
-        try {
-            for (String table : config.tableToClass.keySet()) {
+    private static void registerRedisTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) {
+        String table = dbset.table_name;
+        Set<String> keys = new HashSet<String>();
+        Set<String> allField = new HashSet<String>();
+        String[] sss = dbset.table_field.split(OBJECT_ATTR_SPLIT_KEY);
+        Collections.addAll(allField, sss);
 
-                Set<String> keys = new HashSet<String>();
-                Set<String> allField = new HashSet<String>();
-                String[] sss = config.tableField.get(table).split(OBJECT_ATTR_SPLIT_KEY);
-                Collections.addAll(allField, sss);
-
-                String incrKey =  config.tableIncrField.get(table);
-
-                if (incrKey!=null && incrKey.length() > 0) {
-                    sss = incrKey.split(OBJECT_ATTR_SPLIT_KEY);
-                    Collections.addAll(keys, sss);
-                }
-
-                String keyField = config.tableKeyField.get(table);
-
-                if (keyField!=null && keyField.length() > 0) {
-                    sss = keyField.split(OBJECT_ATTR_SPLIT_KEY);
-                    Collections.addAll(keys, sss);
-                }
-
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
-
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allField);
-
-                String className = config.tableToClass.get(table);
-
-                Class clazz = Class.forName(className);
-
-                // 缓存table类的属性
-                registerTableClassField(clazz);
-
-                DBObjectManager.registerJSONAttr(table, allField.toArray(new String[allField.size()]));
-                DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
-                DBObjectManager.registerTableClass(table, clazz);
-
-                String uniqueField = config.tableUniqueField.get(table);
-
-                if (uniqueField != null) {
-                    Field field = ObjectFieldCache.get(clazz).get(uniqueField);
-                    if (field != null) {
-                        TableUniqueField.put(table, field);
-                    }
-                }
-
-                if (incrKey != null) {
-                    Field field = ObjectFieldCache.get(clazz).get(incrKey);
-                    if (field != null) {
-                        TableInsertIncrKeyField.put(table, field);
-                    }
-                }
-            }
-
-            // 缓存table相关的类
-            for (String className : config.classToTable.keySet()) {
-                try {
-                    Class clazz = Class.forName(className);
-                    String table = config.classToTable.get(className);
-                    setTableNameByClass(clazz, table);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        String incrKey = dbset.incr_field;
+        if (incrKey != null && incrKey.length() > 0) {
+            sss = incrKey.split(OBJECT_ATTR_SPLIT_KEY);
+            Collections.addAll(keys, sss);
         }
+
+        String keyField = dbset.key_field;
+
+        if (keyField != null && keyField.length() > 0) {
+            sss = keyField.split(OBJECT_ATTR_SPLIT_KEY);
+            Collections.addAll(keys, sss);
+        }
+
+        ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
+
+        ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allField);
+
+        String className = dbset.class_name;
+        Class clazz = null;
+        try {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        // 缓存table类的属性
+        registerTableClassField(clazz);
+
+        DBObjectManager.registerJSONAttr(table, allField.toArray(new String[allField.size()]));
+        DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
+        DBObjectManager.registerTableClass(table, clazz);
+
+        if (incrKey != null) {
+            Field field = ObjectFieldCache.get(clazz).get(incrKey);
+            if (field != null) {
+                TableInsertIncrKeyField.put(table, field);
+            }
+        }
+        // 缓存table相关的类
+        setTableNameByClass(clazz, table);
     }
 
     private static void registerTableClassField(Class clazz) {
@@ -301,10 +283,6 @@ public final class DBObjectManager {
 
     public static Field getInsertIncrKeyField(String table_name) {
         return TableInsertIncrKeyField.get(table_name);
-    }
-
-    public static Field getUniqueField(String table_name) {
-        return TableUniqueField.get(table_name);
     }
 
     /**

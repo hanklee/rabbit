@@ -36,6 +36,18 @@ public abstract class DBObject extends JSONObj {
         //nothing to do
     }
 
+    public void afterInsert(Object ignored) throws DBException {
+        //nothing to do
+    }
+
+    public void afterUpdate(Object ignored) throws DBException {
+        //nothing to do
+    }
+
+    public void afterDelete(Object ignored) throws DBException {
+        //nothing to do
+    }
+
     /**
      * clone just copy the attribute value include, int, string, long, bool,
      * <p/>
@@ -65,12 +77,12 @@ public abstract class DBObject extends JSONObj {
         return false;
     }
 
-    /**
-     * 根据table 产生一个id
-     */
-    public void generateId(String table, IdGenerator idGen) {
-
-    }
+//    /**
+//     * 根据table 产生一个id
+//     */
+//    public void generateId(String table, IdGenerator idGen) {
+//
+//    }
 
 
     // key string format:"table_name:id1:id2:id3..."
@@ -263,14 +275,19 @@ public abstract class DBObject extends JSONObj {
                         if (tmp.size() > 0) {
                             JSONArray jsonArray = new JSONArray();
                             Object check = tmp.get(0);
-                            if (!(check instanceof DBObject)) {
-                                continue;
+                            if (check instanceof DBObject) {
+                                String tmp_table_name = table_name + "_" + ((DBObject) check).getTableName();
+                                for (Object o : tmp) {
+                                    jsonArray.put(((DBObject) o).toDBJson(tmp_table_name));
+                                }
+                                json.put(attr, jsonArray);
+                            } else {
+                                for (Object o : tmp) {
+                                    jsonArray.put(o);
+                                }
+                                json.put(attr, jsonArray);
                             }
-                            String tmp_table_name = table_name + "_" + ((DBObject) check).getTableName();
-                            for (Object o : tmp) {
-                                jsonArray.put(((DBObject) o).toDBJson(tmp_table_name));
-                            }
-                            json.put(attr, jsonArray);
+
                         }
                     } else if (value instanceof DBObject) {
                         json.put(attr, ((DBObject) value).toDBJson());
@@ -305,34 +322,34 @@ public abstract class DBObject extends JSONObj {
 //    }
 
 
-    /**
-     * reference : http://redis.io/topics/twitter-clone
-     * <p/>
-     * 1: get key id : next_$table_name_id
-     * <p/>
-     * 2: hmset $table_name:$key_id ....
-     * <p/>
-     * 3: if object has unique value , set $table_name, $unique_value, $key_id
-     * <p>
-     * for index
-     * <p>
-     * if you want redis set $table_name, $unique_value, $key_id,
-     * overwrite this method
-     *
-     * @return string unique value
-     */
-    public String uniqueValue() {
-        Field field = DBObjectManager.getUniqueField(getTableName());
-        if (field != null) {
-            try {
-                Object value = field.get(this);
-                return String.valueOf(value);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
+//    /**
+//     * reference : http://redis.io/topics/twitter-clone
+//     * <p/>
+//     * 1: get key id : next_$table_name_id
+//     * <p/>
+//     * 2: hmset $table_name:$key_id ....
+//     * <p/>
+//     * 3: if object has unique value , set $table_name, $unique_value, $key_id
+//     * <p>
+//     * for index
+//     * <p>
+//     * if you want redis set $table_name, $unique_value, $key_id,
+//     * overwrite this method
+//     *
+//     * @return string unique value
+//     */
+//    public String uniqueValue() {
+//        Field field = DBObjectManager.getUniqueField(getTableName());
+//        if (field != null) {
+//            try {
+//                Object value = field.get(this);
+//                return String.valueOf(value);
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return null;
+//    }
 
 
     /**

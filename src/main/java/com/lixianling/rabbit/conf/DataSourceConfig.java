@@ -4,14 +4,13 @@
  */
 package com.lixianling.rabbit.conf;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
- *
  * @author Xianling Li(hanklee)
- * $Id: DataSourceConf.java 35 2016-01-06 15:27:41Z hank $
+ * $Id: DataSourceConfig.java 35 2016-01-06 15:27:41Z hank $
  */
-public class DataSourceConf {
+public class DataSourceConfig {
     public String driver;
     public String name;
     public String url;
@@ -19,8 +18,5 @@ public class DataSourceConf {
     public String password;
     public boolean _default;
 
-    // table and class relationship
-    public Map<String, String> tableToClass;
-    public Map<String, String> tableExcludes;
-    public Map<String, String> classToTable;
+
 }

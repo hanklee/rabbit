@@ -17,7 +17,12 @@
     </dbobject>
 -->
 
-    <dbobject datasource="test" mode="sql,redis">
+    <!--
+
+    mode: mysql, redis , mix
+
+    -->
+    <dbobject datasource="test" mode="mysql">
         <class_name>com.lixianling.rabbit.sql.MyTest</class_name>
         <!--
 
@@ -43,13 +48,6 @@
         <table_field>id:name:email</table_field>
         <!--
 
-        REDIS
-        this field value will recorded in a map named table for query
-
-        -->
-        <unique_field>name</unique_field>
-        <!--
-
         REDIS:
         same key_field but be key string using increase number
 
@@ -68,5 +66,18 @@
 
          -->
         <key_field>id</key_field>
+    </dbobject>
+
+    <dbobject mode="redis">
+        <class_name>com.lixianling.rabbit.redis.Gencontent</class_name>
+        <table_name mark="true">gencontent</table_name>
+        <table_field>id:title:contents</table_field>
+        <!--
+
+        REDIS:
+        same key_field but be key string using increase number
+
+         -->
+        <incr_field>id</incr_field>
     </dbobject>
 </dbobjects>

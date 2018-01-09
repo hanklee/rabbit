@@ -4,7 +4,7 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.conf.DataSourceConf;
+import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.dbutils.QueryRunner;
@@ -46,9 +46,9 @@ public final class DataSourceManager {
      *
      *
      */
-    public void init(Map<String, DataSourceConf> _dataSourceConf) {
+    public void init(Map<String, DataSourceConfig> _dataSourceConf) {
         for (String name : _dataSourceConf.keySet()) {
-            DataSourceConf dataSourceConf = _dataSourceConf.get(name);
+            DataSourceConfig dataSourceConf = _dataSourceConf.get(name);
             try {
                 // setup the connection pool
                 HikariConfig config = new HikariConfig();

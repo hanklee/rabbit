@@ -14,7 +14,6 @@ import java.util.Map;
  */
 public class RedisConfig {
     public List<Host> hosts;
-//    public String password;
     public boolean cluster = false;
 
     public static class Host {
@@ -24,13 +23,4 @@ public class RedisConfig {
         public String password;
     }
 
-    /**
-     *  redis object configure
-     */
-    public Map<String, String> tableToClass;
-    public Map<String, String> classToTable;
-    public Map<String, String> tableField;
-    public Map<String, String> tableUniqueField;
-    public Map<String, String> tableIncrField;
-    public Map<String, String> tableKeyField;
 }

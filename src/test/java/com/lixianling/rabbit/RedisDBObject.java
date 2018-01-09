@@ -9,9 +9,12 @@ import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.redis.RedisException;
 import com.lixianling.rabbit.dao.redis.RedisObject;
+import com.lixianling.rabbit.manager.DBObjectManager;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +24,18 @@ import java.util.Set;
  * $Id: RedisDBObject.java 39 2016-01-08 12:04:37Z hank $
  */
 public class RedisDBObject extends RedisObject {
+    private static final Object LOCK_INSERT = new Object();
+    /*
+
+    clear delete
+
+    del myobjects:unique:email
+    del myobjects:unique:name
+    del myobjects:ids:
+    del myobjects:next_id:
+    del myobjects:xxx
+
+     */
 
     public static final int MYCODE_EXIST_EMAIL = 100;
     public static final int MYCODE_EXIST_NAME = 101;
@@ -30,16 +45,71 @@ public class RedisDBObject extends RedisObject {
     public String email;
 
     @Override
-    public void beforeInsert(Object con) throws DBException {
-        if (con instanceof Jedis) {
-            Jedis pipeline = (Jedis) con;
-            String temp = pipeline.hget(this.getTableName() + "_email", this.email);
-            if (temp != null) {
-                throw new DBException("has exist email", MYCODE_EXIST_EMAIL);
+    public void beforeInsert(Object obj) throws DBException {
+        synchronized (LOCK_INSERT) {
+            if (obj instanceof Jedis) {
+                Jedis con = (Jedis) obj;
+                String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
+                String uniqueName = this.getTableName() + RedisDAO.TABLE_UNIQUE + "name";
+                String temp = con.hget(uniqueEmail, this.email);
+                if (temp != null) {
+                    throw new DBException("has exist email", MYCODE_EXIST_EMAIL);
+                }
+                temp = con.hget(uniqueName, this.name);
+                if (temp != null) {
+                    throw new DBException("has exist name", MYCODE_EXIST_NAME);
+                }
+                con.hset(uniqueEmail, this.email, this.getKeyStringByRegisterKey(this.getTableName()));
+                con.hset(uniqueName, this.name, this.getKeyStringByRegisterKey(this.getTableName()));
             }
-            pipeline.hset(this.getTableName() + "_email", this.email, this.getKeyStringByRegisterKey(this.getTableName()));
         }
+    }
 
+    @Override
+    public void beforeUpdate(Object obj) throws DBException {
+        synchronized (LOCK_INSERT) {
+            if (obj instanceof Jedis) {
+                Jedis con = (Jedis) obj;
+                RedisDBObject clone = (RedisDBObject) this.clone();
+                String value = con.get(this.toKeyString(this.getTableName()));
+                clone.JsonToObj(new JSONObject(value));
+                if (!this.email.equals(clone.email)) {
+                    String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
+                    String temp = con.hget(uniqueEmail, this.email);
+                    if (temp != null) {
+                        throw new DBException("has exist email", MYCODE_EXIST_EMAIL);
+                    }
+                    con.hdel(uniqueEmail, clone.email);
+                    con.hset(uniqueEmail, this.email, this.getKeyStringByRegisterKey(this.getTableName()));
+                }
+                if (!this.name.equals(clone.name)) {
+                    String uniqueName = this.getTableName() + RedisDAO.TABLE_UNIQUE + "name";
+                    String temp = con.hget(uniqueName, this.name);
+                    if (temp != null) {
+                        throw new DBException("has exist name", MYCODE_EXIST_NAME);
+                    }
+                    con.hdel(uniqueName, clone.name);
+                    con.hset(uniqueName, this.name, this.getKeyStringByRegisterKey(this.getTableName()));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void afterDelete(Object obj) throws DBException {
+        synchronized (LOCK_INSERT) {
+            if (obj instanceof Jedis) {
+                // After must using Pipeline for this exception:
+                // Cannot use Jedis when in Pipeline. Please use Pipeline or reset jedis state .
+                Pipeline con = ((Jedis) obj).pipelined();
+                con.multi();
+                String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
+                String uniqueName = this.getTableName() + RedisDAO.TABLE_UNIQUE + "name";
+                con.hdel(uniqueName, this.name);
+                con.hdel(uniqueEmail, this.email);
+                con.exec();
+            }
+        }
     }
 
 
@@ -49,7 +119,7 @@ public class RedisDBObject extends RedisObject {
             System.out.println("insert success:" + obj.toJson().toString());
         } catch (DBException e) {
             switch (e.code()) {
-                case 1:
+                case MYCODE_EXIST_NAME:
                     System.out.println("has exist name");
                     break;
                 case MYCODE_EXIST_EMAIL:
@@ -71,35 +141,53 @@ public class RedisDBObject extends RedisObject {
         }
     }
 
-    private static void testQuery(RedisDAO dao, final String query) throws DBException {
-        RedisDBObject obj1 = dao.query(new JedisHandler<RedisDBObject>() {
-            @Override
-            public RedisDBObject handle(Jedis connection) throws RedisException {
-                RedisDBObject obj = new RedisDBObject();
-                String uniqueValue = connection.hget(obj.getTableName(), query);
-//                System.out.println();
-                if (uniqueValue == null)
-                    throw new RedisException("not found");
-                String key = obj.getTableName() + ":" + uniqueValue;
-//                System.out.println(key);
-                String value = connection.get(key);
-                if (value == null)
-                    throw new RedisException("not found");
-                obj.JsonToObj(new JSONObject(value));
-                return obj;
+    private static void testDelete(RedisDAO dao, String name) {
+        try {
+            RedisDBObject obj = testQuery(dao,name);
+            if (obj != null) {
+                dao.delete(obj);
+                System.out.println("delete success:" + obj.toJson().toString());
             }
-        });
 
-        System.out.println(obj1.toJson().toString());
+        } catch (DBException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static RedisDBObject testQuery(RedisDAO dao, final String query) throws DBException {
+        try {
+            RedisDBObject obj1 = dao.query(new JedisHandler<RedisDBObject>() {
+                @Override
+                public RedisDBObject handle(Jedis connection) throws RedisException {
+                    RedisDBObject obj = new RedisDBObject();
+                    String uniqueName = obj.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
+                    String uniqueValue = connection.hget(uniqueName, query);
+                    if (uniqueValue == null)
+                        throw new RedisException("not found key");
+                    String value = connection.get(uniqueValue);
+                    if (value == null)
+                        throw new RedisException("not found value");
+                    obj.JsonToObj(new JSONObject(value));
+                    return obj;
+                }
+            });
+            System.out.println("query get obj:" + obj1.toJson().toString());
+            return obj1;
+        } catch (Exception e){
+//            e.printStackTrace();
+//            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void testList(RedisDAO dao) {
         try {
+            System.out.println("OBJECT LIST:");
             List<RedisDBObject> list = dao.query(new JedisHandler<List<RedisDBObject>>() {
                 @Override
                 public List<RedisDBObject> handle(Jedis connection) throws RedisException {
                     List<RedisDBObject> result = new ArrayList<RedisDBObject>();
-                    Set<String> srs = connection.zrange("myobjects" + RedisDAO.TABLE_IDS, 2, 4);
+                    Set<String> srs = connection.zrange(RedisDAO.getTableIds("myobjects"), 0, 5);
                     for (String sr : srs) {
                         RedisDBObject no = new RedisDBObject();
                         String value = connection.get(sr);
@@ -111,7 +199,7 @@ public class RedisDBObject extends RedisObject {
                     return result;
                 }
             });
-            for(RedisObject ro:list) {
+            for (RedisObject ro : list) {
                 System.out.println(ro.toJson().toString());
             }
         } catch (DBException e) {
@@ -123,21 +211,25 @@ public class RedisDBObject extends RedisObject {
     public static void main(String[] args) throws Exception {
         RedisDBObject obj = new RedisDBObject();
         obj.id = 1;
-        obj.name = "hank6";
-        obj.email = "hank1.dev@gmail.com";
+        obj.name = "hank3";
+        obj.email = "hank3.dev@gmail.com";
         System.out.println(obj.toJson().toString());
         System.out.println(obj.toKeyString(obj.getTableName()));
-        System.out.println(obj.uniqueValue());
+        System.out.println(obj.getKeyStringByRegisterKey(obj.getTableName()));
+//        System.out.println(obj.uniqueValue());
 
         RedisDAO dao = new RedisDAO();
 
-        testList(dao);
+//        testDelete(dao,"hank2.dev@gmail.com");
 
-//        testInsert(obj,dao);
 
-//        testQuery(dao,"hank");
+        testInsert(obj,dao);
 
+//        obj = testQuery(dao,"hank1.dev@gmail.com");
+//        obj.email = "hank.dev@gmail.com";
 //        testUpdate(obj,dao);
+
+        testList(dao);
 
 //        RedisDBObject obj2 = new RedisDBObject();
 //        obj2.id = 6;

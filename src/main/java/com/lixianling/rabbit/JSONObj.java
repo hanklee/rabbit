@@ -86,6 +86,13 @@ public abstract class JSONObj implements Serializable {
                             tmp.add(o);
                         }
                         field.set(this, tmp);
+                    } else {
+                        List tmp = new ArrayList();
+                        JSONArray jsonArray = (JSONArray) value;
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            tmp.add(jsonArray.get(i));
+                        }
+                        field.set(this, tmp);
                     }
                 } else if (value instanceof List) {
                     ParameterizedType listType = (ParameterizedType) field.getGenericType();

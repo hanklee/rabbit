@@ -5,7 +5,7 @@
     REDIS, must configure the redis
     MIX, must configure the datasource and cache
     -->
-    <mode>REDIS</mode>
+    <mode>MIX</mode>
 
     <!--  Mix mode or MYSQL mode  -->
 

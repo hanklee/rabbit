@@ -33,9 +33,9 @@ public class MyTest extends DBObject {
         MyTest test = new MyTest();
 
         test.a =1;
-        test.b = 2;
-        test.c = 2;
-        test.d = 2;
+        test.b = 3;
+        test.c = 4;
+        test.d = 5;
 
         try {
             dao.update(test);
