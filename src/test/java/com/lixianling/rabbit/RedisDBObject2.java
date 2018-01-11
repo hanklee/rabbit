@@ -4,11 +4,11 @@
  */
 package com.lixianling.rabbit;
 
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.redis.RedisException;
 import com.lixianling.rabbit.dao.redis.RedisObject;
-import com.lixianling.rabbit.manager.RedisManager;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
@@ -29,9 +29,10 @@ public class RedisDBObject2 extends RedisObject {
     public static void testList(RedisDAO dao) {
         try {
             System.out.println("OBJECT LIST:");
-            List<RedisDBObject2> list = dao.query(new JedisHandler<List<RedisDBObject2>>() {
+            List<RedisDBObject2> list = dao.execute(new DAOHandler<List<RedisDBObject2>>() {
                 @Override
-                public List<RedisDBObject2> handle(Jedis connection) throws RedisException {
+                public List<RedisDBObject2> handle(Object con) throws DBException {
+                    Jedis connection = (Jedis) con;
                     List<RedisDBObject2> result = new ArrayList<RedisDBObject2>();
                     Set<String> srs = connection.zrange(RedisDAO.getTableIds("myobjects2"), 0, 5);
                     for (String sr : srs) {
@@ -73,7 +74,7 @@ public class RedisDBObject2 extends RedisObject {
 //        dao.update(obj);
 
 //        final int id = obj.id;
-//        RedisDBObject2 obj1 = dao.query(new JedisHandler<RedisDBObject2>() {
+//        RedisDBObject2 obj1 = dao.execute(new JedisHandler<RedisDBObject2>() {
 //            @Override
 //            public RedisDBObject2 handle(Jedis connection) throws RedisException {
 //                RedisDBObject2 obj = new RedisDBObject2();

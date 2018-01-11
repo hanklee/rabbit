@@ -62,4 +62,6 @@ public abstract class DAO {
     public abstract void insert(Collection<? extends DBObject> objs, String table_name) throws DBException;
 
     public abstract void delete(Collection<? extends DBObject> objs, String table_name) throws DBException;
+
+    public abstract <T> T execute(DAOHandler<T> daoHandler) throws DBException;
 }

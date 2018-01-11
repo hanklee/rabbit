@@ -45,7 +45,7 @@
     <dbobject mode="redis">
         <class_name>com.lixianling.rabbit.RedisDBObject</class_name>
         <table_name mark="true">myobjects</table_name>
-        <table_field>id:name:email</table_field>
+        <table_field>id:name:email:list1:list2:list3</table_field>
         <!--
 
         REDIS:
@@ -68,7 +68,7 @@
         <key_field>id</key_field>
     </dbobject>
 
-    <dbobject mode="redis">
+    <dbobject mode="redis,elastic,mongo" datasource="q4answer">
         <class_name>com.lixianling.rabbit.redis.Gencontent</class_name>
         <table_name mark="true">gencontent</table_name>
         <table_field>id:title:contents</table_field>

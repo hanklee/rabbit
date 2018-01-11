@@ -33,6 +33,29 @@
         </datasource>
     </datasources>
 
+    <elastic>
+
+        <settings>
+            <setting>
+                <name>cluster.name</name>
+                <value>dolphin</value>
+            </setting>
+            <!--<setting>-->
+                <!--<name>client.transport.ping_timeout</name>-->
+                <!--<value>6s</value>-->
+            <!--</setting>-->
+        </settings>
+        <hosts>
+            <host port="9300">192.168.1.115</host>
+        </hosts>
+    </elastic>
+
+    <mongo>
+        <hosts>
+            <host port="27017">192.168.1.131</host>
+        </hosts>
+    </mongo>
+
 
 
 </rabbit>

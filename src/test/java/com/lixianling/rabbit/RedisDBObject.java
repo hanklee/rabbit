@@ -5,16 +5,15 @@
 package com.lixianling.rabbit;
 
 import com.lixianling.rabbit.dao.DAO;
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.redis.RedisException;
 import com.lixianling.rabbit.dao.redis.RedisObject;
-import com.lixianling.rabbit.manager.DBObjectManager;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +42,9 @@ public class RedisDBObject extends RedisObject {
     public int id;
     public String name;
     public String email;
+    public List<Integer> list1;
+    public List<String> list2;
+    public List<Double> list3;
 
     @Override
     public void beforeInsert(Object obj) throws DBException {
@@ -156,9 +158,10 @@ public class RedisDBObject extends RedisObject {
 
     private static RedisDBObject testQuery(RedisDAO dao, final String query) throws DBException {
         try {
-            RedisDBObject obj1 = dao.query(new JedisHandler<RedisDBObject>() {
+            RedisDBObject obj1 = dao.execute(new DAOHandler<RedisDBObject>() {
                 @Override
-                public RedisDBObject handle(Jedis connection) throws RedisException {
+                public RedisDBObject handle(Object con) throws DBException {
+                    Jedis connection = (Jedis) con;
                     RedisDBObject obj = new RedisDBObject();
                     String uniqueName = obj.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
                     String uniqueValue = connection.hget(uniqueName, query);
@@ -171,7 +174,7 @@ public class RedisDBObject extends RedisObject {
                     return obj;
                 }
             });
-            System.out.println("query get obj:" + obj1.toJson().toString());
+            System.out.println("execute get obj:" + obj1.toJson().toString());
             return obj1;
         } catch (Exception e){
 //            e.printStackTrace();
@@ -183,9 +186,10 @@ public class RedisDBObject extends RedisObject {
     public static void testList(RedisDAO dao) {
         try {
             System.out.println("OBJECT LIST:");
-            List<RedisDBObject> list = dao.query(new JedisHandler<List<RedisDBObject>>() {
+            List<RedisDBObject> list = dao.execute(new DAOHandler<List<RedisDBObject>>() {
                 @Override
-                public List<RedisDBObject> handle(Jedis connection) throws RedisException {
+                public List<RedisDBObject> handle(Object con) throws DBException {
+                    Jedis connection = (Jedis) con;
                     List<RedisDBObject> result = new ArrayList<RedisDBObject>();
                     Set<String> srs = connection.zrange(RedisDAO.getTableIds("myobjects"), 0, 5);
                     for (String sr : srs) {
@@ -213,17 +217,30 @@ public class RedisDBObject extends RedisObject {
         obj.id = 1;
         obj.name = "hank3";
         obj.email = "hank3.dev@gmail.com";
+//        obj.list1 = new ArrayList<Integer>();
+//        obj.list1.add(1);
+//        obj.list2 = new ArrayList<String>();
+        obj.list3 = new ArrayList<Double>();
+        obj.list3.add(7.5);
+        obj.list3.add(8.5);
+        obj.list3.add(9.5);
         System.out.println(obj.toJson().toString());
+        System.out.println(obj.toDBJson().toString());
         System.out.println(obj.toKeyString(obj.getTableName()));
         System.out.println(obj.getKeyStringByRegisterKey(obj.getTableName()));
 //        System.out.println(obj.uniqueValue());
+
+        RedisDBObject obj2 = new RedisDBObject();
+        obj2.JsonToObj(new JSONObject("{\"list1\":[1],\"list3\":[7.5,8.5,9.5],\"list2\":[],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}"));
+        System.out.println(obj2.toJson().toString());
+        System.out.println(obj2.toDBJson().toString());
 
         RedisDAO dao = new RedisDAO();
 
 //        testDelete(dao,"hank2.dev@gmail.com");
 
 
-        testInsert(obj,dao);
+//        testInsert(obj,dao);
 
 //        obj = testQuery(dao,"hank1.dev@gmail.com");
 //        obj.email = "hank.dev@gmail.com";

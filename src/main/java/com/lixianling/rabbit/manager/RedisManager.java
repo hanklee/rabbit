@@ -4,18 +4,11 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.dao.redis.MixJedisCommands;
-import com.lixianling.rabbit.dao.redis.RabbitJedisCommands;
-import com.lixianling.rabbit.dao.redis.JedisExecute;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.conf.RedisConfig;
-import com.lixianling.rabbit.dao.redis.RedisException;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Protocol;
-
-import java.util.Set;
 
 /**
  * @author Xianling Li(hanklee)
@@ -23,12 +16,12 @@ import java.util.Set;
  */
 public final class RedisManager {
     private static final JedisPool pool;
-    private static final MixJedisCommands commands;
+//    private static final MixJedisCommands commands;
 
     static {
         // just init cache manager
         pool = init(RabbitManager.RABBIT_CONFIG);
-        commands = new RabbitJedisCommands(pool);
+//        commands = new RabbitJedisCommands(pool);
     }
 
     protected static void register() {
@@ -99,50 +92,46 @@ public final class RedisManager {
     }
 
 
-    public static MixJedisCommands getCommand() {
-        return commands;
-    }
-
     /**
      * 获取数据
      *
      * @param key
      * @return
      */
-    public static String get(final String key) {
-        return commands.get(key);
-    }
+//    public static String get(final String key) {
+//        return commands.get(key);
+//    }
 
-    public static void del(final String key) {
-        commands.del(key);
-    }
-
-    public static void delKeyPattern(final String parttern) {
-        try {
-            new JedisExecute<Long>(pool) {
-                @Override
-                public Long execute(Jedis jedis) throws RedisException {
-                    Set<String> result = jedis.keys(parttern);
-                    if (result.size() > 0)
-                        jedis.del(result.toArray(new String[result.size()]));
-                    return 0L;
-                }
-            }.run();
-        } catch (com.lixianling.rabbit.dao.redis.RedisException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void dels(final Set<String> keys) {
-        if (keys.size() > 0)
-            commands.del(keys.toArray(new String[keys.size()]));
-    }
-
-    public static void set(final String key, final String value) {
-        commands.set(key, value);
-    }
-
-    public static Set<String> keys(final String parttern) {
-        return commands.keys(parttern);
-    }
+//    public static void del(final String key) {
+//        commands.del(key);
+//    }
+//
+//    public static void delKeyPattern(final String parttern) {
+//        try {
+//            new JedisExecute<Long>(pool) {
+//                @Override
+//                public Long execute(Jedis jedis) throws RedisException {
+//                    Set<String> result = jedis.keys(parttern);
+//                    if (result.size() > 0)
+//                        jedis.del(result.toArray(new String[result.size()]));
+//                    return 0L;
+//                }
+//            }.run();
+//        } catch (com.lixianling.rabbit.dao.redis.RedisException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    public static void dels(final Set<String> keys) {
+//        if (keys.size() > 0)
+//            commands.del(keys.toArray(new String[keys.size()]));
+//    }
+//
+//    public static void set(final String key, final String value) {
+//        commands.set(key, value);
+//    }
+//
+//    public static Set<String> keys(final String parttern) {
+//        return commands.keys(parttern);
+//    }
 }

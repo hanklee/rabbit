@@ -97,6 +97,10 @@ public abstract class DBObject extends JSONObj {
         return _keyString;
     }
 
+    public Map<String, Object> ObjToMap(String table_name){
+        return ObjToMap(DBObjectManager.getObjectJSONAttr(table_name));
+    }
+
     public Map<String, Object> ObjToMap(Set<String> attrs) {
         Map<String, Object> result = new HashMap<String, Object>();
         Map<String, Field> allFields = getAllFields();
@@ -107,15 +111,29 @@ public abstract class DBObject extends JSONObj {
                 if (value != null) {
                     if (value instanceof List) {
                         List tmp = (List) value;
-                        Map[] listObjs = new Map[tmp.size()];
+
                         if (tmp.size() > 0) {
-                            int i = 0;
-                            for (Object o : tmp) {
-                                listObjs[i] = ((DBObject) o).ObjToMap(attrs);
-                                i++;
+                            Object tmpo = tmp.get(0);
+                            if (tmpo instanceof DBObject) {
+                                Map[] listObjs = new Map[tmp.size()];
+                                int i = 0;
+                                for (Object o : tmp) {
+                                    listObjs[i] = ((DBObject) o).ObjToMap(attrs);
+                                    i++;
+                                }
+                                result.put(attr, listObjs);
+                            } else {
+                                Object[] listObjs = new Object[tmp.size()];
+                                int i = 0;
+                                for (Object o : tmp) {
+                                    listObjs[i] = o;
+                                    i++;
+                                }
+                                result.put(attr, listObjs);
                             }
+
                         }
-                        result.put(attr, listObjs);
+
                     } else if (value instanceof DBObject) {
                         result.put(attr, ((DBObject) value).ObjToMap(attrs));
                     } else
@@ -246,6 +264,11 @@ public abstract class DBObject extends JSONObj {
         return tname;
     }
 
+    public String getDatasource() {
+        Class clazz = getClass();
+        return DBObjectManager.getDataSourceByObject(clazz);
+    }
+
     public JSONObject toDBJson() {
         JSONObject json = new JSONObject();
         setJsonValueByDBAttr(json, getTableName());
@@ -272,8 +295,8 @@ public abstract class DBObject extends JSONObj {
                 if (value != null) {
                     if (value instanceof List) {
                         List tmp = (List) value;
+                        JSONArray jsonArray = new JSONArray();
                         if (tmp.size() > 0) {
-                            JSONArray jsonArray = new JSONArray();
                             Object check = tmp.get(0);
                             if (check instanceof DBObject) {
                                 String tmp_table_name = table_name + "_" + ((DBObject) check).getTableName();
@@ -285,10 +308,10 @@ public abstract class DBObject extends JSONObj {
                                 for (Object o : tmp) {
                                     jsonArray.put(o);
                                 }
-                                json.put(attr, jsonArray);
-                            }
 
+                            }
                         }
+                        json.put(attr, jsonArray);
                     } else if (value instanceof DBObject) {
                         json.put(attr, ((DBObject) value).toDBJson());
                     } else

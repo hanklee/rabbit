@@ -4,10 +4,7 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.conf.DBObjectConfig;
-import com.lixianling.rabbit.conf.DataSourceConfig;
-import com.lixianling.rabbit.conf.RabbitConfig;
-import com.lixianling.rabbit.conf.RedisConfig;
+import com.lixianling.rabbit.conf.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -148,6 +145,47 @@ public final class RabbitManager {
                 }
             }
             rabbitConfig.redisConfig = redisConfig;
+
+            ElasticConfig elasticConfig = new ElasticConfig();
+            list = dd.getElementsByTagName("elastic");
+
+            if (list.getLength() > 0) {
+                Element tE = (Element) list.item(0);
+                NodeList subList = tE.getElementsByTagName("setting");
+                for (int i = 0; i < subList.getLength(); i++) {
+                    Element setE = (Element) subList.item(i);
+                    String key = setE.getElementsByTagName("name").item(0).getTextContent();
+                    String value = setE.getElementsByTagName("value").item(0).getTextContent();
+                    elasticConfig.settings.put(key,value);
+                }
+
+                subList = tE.getElementsByTagName("host");
+                for (int i = 0; i < subList.getLength(); i++) {
+                    ElasticConfig.Host host = new ElasticConfig.Host();
+                    Element hostE = (Element) subList.item(i);
+                    host.port = Integer.valueOf(hostE.getAttribute("port"));
+                    host.host = hostE.getTextContent();
+                    elasticConfig.hosts.add(host);
+                }
+            }
+            rabbitConfig.elasticConfig = elasticConfig;
+
+            MongoConfig mongoConfig = new MongoConfig();
+            list = dd.getElementsByTagName("mongo");
+
+            if (list.getLength() > 0) {
+                Element tE = (Element) list.item(0);
+                NodeList subList = tE.getElementsByTagName("host");
+                for (int i = 0; i < subList.getLength(); i++) {
+                    MongoConfig.Host host = new MongoConfig.Host();
+                    Element hostE = (Element) subList.item(i);
+                    host.port = Integer.valueOf(hostE.getAttribute("port"));
+                    host.host = hostE.getTextContent();
+                    mongoConfig.hosts.add(host);
+                }
+            }
+            rabbitConfig.mongoConfig = mongoConfig;
+
 
             Document objectXML = parseXML(DBOBJECT_CONF_FILE, false);
 

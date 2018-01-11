@@ -7,5 +7,5 @@ package com.lixianling.rabbit.dao.mongodb;
  *
  * @author hank
  */
-public class MongoExecute {
+public abstract class MongoExecute<T> {
 }

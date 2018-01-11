@@ -5,11 +5,10 @@
 package com.lixianling.rabbit.manager;
 
 import com.google.common.collect.ImmutableMap;
+import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.IdGenerator;
 import com.lixianling.rabbit.conf.DBObjectConfig;
-import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
-import com.lixianling.rabbit.conf.RedisConfig;
 import com.lixianling.rabbit.dao.sql.SQLBuilder;
 import org.apache.commons.dbutils.QueryRunner;
 
@@ -49,14 +48,10 @@ public final class DBObjectManager {
 
     private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>();
     private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>();
+    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>();
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>();
 
-//    private static Map<String, String> TableCacheKeyFields = new ConcurrentHashMap<String, String>();
-
-
     private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>();
-
-//    private static Map<String, Field> TableUniqueField = new ConcurrentHashMap<String, Field>();
 
     public static IdGenerator idGenerator;
 
@@ -89,25 +84,25 @@ public final class DBObjectManager {
 
     /**
      * register dbobject to relate database
+     *
      * @param config
      * @throws SQLException
      */
-    private static void registerTables(RabbitConfig config) throws SQLException{
+    private static void registerTables(RabbitConfig config) throws DBException {
         for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
-
-            if ("redis".equals(dbset.mode)) {
-                registerRedisTables(config,dbset);
-            } else if ("mysql".equals(dbset.mode)) {
-                registerMySQLTables(config,dbset);
-            } else if ("mix".equals(dbset.mode)) {
-                registerRedisTables(config,dbset);
-                registerMySQLTables(config,dbset);
+            String[] modes = dbset.mode.split(",");
+            for (String tmp : modes) {
+                if ("redis".equals(tmp) || "elastic".equals(tmp)
+                        || "mongo".equals(tmp)) {
+                    registerJsonTables(config, dbset);
+                } else if ("mysql".equals(tmp)) {
+                    registerMySQLTables(config, dbset);
+                }
             }
-
         }
     }
 
-    private static void registerMySQLTables(RabbitConfig rabbitConfig, DBObjectConfig.DBObjectSet dbset) throws SQLException {
+    private static void registerMySQLTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
         // 获取数据源table相关的columns(类的属性与之相关)
         String key;
         Connection con = null;
@@ -115,8 +110,8 @@ public final class DBObjectManager {
         QueryRunner queryRunner = DataSourceManager.getQueryRunner(dbset.datasource);
         String table = dbset.table_name;
         try {
-            con = queryRunner.getDataSource().getConnection();
             try {
+                con = queryRunner.getDataSource().getConnection();
                 String incrKey = null;
                 Set<String> keys = new HashSet<String>();
                 Set<String> no_incr_key_columns = new HashSet<String>();
@@ -188,11 +183,18 @@ public final class DBObjectManager {
                     setTableNameByClass(clazz, table);
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+//                ex.printStackTrace();
+                throw new DBException(ex.getMessage());
+
             }
         } finally {
-            if (rs != null)
-                rs.close();
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 //            DbUtils.close(con);
         }
 
@@ -206,7 +208,7 @@ public final class DBObjectManager {
 //        TableCacheKeyFields.putAll(config.tableToCacheKeyField);
     }
 
-    private static void registerRedisTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) {
+    private static void registerJsonTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
         String table = dbset.table_name;
         Set<String> keys = new HashSet<String>();
         Set<String> allField = new HashSet<String>();
@@ -227,7 +229,6 @@ public final class DBObjectManager {
         }
 
         ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
-
         ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allField);
 
         String className = dbset.class_name;
@@ -235,7 +236,7 @@ public final class DBObjectManager {
         try {
             clazz = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new DBException(e.getMessage());
         }
         // 缓存table类的属性
         registerTableClassField(clazz);
@@ -252,6 +253,11 @@ public final class DBObjectManager {
         }
         // 缓存table相关的类
         setTableNameByClass(clazz, table);
+
+        if (dbset.mode.contains("elastic")
+                || dbset.mode.contains("mongo")) {
+            ObjectSource.put(clazz, dbset.datasource);
+        }
     }
 
     private static void registerTableClassField(Class clazz) {
@@ -380,6 +386,10 @@ public final class DBObjectManager {
 
     public static void setTableNameByClass(Class clazz, String table_name) {
         ObjectCache.put(clazz, table_name);
+    }
+
+    public static String getDataSourceByObject(Class clazz) {
+        return ObjectSource.get(clazz);
     }
 
 

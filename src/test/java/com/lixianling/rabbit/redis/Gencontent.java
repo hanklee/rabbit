@@ -6,13 +6,14 @@ package com.lixianling.rabbit.redis;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.RedisDBObject;
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.redis.RedisException;
-import com.lixianling.rabbit.dao.redis.RedisObject;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
+import javax.sql.rowset.JdbcRowSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +22,7 @@ import java.util.Set;
  * @author hank
  */
 public class Gencontent extends DBObject {
-
+    public String _id;
     public int id;
     public String title;
     //    public String parsecon;
@@ -30,11 +31,16 @@ public class Gencontent extends DBObject {
     public static void testList(RedisDAO dao) {
         try {
             System.out.println("OBJECT LIST:");
-            List<Gencontent> list = dao.query(new JedisHandler<List<Gencontent>>() {
+            List<Gencontent> list = dao.execute(new DAOHandler<List<Gencontent>>() {
                 @Override
-                public List<Gencontent> handle(Jedis connection) throws RedisException {
+                public List<Gencontent> handle(Object con) throws RedisException {
+                    Jedis connection = (Jedis) con;
+                    int si = 0;
+                    int start = si * 20 + 1;
+                    if (start == 1) start = 0;
+                    int end = start + 20;
                     List<Gencontent> result = new ArrayList<Gencontent>();
-                    Set<String> srs = connection.zrange(RedisDAO.getTableIds("gencontent"), 0, 20);
+                    Set<String> srs = connection.zrange(RedisDAO.getTableIds("gencontent"), start, end);
                     for (String sr : srs) {
                         Gencontent no = new Gencontent();
                         String value = connection.get(sr);
@@ -64,9 +70,10 @@ public class Gencontent extends DBObject {
     public static void cleanTable(RedisDAO dao, final String table) {
         try {
             System.out.println("Clean table: " + table);
-            dao.query(new JedisHandler<Void>() {
+            dao.execute(new DAOHandler<Void>() {
                 @Override
-                public Void handle(Jedis connection) throws RedisException {
+                public Void handle(Object con) throws DBException {
+                    Jedis connection = (Jedis) con;
                     long totalNum = connection.zcount(RedisDAO.getTableIds(table), "-inf", "+inf");
                     long delNum = totalNum / 20;
                     if (totalNum % 20 != 0) delNum++;

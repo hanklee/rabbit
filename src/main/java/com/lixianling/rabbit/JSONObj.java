@@ -105,6 +105,11 @@ public abstract class JSONObj implements Serializable {
                             ((JSONObj) o).MapToObj((Map) mapData);
                             tmp.add(o);
                         }
+                    } else {
+                        List mapArray = (List) value;
+                        for (Object mapData : mapArray) {
+                            tmp.add(mapData);
+                        }
                     }
                     field.set(this, tmp);
                 } else if (value instanceof Map[]) {
@@ -167,17 +172,20 @@ public abstract class JSONObj implements Serializable {
                 if (value != null) {
                     if (value instanceof List) {
                         List tmp = (List) value;
+                        JSONArray jsonArray = new JSONArray();
                         if (tmp.size() > 0) {
-                            JSONArray jsonArray = new JSONArray();
                             Object check = tmp.get(0);
-                            if (!(check instanceof JSONObj)) {
-                                continue;
+                            if (check instanceof JSONObj) {
+                                for (Object o : tmp) {
+                                    jsonArray.put(((JSONObj) o).toJson());
+                                }
+                            } else {
+                                for (Object o : tmp) {
+                                    jsonArray.put(o);
+                                }
                             }
-                            for (Object o : tmp) {
-                                jsonArray.put(((JSONObj) o).toJson());
-                            }
-                            json.put(attr, jsonArray);
                         }
+                        json.put(attr, jsonArray);
                     } else if (value instanceof JSONObj) {
                         json.put(attr, ((JSONObj) value).toJson());
                     } else

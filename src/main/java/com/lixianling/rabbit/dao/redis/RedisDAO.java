@@ -8,6 +8,7 @@ import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.DAO;
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.manager.RabbitManager;
 import com.lixianling.rabbit.manager.RedisManager;
@@ -39,22 +40,21 @@ public class RedisDAO extends DAO {
     public final static String TABLE_NEXT_ID = ":next_id:";
     public final static String TABLE_UNIQUE = ":unique:";
 
-    public static String getTableIds(final DBObject obj){
+    public static String getTableIds(final DBObject obj) {
         return obj.getTableName() + TABLE_IDS;
     }
 
-    public static String getTableIds(final String table){
+    public static String getTableIds(final String table) {
         return table + TABLE_IDS;
     }
 
-    public static String getTableNextId(final DBObject obj){
+    public static String getTableNextId(final DBObject obj) {
         return obj.getTableName() + TABLE_NEXT_ID;
     }
 
-    public static String getTableNextId(final String table){
+    public static String getTableNextId(final String table) {
         return table + TABLE_NEXT_ID;
     }
-
 
 
     public RedisDAO() {
@@ -72,109 +72,91 @@ public class RedisDAO extends DAO {
 
     @Override
     public void update(final DBObject obj, final String table) throws DBException {
-        try {
-            new JedisExecute<Void>(pool) {
-                @Override
-                public Void execute(Jedis connection) throws RedisException {
-                    try {
-
-                        String value = connection.get(obj.toKeyString(table));
-                        if (value == null) {
-                            throw new RedisException("Not found data.",CODE_NOTFOUND);
-                        }
-                        obj.beforeUpdate(connection);
-                        connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
-                        obj.afterUpdate(connection);
-                    } catch (Exception e) {
-                        throw new RedisException(e.getMessage());
+        new JedisExecute<Void>(pool) {
+            public Void execute(Object con) throws DBException {
+                Jedis connection = (Jedis) con;
+                try {
+                    String value = connection.get(obj.toKeyString(table));
+                    if (value == null) {
+                        throw new RedisException("Not found data.", CODE_NOTFOUND);
                     }
-                    return null;
+                    obj.beforeUpdate(connection);
+                    connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
+                    obj.afterUpdate(connection);
+                } catch (Exception e) {
+                    throw new DBException(e.getMessage());
                 }
-            }.run();
-        } catch (RedisException e) {
-            throw e;
-        }catch (Exception e) {
-            throw new DBException(e.getMessage());
-        }
+                return null;
+            }
+        }.run();
     }
 
     @Override
     public void delete(final DBObject obj, final String table) throws DBException {
-        try {
-            new JedisExecute<Void>(pool) {
-                @Override
-                public Void execute(Jedis connection) throws RedisException {
-                    try {
-                        obj.beforeDelete(connection);
-                        Pipeline pipeline = connection.pipelined();
-                        pipeline.multi();
-                        pipeline.del(obj.toKeyString(table));
+        new JedisExecute<Void>(pool) {
+            public Void execute(Object con) throws DBException {
+                Jedis connection = (Jedis) con;
+                try {
+                    obj.beforeDelete(connection);
+                    Pipeline pipeline = connection.pipelined();
+                    pipeline.multi();
+                    pipeline.del(obj.toKeyString(table));
 //                        pipeline.srem(table + TABLE_IDS, obj.toKeyString(table));
-                        pipeline.zrem(getTableIds(table), obj.toKeyString(table));
-                        pipeline.exec();
-                        obj.afterDelete(connection);
-                    } catch (Exception e) {
-                        throw new RedisException(e.getMessage());
-                    }
-                    return null;
+                    pipeline.zrem(getTableIds(table), obj.toKeyString(table));
+                    pipeline.exec();
+                    obj.afterDelete(connection);
+                } catch (Exception e) {
+                    throw new RedisException(e.getMessage());
                 }
-            }.run();
-        } catch (RedisException e) {
-//            e.printStackTrace();
-            throw new DBException(e.reason());
-        }
+                return null;
+            }
+        }.run();
     }
 
     @Override
     public void insert(final DBObject obj, final String table) throws DBException {
-        try {
-            new JedisExecute<Void>(pool) {
-                @Override
-                public Void execute(Jedis connection) throws RedisException {
-
-
-                    try {
-                        Long incrId = connection.incr(getTableNextId(table));
-                        Pipeline pipeline = connection.pipelined();
-                        Field keyField = DBObjectManager.getInsertIncrKeyField(table);
-                        //                    Transaction transaction = connection.multi();
-                        if (keyField != null) {
-                            if (keyField.getType().equals(Integer.TYPE)) {
-                                keyField.set(obj, incrId.intValue());
-                            } else if (keyField.getType().equals(Long.TYPE)) {
-                                keyField.set(obj, incrId);
-                            } else if (keyField.getType().equals(String.class)) {
-                                keyField.set(obj, incrId.toString());
-                            }
+        new JedisExecute<Void>(pool) {
+            @Override
+            public Void execute(Object con) throws DBException {
+                Jedis connection = (Jedis) con;
+                try {
+                    Long incrId = connection.incr(getTableNextId(table));
+                    Pipeline pipeline = connection.pipelined();
+                    Field keyField = DBObjectManager.getInsertIncrKeyField(table);
+                    //                    Transaction transaction = connection.multi();
+                    if (keyField != null) {
+                        if (keyField.getType().equals(Integer.TYPE)) {
+                            keyField.set(obj, incrId.intValue());
+                        } else if (keyField.getType().equals(Long.TYPE)) {
+                            keyField.set(obj, incrId);
+                        } else if (keyField.getType().equals(String.class)) {
+                            keyField.set(obj, incrId.toString());
+                        }
 
 //                            pipeline.multi();
 //                            pipeline.sadd(table + TABLE_IDS, obj.getKeyStringByRegisterKey(table));
-                        } else {
-                            String value = connection.get(obj.getKeyStringByRegisterKey(table));
-                            if (value != null) {
-                                throw new RedisException("Has exist data.", CODE_EXIST_VALUE);
-                            }
+                    } else {
+                        String value = connection.get(obj.getKeyStringByRegisterKey(table));
+                        if (value != null) {
+                            throw new RedisException("Has exist data.", CODE_EXIST_VALUE);
                         }
-                        obj.beforeInsert(connection);
-                        pipeline.multi();
-                        pipeline.zadd(table + TABLE_IDS, incrId, obj.getKeyStringByRegisterKey(table));
-                        pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
-                        pipeline.exec();
-                        obj.afterInsert(connection);
-                    } catch (RedisException e) {
-                        throw e;
-                    } catch (DBException e) {
-                        throw new RedisException(e.reason(),e.code());
-                    }catch (Exception e) {
-                        throw new RedisException(e.getMessage());
                     }
-                    return null;
+                    obj.beforeInsert(connection);
+                    pipeline.multi();
+                    pipeline.zadd(table + TABLE_IDS, incrId, obj.getKeyStringByRegisterKey(table));
+                    pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
+                    pipeline.exec();
+                    obj.afterInsert(connection);
+                } catch (RedisException e) {
+                    throw e;
+                } catch (DBException e) {
+                    throw new RedisException(e.reason(), e.code());
+                } catch (Exception e) {
+                    throw new RedisException(e.getMessage());
                 }
-            }.run();
-        } catch (RedisException e) {
-//            e.printStackTrace();
-            throw new DBException(e.reason(),e.code());
-        }
+                return null;
+            }
+        }.run();
     }
 
     @Override
@@ -203,7 +185,8 @@ public class RedisDAO extends DAO {
         try {
             return new JedisExecute<DBObject>(pool) {
                 @Override
-                public DBObject execute(Jedis connection) throws RedisException {
+                public DBObject execute(Object con) throws RedisException {
+                    Jedis connection = (Jedis) con;
                     try {
                         String value = connection.get(obj.toKeyString(table));
                         if (value == null)
@@ -221,18 +204,12 @@ public class RedisDAO extends DAO {
         }
     }
 
-    public <T> T query(final JedisHandler<T> jsh) throws DBException {
-        try {
-            return new JedisExecute<T>(pool) {
-
-                @Override
-                public T execute(Jedis connection) throws RedisException {
-                    return jsh.handle(connection);
-                }
-            }.run();
-        } catch (RedisException e) {
-//            e.printStackTrace();
-            throw new DBException(e.reason());
-        }
+    public <T> T execute(final DAOHandler<T> handler) throws DBException {
+        return new JedisExecute<T>(pool) {
+            @Override
+            public T execute(Object con) throws DBException {
+                return handler.handle(con);
+            }
+        }.run();
     }
 }

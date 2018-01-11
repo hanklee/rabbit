@@ -21,4 +21,6 @@ public final class RabbitConfig {
     public RedisConfig redisConfig;
     public Mode mode;
     public DBObjectConfig dbObjectConfig;
+    public ElasticConfig elasticConfig;
+    public MongoConfig mongoConfig;
 }

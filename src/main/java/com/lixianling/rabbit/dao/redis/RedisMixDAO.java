@@ -6,6 +6,7 @@ package com.lixianling.rabbit.dao.redis;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.MixDAO;
@@ -65,6 +66,11 @@ public class RedisMixDAO extends MixDAO {
     @Override
     public void delete(Collection<? extends DBObject> objs, String table_name) throws DBException {
         this.dao.delete(objs, table_name);
+    }
+
+    @Override
+    public <T> T execute(DAOHandler<T> daoHandler) throws DBException {
+        return this.dao.execute(daoHandler);
     }
 
     @Override

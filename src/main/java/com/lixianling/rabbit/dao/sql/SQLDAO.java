@@ -7,6 +7,7 @@ package com.lixianling.rabbit.dao.sql;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.conf.RabbitConfig;
+import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DataSourceManager;
@@ -191,6 +192,16 @@ public class SQLDAO extends DAO {
 
     public void delete(Collection<? extends DBObject> objs, String table_name) throws DBException {
         delete(innerRunner, objs, table_name);
+    }
+
+    @Override
+    public <T> T execute(final DAOHandler<T> daoHandler) throws DBException {
+        return new SQLExecute<T>(this.innerRunner) {
+            @Override
+            public T execute(Object con) throws DBException {
+                return daoHandler.handle(con);
+            }
+        }.run();
     }
 
     public void update(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {

@@ -3,9 +3,71 @@
  */
 package com.lixianling.rabbit.manager;
 
+import com.lixianling.rabbit.conf.ElasticConfig;
+import com.lixianling.rabbit.conf.RabbitConfig;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author hank
  */
-public class ElasticManager {
+public final class ElasticManager {
+
+    private static final ElasticManager INATNCE;
+
+    static {
+        // just init cache manager
+        INATNCE = new ElasticManager(RabbitManager.RABBIT_CONFIG);
+    }
+
+    private Settings settings;
+    private List<ElasticConfig.Host> hosts;
+    private TransportClient client;
+
+    public static ElasticManager getInstance() {
+        return INATNCE;
+    }
+
+    protected static void register() {
+        // nothing to do
+    }
+
+    private ElasticManager() {
+
+    }
+
+    private ElasticManager(RabbitConfig config) {
+        Settings.Builder settingsBuilder = Settings.builder();
+        for (String key : config.elasticConfig.settings.keySet()) {
+            String value = config.elasticConfig.settings.get(key);
+            settingsBuilder.put(key,value);
+        }
+//        this.settings = settingsBuilder.put("transport.type", "netty3").put("http.type", "netty3").build();
+        this.settings = settingsBuilder.build();
+        this.hosts = new ArrayList<ElasticConfig.Host>();
+        this.hosts.addAll(config.elasticConfig.hosts);
+        this.client = new PreBuiltTransportClient(this.settings);
+        //TransportClient transportClient = TransportClient.builder().settings(settings).build();
+        for (ElasticConfig.Host host : this.hosts) {
+            try {
+                this.client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host.host), host.port));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public TransportClient getClient() {
+        return this.client;
+    }
 }
