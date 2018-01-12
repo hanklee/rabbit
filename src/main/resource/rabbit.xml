@@ -31,6 +31,7 @@
             <user>root</user>
             <password>TheBestOfPro</password>
         </datasource>
+
     </datasources>
 
     <elastic>

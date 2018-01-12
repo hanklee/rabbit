@@ -11,7 +11,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 /**
- *
  * @author hank
  */
 public abstract class ElasticExecute<T> implements DAOExecute<T> {
@@ -23,10 +22,6 @@ public abstract class ElasticExecute<T> implements DAOExecute<T> {
     }
 
     public T run() throws DBException {
-        try {
-            return execute(this.client);
-        } catch (Exception e) {
-            throw new DBException(e.getMessage());
-        }
+        return execute(this.client);
     }
 }

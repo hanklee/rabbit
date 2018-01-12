@@ -5,9 +5,7 @@
 package com.lixianling.rabbit;
 
 import com.lixianling.rabbit.dao.DAOHandler;
-import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import com.lixianling.rabbit.dao.redis.RedisException;
 import com.lixianling.rabbit.dao.redis.RedisObject;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;

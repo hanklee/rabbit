@@ -15,6 +15,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -50,6 +51,20 @@ public abstract class JSONObj implements Serializable {
     public void JsonToObj(JSONObject json) {
         Map<String, Field> allFields = getAllFields();
         for (Object attr : json.keySet()) {
+            Object value = json.opt((String) attr);
+            Field field = allFields.get(attr);
+            if (field != null
+                    && value != null) {
+                Class type = field.getType();
+                __setValueToObj(value, field, type);
+            }
+        }
+    }
+
+    public void JsonToObj(JSONObject json,String table_name) {
+        Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
+        Map<String, Field> allFields = getAllFields();
+        for (Object attr : attrs) {
             Object value = json.opt((String) attr);
             Field field = allFields.get(attr);
             if (field != null

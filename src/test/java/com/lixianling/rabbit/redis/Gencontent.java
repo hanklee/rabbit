@@ -5,15 +5,12 @@ package com.lixianling.rabbit.redis;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.RedisDBObject;
 import com.lixianling.rabbit.dao.DAOHandler;
-import com.lixianling.rabbit.dao.redis.JedisHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.redis.RedisException;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
-import javax.sql.rowset.JdbcRowSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -91,21 +88,68 @@ public class Gencontent extends DBObject {
         }
     }
 
-    public static void main(String[] args) {
-        Gencontent tmp = new Gencontent();
-        tmp.title = "test";
-        tmp.id = 1;
-        tmp.contents = new ArrayList<String>();
-        tmp.contents.add("test1");
-        tmp.contents.add("test2");
-        System.out.println(tmp.toDBJson().toString());
-
-        Gencontent tmp2 = new Gencontent();
-        tmp2.JsonToObj(new JSONObject("{\"contents\":[\"test1\",\"test2\"],\"id\":1,\"title\":\"test\"}"));
-        System.out.println(tmp2.contents);
+    public static void testPerformance(int testNum) throws Exception {
         RedisDAO dao = new RedisDAO();
-        testList(dao);
-//        cleanTable(dao,"gencontent");
+
+
+//        System.out.println(tmp.toDBJson().toString());
+        List<Gencontent> list = new ArrayList<Gencontent>();
+        System.out.println("Insert performance ... , number: " + testNum);
+        long cTime = System.currentTimeMillis();
+        for (int i = 0; i < 100; i++) {
+            Gencontent tmp = new Gencontent();
+            tmp.title = "testfafdasfdasf";
+//            tmp.id = i + 1;
+            tmp.contents = new ArrayList<String>();
+            tmp.contents.add("test1");
+            tmp.contents.add("test2");
+            dao.insert(tmp);
+            list.add(tmp);
+        }
+        System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
+        System.out.println("Get    performance ... , number: " + testNum);
+        cTime = System.currentTimeMillis();
+        for (Gencontent tmp : list) {
+            dao.getObject(tmp);
+        }
+        System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
+        System.out.println("Update performance ... , number: " + testNum);
+        cTime = System.currentTimeMillis();
+        for (Gencontent tmp : list) {
+//            tmp.id = 0;
+            tmp.title = "afdsfssf";
+            dao.update(tmp);
+        }
+        System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
+        System.out.println("Delete performance ... , number: " + testNum);
+        cTime = System.currentTimeMillis();
+        for (Gencontent tmp : list) {
+            dao.delete(tmp);
+        }
+        System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
+    }
+
+    public static void main(String[] args) throws Exception{
+        testPerformance(10000);
+//        Gencontent tmp = new Gencontent();
+//        tmp.title = "test";
+//        tmp.id = 1;
+//        tmp.contents = new ArrayList<String>();
+//        tmp.contents.add("test1");
+//        tmp.contents.add("test2");
+//        System.out.println(tmp.toDBJson().toString());
+//
+//        Gencontent tmp2 = new Gencontent();
+//        tmp2.JsonToObj(new JSONObject("{\"contents\":[\"test1\",\"test2\"],\"id\":1,\"title\":\"test\"}"));
+//        System.out.println(tmp2.contents);
+//        RedisDAO dao = new RedisDAO();
+////        testList(dao);
+////        cleanTable(dao,"gencontent");
+//        long cTime = System.currentTimeMillis();
+//        for (int i = 0; i < 100; i++) {
+//            dao.insert(tmp);
+//        }
+//        System.out.println("insert 100 run:" +(System.currentTimeMillis() - cTime) + " ms");
     }
 
     /*
