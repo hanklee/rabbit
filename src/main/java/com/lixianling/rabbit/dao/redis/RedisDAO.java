@@ -78,7 +78,7 @@ public class RedisDAO extends DAO {
                 try {
                     String value = connection.get(obj.toKeyString(table));
                     if (value == null) {
-                        throw new RedisException("Not found data.", CODE_NOTFOUND);
+                        throw new DBException("Not found data.", CODE_NOTFOUND);
                     }
                     obj.beforeUpdate(connection);
                     connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
@@ -106,7 +106,7 @@ public class RedisDAO extends DAO {
                     pipeline.exec();
                     obj.afterDelete(connection);
                 } catch (Exception e) {
-                    throw new RedisException(e.getMessage());
+                    throw new DBException(e.getMessage());
                 }
                 return null;
             }
@@ -138,7 +138,7 @@ public class RedisDAO extends DAO {
                     } else {
                         String value = connection.get(obj.getKeyStringByRegisterKey(table));
                         if (value != null) {
-                            throw new RedisException("Has exist data.", CODE_EXIST_VALUE);
+                            throw new DBException("Has exist data.", CODE_EXIST_VALUE);
                         }
                     }
                     obj.beforeInsert(connection);
@@ -147,12 +147,10 @@ public class RedisDAO extends DAO {
                     pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
                     pipeline.exec();
                     obj.afterInsert(connection);
-                } catch (RedisException e) {
-                    throw e;
                 } catch (DBException e) {
-                    throw new RedisException(e.reason(), e.code());
+                    throw e;
                 } catch (Exception e) {
-                    throw new RedisException(e.getMessage());
+                    throw new DBException(e.getMessage());
                 }
                 return null;
             }
@@ -182,26 +180,23 @@ public class RedisDAO extends DAO {
 
     @Override
     public DBObject getObject(final DBObject obj, final String table) throws DBException {
-        try {
-            return new JedisExecute<DBObject>(pool) {
-                @Override
-                public DBObject execute(Object con) throws RedisException {
-                    Jedis connection = (Jedis) con;
-                    try {
-                        String value = connection.get(obj.toKeyString(table));
-                        if (value == null)
-                            throw new RedisException("not found!");
-                        DBObject clone = obj.clone();
-                        clone.JsonToObj(new JSONObject(value));
-                        return clone;
-                    } catch (DBException e) {
-                        throw new RedisException(e.reason());
-                    }
+        return new JedisExecute<DBObject>(pool) {
+            @Override
+            public DBObject execute(Object con) throws DBException {
+                Jedis connection = (Jedis) con;
+                try {
+                    String value = connection.get(obj.toKeyString(table));
+                    if (value == null)
+                        throw new DBException("not found!");
+                    DBObject clone = obj.clone();
+                    clone.JsonToObj(new JSONObject(value));
+                    return clone;
+                } catch (DBException e) {
+                    throw e;
                 }
-            }.run();
-        } catch (RedisException e) {
-            throw new DBException(e.reason());
-        }
+            }
+        }.run();
+
     }
 
     public <T> T execute(final DAOHandler<T> handler) throws DBException {

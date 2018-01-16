@@ -7,8 +7,6 @@ package com.lixianling.rabbit;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import com.lixianling.rabbit.dao.redis.RedisException;
-import com.lixianling.rabbit.dao.redis.RedisObject;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
@@ -21,7 +19,7 @@ import java.util.Set;
  * @author Xianling Li(hanklee)
  * $Id: RedisDBObject.java 39 2016-01-08 12:04:37Z hank $
  */
-public class RedisDBObject extends RedisObject {
+public class RedisDBObject extends DBObject {
     private static final Object LOCK_INSERT = new Object();
     /*
 
@@ -165,10 +163,10 @@ public class RedisDBObject extends RedisObject {
                     String uniqueName = obj.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
                     String uniqueValue = connection.hget(uniqueName, query);
                     if (uniqueValue == null)
-                        throw new RedisException("not found key");
+                        throw new DBException("not found key");
                     String value = connection.get(uniqueValue);
                     if (value == null)
-                        throw new RedisException("not found value");
+                        throw new DBException("not found value");
                     obj.JsonToObj(new JSONObject(value));
                     return obj;
                 }
@@ -202,7 +200,7 @@ public class RedisDBObject extends RedisObject {
                     return result;
                 }
             });
-            for (RedisObject ro : list) {
+            for (DBObject ro : list) {
                 System.out.println(ro.toJson().toString());
             }
         } catch (DBException e) {

@@ -5,10 +5,7 @@ package com.lixianling.rabbit.dao.elastic;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.dao.DAOExecute;
-import com.lixianling.rabbit.dao.redis.RedisException;
 import org.elasticsearch.client.transport.TransportClient;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 /**
  * @author hank

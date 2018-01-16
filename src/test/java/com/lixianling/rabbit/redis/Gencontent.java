@@ -3,11 +3,17 @@
  */
 package com.lixianling.rabbit.redis;
 
+import com.hankcs.hanlp.HanLP;
+import com.hankcs.hanlp.seg.common.Term;
+import com.hankcs.hanlp.seg.CRF.CRFSegment;
+import com.hankcs.hanlp.seg.Segment;
+import com.hankcs.hanlp.tokenizer.NLPTokenizer;
+import com.hankcs.hanlp.tokenizer.SpeedTokenizer;
+import com.hankcs.hanlp.tokenizer.StandardTokenizer;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import com.lixianling.rabbit.dao.redis.RedisException;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
@@ -30,12 +36,14 @@ public class Gencontent extends DBObject {
             System.out.println("OBJECT LIST:");
             List<Gencontent> list = dao.execute(new DAOHandler<List<Gencontent>>() {
                 @Override
-                public List<Gencontent> handle(Object con) throws RedisException {
+                public List<Gencontent> handle(Object con) throws DBException {
                     Jedis connection = (Jedis) con;
+                    long totalNum = connection.zcount(RedisDAO.getTableIds("gencontent"), "-inf", "+inf");
+                    System.out.println("Total num:"+totalNum);
                     int si = 0;
-                    int start = si * 20 + 1;
+                    int start = si * 40 + 1;
                     if (start == 1) start = 0;
-                    int end = start + 20;
+                    int end = start + 40;
                     List<Gencontent> result = new ArrayList<Gencontent>();
                     Set<String> srs = connection.zrange(RedisDAO.getTableIds("gencontent"), start, end);
                     for (String sr : srs) {
@@ -53,9 +61,25 @@ public class Gencontent extends DBObject {
             for (Gencontent ro : list) {
                 System.out.println(ro.id + "," + ro.title);
 //                System.out.println(ro.contents);
+                String tmp = "";
                 for (String content : ro.contents) {
-                    System.out.println(content);
+//                    System.out.println(content);
+                    tmp = tmp + "\n" + content;
                 }
+//                Segment segment = new CRFSegment();
+                List<Term>  items = HanLP.segment(ro.title);
+                for(Term term:items) {
+                    System.out.print(term.word);
+                }
+                System.out.println();
+//                System.out.println(HanLP.segment(ro.title));
+//                System.out.println(StandardTokenizer.segment(ro.title));
+//                System.out.println( NLPTokenizer.segment(ro.title));
+//                System.out.println( SpeedTokenizer.segment(ro.title));
+//                System.out.println( segment.seg(ro.title));
+                List<String> keywordList = HanLP.extractKeyword(tmp, 5);
+                System.out.println(" keyword: " + keywordList);
+                System.out.println(tmp);
                 System.out.println("---------------------------");
 //                System.out.println(ro.toJson().toString());
             }
@@ -130,7 +154,7 @@ public class Gencontent extends DBObject {
     }
 
     public static void main(String[] args) throws Exception{
-        testPerformance(10000);
+//        testPerformance(10000);
 //        Gencontent tmp = new Gencontent();
 //        tmp.title = "test";
 //        tmp.id = 1;
@@ -142,9 +166,9 @@ public class Gencontent extends DBObject {
 //        Gencontent tmp2 = new Gencontent();
 //        tmp2.JsonToObj(new JSONObject("{\"contents\":[\"test1\",\"test2\"],\"id\":1,\"title\":\"test\"}"));
 //        System.out.println(tmp2.contents);
-//        RedisDAO dao = new RedisDAO();
-////        testList(dao);
-////        cleanTable(dao,"gencontent");
+        RedisDAO dao = new RedisDAO();
+        testList(dao);
+//        cleanTable(dao,"gencontent");
 //        long cTime = System.currentTimeMillis();
 //        for (int i = 0; i < 100; i++) {
 //            dao.insert(tmp);

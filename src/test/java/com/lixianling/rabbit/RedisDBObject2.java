@@ -6,7 +6,6 @@ package com.lixianling.rabbit;
 
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import com.lixianling.rabbit.dao.redis.RedisObject;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
@@ -16,9 +15,9 @@ import java.util.Set;
 
 /**
  * @author Xianling Li(hanklee)
- *         $Id: RedisDBObject2.java 40 2016-01-08 17:11:07Z hank $
+ * $Id: RedisDBObject2.java 40 2016-01-08 17:11:07Z hank $
  */
-public class RedisDBObject2 extends RedisObject {
+public class RedisDBObject2 extends DBObject {
 
     public int id;
     public String name;
@@ -44,7 +43,7 @@ public class RedisDBObject2 extends RedisObject {
                     return result;
                 }
             });
-            for (RedisObject ro : list) {
+            for (DBObject ro : list) {
                 System.out.println(ro.toJson().toString());
             }
         } catch (DBException e) {
