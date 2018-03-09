@@ -299,7 +299,7 @@ public abstract class DBObject extends JSONObj {
                         if (tmp.size() > 0) {
                             Object check = tmp.get(0);
                             if (check instanceof DBObject) {
-                                String tmp_table_name = table_name + "_" + ((DBObject) check).getTableName();
+                                String tmp_table_name = table_name + "_" + attr;
                                 for (Object o : tmp) {
                                     jsonArray.put(((DBObject) o).toDBJson(tmp_table_name));
                                 }

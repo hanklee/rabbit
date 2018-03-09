@@ -1,10 +1,9 @@
-Simple Database Access Operations And Redis Cache System base on Java
+Simple Database Access Operations base on Java
 
 Feature:
 
-Using XML configure the DAO and Cache System
-Mysql,Redis DAO solution
-Cache System major base on Redis
+Using XML configure the DAO
+Mysql,Redis,Mongodb, Elastic DAO solution
 
 
 ChangeLog

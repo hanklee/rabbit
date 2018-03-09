@@ -36,7 +36,7 @@ public abstract class JedisExecute<T> implements DAOExecute<T> {
         } catch (Exception e) {
             //释放redis对象
 //            pool.returnBrokenResource(jedis);
-//            e.printStackTrace();
+            e.printStackTrace();
             throw new DBException(e.getMessage());
         } finally {
             //返还到连接池

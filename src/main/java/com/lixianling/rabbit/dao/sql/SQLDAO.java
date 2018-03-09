@@ -27,9 +27,9 @@ import java.util.Set;
  */
 public class SQLDAO extends DAO {
 
-    protected QueryRunner innerRunner;
+    private QueryRunner innerRunner;
 
-    protected GenKeyQueryRunner innerInsertRunner;
+    private GenKeyQueryRunner innerInsertRunner;
 
     public SQLDAO(){
         if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX

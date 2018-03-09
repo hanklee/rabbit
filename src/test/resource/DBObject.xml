@@ -68,10 +68,10 @@
         <key_field>id</key_field>
     </dbobject>
 
-    <dbobject mode="redis,elastic,mongo" datasource="q4answer">
+    <dbobject mode="redis,elastic,mongo" datasource="qiqu_index">
         <class_name>com.lixianling.rabbit.redis.Gencontent</class_name>
         <table_name mark="true">gencontent</table_name>
-        <table_field>id:title:contents</table_field>
+        <table_field>title:contents</table_field>
         <!--
 
         REDIS:
@@ -93,4 +93,26 @@
         <table_field>id:catId:keywords</table_field>
         <incr_field>id</incr_field>
     </dbobject>
+
+    <dbobject mode="mongo" datasource="q4answer">
+        <class_name>com.lixianling.rabbit.json.Collect</class_name>
+        <table_name mark="true">collect</table_name>
+        <table_field>question:answers</table_field>
+    </dbobject>
+
+    <dbobject mode="mongo" datasource="q4answer">
+        <class_name>com.lixianling.rabbit.json.Questions</class_name>
+        <table_name>questions</table_name>
+        <table_field>uid:title:content:tags:keywords:create_at</table_field>
+    </dbobject>
+
+
+
+    <dbobject mode="mongo" datasource="q4answer">
+        <class_name>com.lixianling.rabbit.json.Answers</class_name>
+        <table_name>collect_answers</table_name>
+        <table_field>uid:content:md5:keywords:create_at</table_field>
+    </dbobject>
+
+
 </dbobjects>

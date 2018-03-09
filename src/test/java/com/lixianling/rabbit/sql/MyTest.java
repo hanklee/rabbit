@@ -3,18 +3,12 @@
  */
 package com.lixianling.rabbit.sql;
 
-import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
-import com.lixianling.rabbit.dao.redis.RedisDAO;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
-import com.lixianling.rabbit.manager.DBObjectManager;
-import com.lixianling.rabbit.manager.DataSourceManager;
-import com.lixianling.rabbit.redis.Gencontent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author hank

@@ -38,17 +38,22 @@ public class MongoDAO extends DAO {
         if (idf == null) {
             throw new DBException("NOT Found Id");
         }
-        String value;
+        ObjectId objId;
         try {
-            value = (String) idf.get(obj);
+            Object value = idf.get(obj);
+            if (value instanceof ObjectId) {
+                objId = (ObjectId) value;
+            } else if (value instanceof String) {
+                objId = new ObjectId((String) value);
+            } else
+                throw new DBException("NOT Found Id");
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
         MongoDatabase db = this.client.getDatabase(obj.getDatasource());
         MongoCollection<Document> docs = db.getCollection(table);
         Document document = Document.parse(obj.toDBJson(table).toString());
-        docs.replaceOne(eq("_id", new ObjectId(value))
-                , document);
+        docs.replaceOne(eq("_id", objId), document);
     }
 
     @Override
@@ -57,15 +62,22 @@ public class MongoDAO extends DAO {
         if (idf == null) {
             throw new DBException("NOT Found Id");
         }
-        String value;
+//        Class type = idf.getType();
+        ObjectId objId;
         try {
-            value = (String) idf.get(obj);
+            Object value = idf.get(obj);
+            if (value instanceof ObjectId) {
+                objId = (ObjectId) value;
+            } else if (value instanceof String) {
+                objId = new ObjectId((String) value);
+            } else
+                throw new DBException("NOT Found Id");
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
         MongoDatabase db = this.client.getDatabase(obj.getDatasource());
         MongoCollection<Document> docs = db.getCollection(table);
-        docs.deleteOne(eq("_id", new ObjectId(value)));
+        docs.deleteOne(eq("_id", objId));
     }
 
     @Override
@@ -82,14 +94,14 @@ public class MongoDAO extends DAO {
             docs.insertOne(doc);
 
 //        System.out.println(doc.getObjectId("_id").toString());
-            String _id = doc.getObjectId("_id").toString();
-            for (Field field : obj.getClass().getFields()) {
-                if (field.getName().equals("_id")
-                        && field.getType().equals(String.class)) {
-                    field.set(obj, _id);
+            Field idf = DBObjectManager.getClazzField(obj.getClass()).get("_id");
+            if (idf != null) {
+                if (idf.getType().equals(String.class)) {
+                    idf.set(obj, doc.getObjectId("_id").toString());
+                } else if (idf.getType().equals(ObjectId.class)) {
+                    idf.set(obj, doc.getObjectId("_id"));
                 }
             }
-
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
@@ -101,27 +113,31 @@ public class MongoDAO extends DAO {
         if (idf == null) {
             throw new DBException("NOT Found Id");
         }
-        String value;
+        ObjectId objId;
         try {
-            value = (String) idf.get(obj);
+            Object value = idf.get(obj);
+            if (value instanceof ObjectId) {
+                objId = (ObjectId) value;
+            } else if (value instanceof String) {
+                objId = new ObjectId((String) value);
+            } else
+                throw new DBException("NOT Found Id");
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
         MongoDatabase db = this.client.getDatabase(obj.getDatasource());
         MongoCollection<Document> docs = db.getCollection(table);
-        Document myDoc = docs.find(eq("_id", new ObjectId(value))).first();
+        Document myDoc = docs.find(eq("_id", objId)).first();
         if (myDoc != null) {
 //            System.out.println(myDoc.toJson());
             DBObject clone = obj.clone();
             clone.JsonToObj(new JSONObject(myDoc.toJson()), table);
 
             try {
-                String _id = myDoc.getObjectId("_id").toString();
-                for (Field field : obj.getClass().getFields()) {
-                    if (field.getName().equals("_id")
-                            && field.getType().equals(String.class)) {
-                        field.set(clone, _id);
-                    }
+                if (idf.getType().equals(String.class)) {
+                    idf.set(clone, myDoc.getObjectId("_id").toString());
+                } else if (idf.getType().equals(ObjectId.class)) {
+                    idf.set(clone, myDoc.getObjectId("_id"));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
