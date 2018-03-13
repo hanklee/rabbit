@@ -42,77 +42,44 @@
     redis attribute must set true,otherwise the rabbit will check the database whether has the table
 
     -->
-    <dbobject mode="redis">
-        <class_name>com.lixianling.rabbit.RedisDBObject</class_name>
-        <table_name mark="true">myobjects</table_name>
-        <table_field>id:name:email:list1:list2:list3</table_field>
-        <!--
+    <!--<dbobject mode="redis">-->
+        <!--<class_name>com.lixianling.rabbit.RedisDBObject</class_name>-->
+        <!--<table_name mark="true">myobjects</table_name>-->
+        <!--<table_field>id:name:email:list1:list2:list3</table_field>-->
+        <!--&lt;!&ndash;-->
 
-        REDIS:
-        same key_field but be key string using increase number
+        <!--REDIS:-->
+        <!--same key_field but be key string using increase number-->
 
-         -->
-        <incr_field>id</incr_field>
-    </dbobject>
+         <!--&ndash;&gt;-->
+        <!--<incr_field>id</incr_field>-->
+    <!--</dbobject>-->
 
-    <dbobject mode="redis">
-        <class_name>com.lixianling.rabbit.RedisDBObject2</class_name>
-        <table_name mark="true">myobjects2</table_name>
-        <table_field>id:name:email</table_field>
-        <!--
+    <!--<dbobject mode="redis">-->
+        <!--<class_name>com.lixianling.rabbit.RedisDBObject2</class_name>-->
+        <!--<table_name mark="true">myobjects2</table_name>-->
+        <!--<table_field>id:name:email</table_field>-->
+        <!--&lt;!&ndash;-->
 
-        REDIS
-        key field is use for generating key string for redis key
+        <!--REDIS-->
+        <!--key field is use for generating key string for redis key-->
 
-         -->
-        <key_field>id</key_field>
-    </dbobject>
+         <!--&ndash;&gt;-->
+        <!--<key_field>id</key_field>-->
+    <!--</dbobject>-->
 
-    <dbobject mode="redis,elastic,mongo" datasource="qiqu_index">
-        <class_name>com.lixianling.rabbit.redis.Gencontent</class_name>
-        <table_name mark="true">gencontent</table_name>
-        <table_field>title:contents</table_field>
-        <!--
+    <!--<dbobject mode="redis,elastic,mongo" datasource="qiqu_index">-->
+        <!--<class_name>com.lixianling.rabbit.redis.Gencontent</class_name>-->
+        <!--<table_name mark="true">gencontent</table_name>-->
+        <!--<table_field>title:contents</table_field>-->
+        <!--&lt;!&ndash;-->
 
-        REDIS:
-        same key_field but be key string using increase number
+        <!--REDIS:-->
+        <!--same key_field but be key string using increase number-->
 
-         -->
-        <incr_field>id</incr_field>
-    </dbobject>
-
-    <dbobject mode="elastic" datasource="qiqu_index">
-        <class_name>com.lixianling.rabbit.elastic.Qiqu</class_name>
-        <table_name mark="true">qiqu</table_name>
-        <table_field>title:des:bs:answers:tags</table_field>
-    </dbobject>
-
-    <dbobject mode="redis">
-        <class_name>com.lixianling.rabbit.redis.Category</class_name>
-        <table_name mark="true">category</table_name>
-        <table_field>id:catId:keywords</table_field>
-        <incr_field>id</incr_field>
-    </dbobject>
-
-    <dbobject mode="mongo" datasource="q4answer">
-        <class_name>com.lixianling.rabbit.json.Collect</class_name>
-        <table_name mark="true">collect</table_name>
-        <table_field>question:answers</table_field>
-    </dbobject>
-
-    <dbobject mode="mongo" datasource="q4answer">
-        <class_name>com.lixianling.rabbit.json.Questions</class_name>
-        <table_name>questions</table_name>
-        <table_field>uid:title:content:tags:keywords:create_at</table_field>
-    </dbobject>
-
-
-
-    <dbobject mode="mongo" datasource="q4answer">
-        <class_name>com.lixianling.rabbit.json.Answers</class_name>
-        <table_name>collect_answers</table_name>
-        <table_field>uid:content:md5:keywords:create_at</table_field>
-    </dbobject>
+         <!--&ndash;&gt;-->
+        <!--<incr_field>id</incr_field>-->
+    <!--</dbobject>-->
 
 
 </dbobjects>

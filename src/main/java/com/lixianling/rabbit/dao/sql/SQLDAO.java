@@ -109,18 +109,21 @@ public class SQLDAO extends DAO {
             String sql = SQLBuilder.getInsertSQLByTable(table);
             // no thread safe
             obj.beforeInsert(innerInsertRunner);
-            int mount = innerInsertRunner.insert(sql, objs);
-            if (mount < 1) {
-                throw new SQLException("No data insert." + sql + "\n" + obj);
-            }
-
             if (keyField != null /* is auto increase */) {
+                int mount = innerInsertRunner.insert(sql, objs);
+                if (mount < 1) {
+                    throw new SQLException("No data insert." + sql + "\n" + obj);
+                }
+
                 if (keyField.getType().equals(Integer.TYPE)) {
                     keyField.set(obj, ((Long) innerInsertRunner.getGeneratedKeys()).intValue());
 //                        System.out.println(sql);
                 } else if (keyField.getType().equals(Long.TYPE)) {
                     keyField.set(obj, innerInsertRunner.getGeneratedKeys());
                 }
+            } else {
+                innerRunner.insert(sql, new ScalarHandler<Long>(), objs);
+                // innerInsertRunner.insert(sql, objs);
             }
             obj.afterInsert(innerInsertRunner);
         } catch (Exception e) {

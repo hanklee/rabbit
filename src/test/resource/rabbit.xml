@@ -1,11 +1,12 @@
 <rabbit>
 
     <!--
-    MYSQL, must configure the datasource
-    REDIS, must configure the redis
-    MIX, must configure the datasource and cache
+    mysql, must configure the datasource
+    redis, must configure the redis
+    mongo,
+    elastic
     -->
-    <mode>MIX</mode>
+    <mode>mysql</mode>
 
     <!--  Mix mode or MYSQL mode  -->
 
@@ -27,9 +28,9 @@
          -->
         <datasource name="test" default="true">
             <driver>com.mysql.jdbc.Driver</driver>
-            <url>jdbc:mysql://192.168.1.116:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull</url>
+            <url>jdbc:mysql://192.168.10.187:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull</url>
             <user>root</user>
-            <password>TheBestOfPro</password>
+            <password>hank</password>
         </datasource>
 
     </datasources>
