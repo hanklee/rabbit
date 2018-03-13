@@ -36,17 +36,26 @@ public final class RabbitManager {
     }
 
     private static void init() {
-        // register datasource
-        DataSourceManager.register();
+        
+        String[] modes = RabbitManager.RABBIT_CONFIG.mode.split(",");
+        for (String tmp : modes) {
+            if ("redis".equals(tmp)) {
+                // register redis
+                RedisManager.register();
+            } else if ("mysql".equals(tmp)) {
+                // register datasource
+                DataSourceManager.register();                
+            } else if ("mongo".equals(tmp)) {
+                // register mongodb
+                DataSourceManager.register();                   
+            } else if ("elast".equals(tmp)) {
+                // register elastic
+                ElasticManager.register();                   
+            }
+        }
 
         // register db object
         DBObjectManager.register();
-
-        // register redis
-        RedisManager.register();
-
-        // register cahce
-        RedisManager.register();
     }
 
 
@@ -103,13 +112,14 @@ public final class RabbitManager {
             list = dd.getElementsByTagName("mode");
             if (list.getLength() > 0) {
                 String model = list.item(0).getTextContent();
-                if ("REDIS".equals(model)) {
-                    rabbitConfig.mode = RabbitConfig.Mode.REDIS;
-                } else if ("MIX".equals(model)) {
-                    rabbitConfig.mode = RabbitConfig.Mode.MIX;
-                } else {
-                    rabbitConfig.mode = RabbitConfig.Mode.MYSQL;
-                }
+                rabbitConfig.mode = model;
+                // if ("REDIS".equals(model)) {
+                //     rabbitConfig.mode = RabbitConfig.Mode.REDIS;
+                // } else if ("MIX".equals(model)) {
+                //     rabbitConfig.mode = RabbitConfig.Mode.MIX;
+                // } else {
+                //     rabbitConfig.mode = RabbitConfig.Mode.MYSQL;
+                // }
             }
 
             RedisConfig redisConfig = new RedisConfig();

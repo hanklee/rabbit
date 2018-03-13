@@ -32,17 +32,11 @@ public final class RedisManager {
     }
 
     private static JedisPool init(final RabbitConfig config) {
-        if (config.mode == RabbitConfig.Mode.MIX) {
+        if (config.mode.contains("redis")) {
 //            System.err.println("Using redis to record operation data, mysql backup the data!");
             if (!config.redisConfig.cluster) {
                 RedisConfig.Host host = config.redisConfig.hosts.get(0);
 //                System.err.println("AUTH password:" + config.password);
-                return init(host.host, host.port, host.index, host.password);
-            }
-        } else if (config.mode == RabbitConfig.Mode.REDIS) {
-//            System.err.println("Using redis to dao!");
-            if (!config.redisConfig.cluster) {
-                RedisConfig.Host host = config.redisConfig.hosts.get(0);
                 return init(host.host, host.port, host.index, host.password);
             }
         }

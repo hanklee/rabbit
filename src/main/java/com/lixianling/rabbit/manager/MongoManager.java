@@ -32,6 +32,10 @@ public final class MongoManager {
         return INATNCE;
     }
 
+    protected static void register() {
+        // nothing to do
+    }
+
     public MongoManager(RabbitConfig config) {
         List<ServerAddress> addresses = new ArrayList<ServerAddress>();
         for(MongoConfig.Host host:config.mongoConfig.hosts) {

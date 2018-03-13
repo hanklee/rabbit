@@ -32,8 +32,7 @@ public class SQLDAO extends DAO {
     private GenKeyQueryRunner innerInsertRunner;
 
     public SQLDAO(){
-        if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX
-                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MYSQL ) {
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
             setQueryRunner(DataSourceManager.getQueryRunner());
         } else {
             throw new RuntimeException("must config the data source in rabbit.xml file.");

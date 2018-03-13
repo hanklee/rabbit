@@ -58,8 +58,7 @@ public class RedisDAO extends DAO {
 
 
     public RedisDAO() {
-        if (RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.MIX
-                || RabbitManager.RABBIT_CONFIG.mode == RabbitConfig.Mode.REDIS) {
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("redis")) {
             this.pool = RedisManager.getPool();
         } else {
             throw new RuntimeException("must config the redis in rabbit.xml file.");

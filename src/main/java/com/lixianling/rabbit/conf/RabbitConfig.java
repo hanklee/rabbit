@@ -13,13 +13,13 @@ import java.util.Set;
  *         $Id: RabbitConfig.java 38 2016-01-07 17:07:06Z hank $
  */
 public final class RabbitConfig {
-    public enum Mode {
-        MYSQL,REDIS,MIX
-    }
+    // public enum Mode {
+    //     MYSQL,REDIS,MIX
+    // }
 
     public Map<String, DataSourceConfig> dataSources;
     public RedisConfig redisConfig;
-    public Mode mode;
+    public String mode;
     public DBObjectConfig dbObjectConfig;
     public ElasticConfig elasticConfig;
     public MongoConfig mongoConfig;
