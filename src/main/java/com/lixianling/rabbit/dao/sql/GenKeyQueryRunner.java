@@ -8,6 +8,10 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
 import javax.sql.DataSource;
+
+import com.lixianling.rabbit.DBObject;
+
+import java.lang.reflect.Field;
 import java.sql.*;
 
 /**
@@ -15,7 +19,7 @@ import java.sql.*;
  * @author Xianling Li(hanklee)
  * $Id: GenKeyQueryRunner.java 36 2016-01-06 17:24:04Z hank $
  */
-public class GenKeyQueryRunner<T> extends QueryRunner {
+public class GenKeyQueryRunner extends QueryRunner {
 
     /**
      * The indexes of the key columns which are used to auto-generated key retrieval.
@@ -36,12 +40,12 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
     /**
      * The ResultSetHandler used to transform the generated keys into a Java Object
      */
-    private final ResultSetHandler<T> keyHandler;
+    private final ResultSetHandler<Long> keyHandler;
 
     /**
      * The generated keys (available only after a sucessfull call to update())
      */
-    private T generatedKeys;
+    // private Long generatedKeys;
 
     /**
      * Private constructor called to set fields appropriatly
@@ -55,14 +59,14 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param keyHandler     The ResultSetHandler used to transform the generated keys into a Java Object
      */
     private GenKeyQueryRunner(DataSource ds,
-                              int[] keyColsByIndex, String[] keyColsByName, ResultSetHandler<T> keyHandler) {
+                              int[] keyColsByIndex, String[] keyColsByName, ResultSetHandler<Long> keyHandler) {
         super(ds);
         this.keyColsByIndex = keyColsByIndex;
         this.keyColsByName = keyColsByName;
         this.keyHandler = keyHandler;
     }
 
-    public GenKeyQueryRunner(QueryRunner qRunner, ResultSetHandler<T> keyHandler) {
+    public GenKeyQueryRunner(QueryRunner qRunner, ResultSetHandler<Long> keyHandler) {
         this(qRunner.getDataSource(), null, null, keyHandler);
     }
 
@@ -72,7 +76,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      *
      * @param keyHandler The ResultSetHandler used to transform the generated keys into a Java Object
      */
-    public GenKeyQueryRunner(ResultSetHandler<T> keyHandler) {
+    public GenKeyQueryRunner(ResultSetHandler<Long> keyHandler) {
         this(null, null, null, keyHandler);
     }
 
@@ -84,7 +88,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param keyColsByIndex The indexes of the key columns which are used to auto-generated key retrieval.
      *                       May be empty if JDBC should decide on its own which columns suit best.
      */
-    public GenKeyQueryRunner(ResultSetHandler<T> keyHandler, int... keyColsByIndex) {
+    public GenKeyQueryRunner(ResultSetHandler<Long> keyHandler, int... keyColsByIndex) {
         this(null, keyColsByIndex, null, keyHandler);
     }
 
@@ -96,7 +100,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param keyColsByName The names of the key columns which are used to auto-generated key retrieval.
      *                      May be empty if JDBC should decide on its own which columns suit best.
      */
-    public GenKeyQueryRunner(ResultSetHandler<T> keyHandler, String... keyColsByName) {
+    public GenKeyQueryRunner(ResultSetHandler<Long> keyHandler, String... keyColsByName) {
         this(null, null, keyColsByName, keyHandler);
     }
 
@@ -107,7 +111,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param ds         The <code>DataSource</code> to retrieve connections from.
      * @param keyHandler The ResultSetHandler used to transform the generated keys into a Java Object
      */
-    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<T> keyHandler) {
+    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<Long> keyHandler) {
         this(ds, null, null, keyHandler);
     }
 
@@ -120,7 +124,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param keyColsByIndex The indexes of the key columns which are used to auto-generated key retrieval.
      *                       May be empty if JDBC should decide on its own which columns suit best.
      */
-    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<T> keyHandler, int... keyColsByIndex) {
+    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<Long> keyHandler, int... keyColsByIndex) {
         this(ds, keyColsByIndex, null, keyHandler);
     }
 
@@ -133,7 +137,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @param keyColsByName The names of the key columns which are used to auto-generated key retrieval.
      *                      May be empty if JDBC should decide on its own which columns suit best.
      */
-    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<T> keyHandler, String... keyColsByName) {
+    public GenKeyQueryRunner(DataSource ds, ResultSetHandler<Long> keyHandler, String... keyColsByName) {
         this(ds, null, keyColsByName, keyHandler);
     }
 
@@ -167,7 +171,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
         return ps;
     }
 
-    private static final Object INSERT_LOCK = new Object();
+    // private static final Object INSERT_LOCK = new Object();
 
     /**
      * Write the new method , not override the super update method
@@ -177,36 +181,37 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @return the number of row affected
      * @throws java.sql.SQLException SQL exception
      */
-    public int insert(String sql, Object... params) throws SQLException {
-        synchronized (INSERT_LOCK) {
-            Connection conn = this.prepareConnection();
-            PreparedStatement stmt = null;
-            int rows = 0;
-            ResultSet autoKeyRs = null;
-
-            // Clear generatedKeys first, in case an exception is thrown
-            this.generatedKeys = null;
-            // may be it will thread safe,maybe??
-            try {
-                // lock this conn
-
-                stmt = this.prepareStatement(conn, sql);
-                this.fillStatement(stmt, params);
-                rows = stmt.executeUpdate();
-                autoKeyRs = stmt.getGeneratedKeys();
-                this.generatedKeys = keyHandler.handle(autoKeyRs);
-                // Store the generated keys here, they will be available for
-                // retrieval via the getGeneratedKeys method
-
-            } catch (SQLException e) {
-                this.rethrow(e, sql, params);
-            } finally {
-                close(autoKeyRs);
-                close(stmt);
-                close(conn);
+    public int insert(DBObject obj,Field keyField, String sql, Object... params) throws SQLException {
+        Connection conn = this.prepareConnection();
+        PreparedStatement stmt = null;
+        int rows = 0;
+        ResultSet autoKeyRs = null;
+        // Clear generatedKeys first, in case an exception is thrown
+        try {
+            // lock this conn
+            stmt = this.prepareStatement(conn, sql);
+            this.fillStatement(stmt, params);
+            rows = stmt.executeUpdate();
+            autoKeyRs = stmt.getGeneratedKeys();
+            if (rows == 1 && keyField != null ) {
+                Long generatedKeys = keyHandler.handle(autoKeyRs);
+                if (keyField.getType().equals(Integer.TYPE)) {
+                    keyField.set(obj, generatedKeys.intValue());
+//                        System.out.println(sql);
+                } else if (keyField.getType().equals(Long.TYPE)) {
+                    keyField.set(obj, generatedKeys);
+                }
             }
-            return rows;
+        } catch (SQLException e) {
+            this.rethrow(e, sql, params);
+        } catch (Exception e) {
+            throw new SQLException(e.getMessage());
+        } finally {
+            close(autoKeyRs);
+            close(stmt);
+            close(conn);
         }
+        return rows;
     }
 
     /**
@@ -215,7 +220,7 @@ public class GenKeyQueryRunner<T> extends QueryRunner {
      * @return the generated keys, may be <code>null</code>
      *         if no key was generated or if the update method was not invoked before.
      */
-    public T getGeneratedKeys() {
-        return generatedKeys;
-    }
+    // public T getGeneratedKeys() {
+    //     return generatedKeys;
+    // }
 }

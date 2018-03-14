@@ -44,12 +44,12 @@ public final class DBObjectManager {
     private static final String OBJECT_ATTR_EXCLUDE_SPLIT_KEY = ",";
 
 
-    private static Map<String, Set<String>> ObjectColumnsCache = new ConcurrentHashMap<String, Set<String>>();
+    private static Map<String, Set<String>> ObjectColumnsCache = new ConcurrentHashMap<String, Set<String>>(40,0.5f);
 
-    private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>();
-    private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>();
-    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>();
-    private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>();
+    private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>(40,0.5f);
+    private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>(40,0.5f);
+    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40,0.5f);
+    private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40,0.5f);
 
     private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>();
 

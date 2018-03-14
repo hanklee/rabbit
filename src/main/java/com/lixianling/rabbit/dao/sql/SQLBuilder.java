@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SQLBuilder {
 
-    private static Map<String, String> SQLCACHE = new ConcurrentHashMap<String, String>();
+    private static Map<String, String> SQLCACHE = new ConcurrentHashMap<String, String>(80,0.5f);
 
     private static final String OP_INSERT = "_OP_INSERT";
     private static final String OP_UPDATE = "_OP_UPDATE";

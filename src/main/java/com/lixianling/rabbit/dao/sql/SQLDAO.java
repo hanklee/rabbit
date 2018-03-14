@@ -45,7 +45,7 @@ public class SQLDAO extends DAO {
 
     public void setQueryRunner(QueryRunner queryRunner) {
         innerRunner = queryRunner;
-        innerInsertRunner = new GenKeyQueryRunner<Long>(queryRunner.getDataSource(),
+        innerInsertRunner = new GenKeyQueryRunner(queryRunner.getDataSource(),
                 new ScalarHandler<Long>());
     }
 
@@ -109,21 +109,9 @@ public class SQLDAO extends DAO {
             String sql = SQLBuilder.getInsertSQLByTable(table);
             // no thread safe
             obj.beforeInsert(innerInsertRunner);
-            if (keyField != null /* is auto increase */) {
-                int mount = innerInsertRunner.insert(sql, objs);
-                if (mount < 1) {
-                    throw new SQLException("No data insert." + sql + "\n" + obj);
-                }
-
-                if (keyField.getType().equals(Integer.TYPE)) {
-                    keyField.set(obj, ((Long) innerInsertRunner.getGeneratedKeys()).intValue());
-//                        System.out.println(sql);
-                } else if (keyField.getType().equals(Long.TYPE)) {
-                    keyField.set(obj, innerInsertRunner.getGeneratedKeys());
-                }
-            } else {
-                innerRunner.insert(sql, new ScalarHandler<Long>(), objs);
-                // innerInsertRunner.insert(sql, objs);
+            int mount = innerInsertRunner.insert(obj, keyField, sql, objs);
+            if (mount < 1) {
+                throw new SQLException("No data insert." + sql + "\n" + obj);
             }
             obj.afterInsert(innerInsertRunner);
         } catch (Exception e) {
@@ -136,6 +124,9 @@ public class SQLDAO extends DAO {
     public DBObject getObject(DBObject obj,String table) throws DBException {
         String sql = SQLBuilder.getObjectSQLByTable(table);
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
+        if (primary_keys.size() == 0) {
+            throw new DBException("Not support table has not primary key.");
+        }
         Object[] objs = new Object[primary_keys.size()];
         int count = 0;
         for (String primary_key : primary_keys) {
