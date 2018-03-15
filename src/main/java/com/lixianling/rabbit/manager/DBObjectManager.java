@@ -5,6 +5,7 @@
 package com.lixianling.rabbit.manager;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.IdGenerator;
 import com.lixianling.rabbit.conf.DBObjectConfig;
@@ -113,6 +114,7 @@ public final class DBObjectManager {
             try {
                 con = queryRunner.getDataSource().getConnection();
                 String incrKey = null;
+
                 Set<String> keys = new HashSet<String>();
                 Set<String> no_incr_key_columns = new HashSet<String>();
                 Set<String> no_key_columns = new HashSet<String>();
@@ -125,11 +127,12 @@ public final class DBObjectManager {
                 }
                 rs.close();
 
+
                 rs = con.getMetaData().getColumns(null, null, table, null);
                 while (rs.next()) { // column name in the NO. 4
                     String name = rs.getString(4); //rs.getString("COLUMN_NAME");
                     all_columns.add(name);
-                    if (keys.contains(name)) {
+                    if (getTablePrimaryKey(table).contains(name)) {
                         if (!"YES".equals(rs.getString("IS_AUTOINCREMENT"))) {
                             no_incr_key_columns.add(name);
                         } else {
@@ -143,14 +146,27 @@ public final class DBObjectManager {
                     }
                 }
 
-                // 所有键值除了自增长的关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columns);
-                // 所有键值除了关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_NO_KEY, no_key_columns);
-                // 所有键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columns);
+                Set<String> excludes = new HashSet<String>();
+                String[] sss = dbset.exclude_field.split(OBJECT_ATTR_EXCLUDE_SPLIT_KEY);
+                Collections.addAll(excludes, sss);
+
+                no_key_columns.removeAll(excludes); // remove update attribute
+
+                ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
+                ImmutableSet.Builder<String> no_incr_key_columnsBuilder = ImmutableSet.builder();
+                ImmutableSet.Builder<String> no_key_columnsBuilder = ImmutableSet.builder();
+                ImmutableSet.Builder<String> all_columnsBuilder = ImmutableSet.builder();
+
                 // 所有关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
+
+                // 所有键值除了自增长的关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columnsBuilder.addAll(no_incr_key_columns).build());
+                // 所有键值除了关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_NO_KEY, no_key_columnsBuilder.addAll(no_key_columns).build());
+                // 所有键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columnsBuilder.addAll(all_columns).build());
+
 
                 String className = dbset.class_name;
 
@@ -158,12 +174,6 @@ public final class DBObjectManager {
 
                 // 缓存table类的属性
                 registerTableClassField(clazz);
-
-                Set<String> excludes = new HashSet<String>();
-                String[] sss = dbset.exclude_field.split(OBJECT_ATTR_EXCLUDE_SPLIT_KEY);
-                Collections.addAll(excludes, sss);
-
-                no_key_columns.removeAll(excludes); // remove update attribute
 
                 // must register json attribute and then json register key
                 DBObjectManager.registerJSONAttr(table, all_columns.toArray(new String[all_columns.size()]));
@@ -201,11 +211,6 @@ public final class DBObjectManager {
         // 缓存table相关的sql语句
         SQLBuilder.registerTable(table);
 
-
-        // 缓存cache key
-        // redis 缓存结构key:　$table_name_$cache_key_field_(upd|del|ins)_*
-        // 默认system
-//        TableCacheKeyFields.putAll(config.tableToCacheKeyField);
     }
 
     private static void registerJsonTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
@@ -228,8 +233,10 @@ public final class DBObjectManager {
             Collections.addAll(keys, sss);
         }
 
-        ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keys);
-        ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allField);
+        ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> allFieldBuilder = ImmutableSet.builder();
+        ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
+        ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allFieldBuilder.addAll(allField).build());
 
         String className = dbset.class_name;
         Class clazz = null;

@@ -189,12 +189,13 @@ public class SQLDAO extends DAO {
 
     @Override
     public <T> T execute(final DAOHandler<T> daoHandler) throws DBException {
-        return new SQLExecute<T>(this.innerRunner) {
-            @Override
-            public T execute(Object con) throws DBException {
-                return daoHandler.handle(con);
-            }
-        }.run();
+        return daoHandler.handle(this.innerRunner);
+//        return new SQLExecute<T>(this.innerRunner) {
+//            @Override
+//            public T execute(Object con) throws DBException {
+//                return daoHandler.handle(con);
+//            }
+//        }.run();
     }
 
     public void update(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
