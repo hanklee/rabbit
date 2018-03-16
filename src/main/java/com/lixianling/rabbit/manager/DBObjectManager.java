@@ -52,7 +52,7 @@ public final class DBObjectManager {
     private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40,0.5f);
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40,0.5f);
 
-    private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>();
+    private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>(40,0.5f);
 
     public static IdGenerator idGenerator;
 
