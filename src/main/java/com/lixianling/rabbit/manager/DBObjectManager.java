@@ -127,6 +127,9 @@ public final class DBObjectManager {
                 }
                 rs.close();
 
+                ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
+                // 所有关键值
+                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
 
                 rs = con.getMetaData().getColumns(null, null, table, null);
                 while (rs.next()) { // column name in the NO. 4
@@ -151,14 +154,11 @@ public final class DBObjectManager {
                 Collections.addAll(excludes, sss);
 
                 no_key_columns.removeAll(excludes); // remove update attribute
-
-                ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
+                
                 ImmutableSet.Builder<String> no_incr_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> no_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> all_columnsBuilder = ImmutableSet.builder();
 
-                // 所有关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
 
                 // 所有键值除了自增长的关键值
                 ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columnsBuilder.addAll(no_incr_key_columns).build());
@@ -193,7 +193,7 @@ public final class DBObjectManager {
                     setTableNameByClass(clazz, table);
                 }
             } catch (Exception ex) {
-//                ex.printStackTrace();
+                ex.printStackTrace();
                 throw new DBException(ex.getMessage());
 
             }
