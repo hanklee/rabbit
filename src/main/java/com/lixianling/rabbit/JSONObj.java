@@ -263,7 +263,7 @@ public abstract class JSONObj implements Serializable {
                 allFields = DBObjectManager.getClazzField(getObj.getClass());
             for (Field field : allFields.values()) {
                 Object value = field.get(getObj);
-                if (value != null) {
+                if (value != null && !"table_name".equals(field.getName())) {
                     field.set(setObj, value);
                 }
             }
@@ -285,7 +285,7 @@ public abstract class JSONObj implements Serializable {
                 allFields = DBObjectManager.getClazzField(getObj.getClass());
             for (Field field : allFields.values()) {
                 Object value = field.get(getObj);
-                if (value != null) {
+                if (value != null && !"table_name".equals(field.getName())) {
                     Class type = field.getType();
 
                     if (Integer.TYPE == type

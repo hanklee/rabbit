@@ -281,7 +281,7 @@ public abstract class DBObject extends JSONObj {
         return json;
     }
 
-    private void setJsonValueByDBAttr(final JSONObject json, final String table_name) {
+    protected void setJsonValueByDBAttr(final JSONObject json, final String table_name) {
         Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
         Map<String, Field> allFields = getAllFields();
         try {
