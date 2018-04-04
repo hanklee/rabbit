@@ -66,7 +66,7 @@ public final class SQLTransaction {
      * @param table table name
      * @throws DBException db Exception
      */
-    public void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
+    public static void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
         try {
             Field keyField = DBObjectManager.getInsertIncrKeyField(table);
             Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(table); // true means if it is not auto increase then add key's column
