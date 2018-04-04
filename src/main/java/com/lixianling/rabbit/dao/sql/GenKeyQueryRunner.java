@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.sql.*;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: GenKeyQueryRunner.java 36 2016-01-06 17:24:04Z hank $
  */
@@ -181,7 +180,7 @@ public class GenKeyQueryRunner extends QueryRunner {
      * @return the number of row affected
      * @throws java.sql.SQLException SQL exception
      */
-    public int insert(DBObject obj,Field keyField, String sql, Object... params) throws SQLException {
+    public int insert(DBObject obj, Field keyField, String sql, Object... params) throws SQLException {
         Connection conn = this.prepareConnection();
         PreparedStatement stmt = null;
         int rows = 0;
@@ -193,7 +192,49 @@ public class GenKeyQueryRunner extends QueryRunner {
             this.fillStatement(stmt, params);
             rows = stmt.executeUpdate();
             autoKeyRs = stmt.getGeneratedKeys();
-            if (rows == 1 && keyField != null ) {
+            if (rows == 1 && keyField != null) {
+                Long generatedKeys = keyHandler.handle(autoKeyRs);
+                if (keyField.getType().equals(Integer.TYPE)) {
+                    keyField.set(obj, generatedKeys.intValue());
+//                        System.out.println(sql);
+                } else if (keyField.getType().equals(Long.TYPE)) {
+                    keyField.set(obj, generatedKeys);
+                }
+            }
+        } catch (SQLException e) {
+            this.rethrow(e, sql, params);
+        } catch (Exception e) {
+            throw new SQLException(e.getMessage());
+        } finally {
+            close(autoKeyRs);
+            close(stmt);
+            close(conn);
+        }
+        return rows;
+    }
+
+    /**
+     * Write the new method , not override the super update method
+     *
+     * @param conn  SQLConnection
+     * @param  obj db object
+     * @param sql    The sql statement
+     * @param params create the PreparedStatement
+     * @return the number of row affected
+     * @throws java.sql.SQLException SQL exception
+     */
+    public int insert(Connection conn, DBObject obj, Field keyField, String sql, Object... params) throws SQLException {
+        PreparedStatement stmt = null;
+        int rows = 0;
+        ResultSet autoKeyRs = null;
+        // Clear generatedKeys first, in case an exception is thrown
+        try {
+            // lock this conn
+            stmt = this.prepareStatement(conn, sql);
+            this.fillStatement(stmt, params);
+            rows = stmt.executeUpdate();
+            autoKeyRs = stmt.getGeneratedKeys();
+            if (rows == 1 && keyField != null) {
                 Long generatedKeys = keyHandler.handle(autoKeyRs);
                 if (keyField.getType().equals(Integer.TYPE)) {
                     keyField.set(obj, generatedKeys.intValue());
