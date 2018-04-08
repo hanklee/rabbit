@@ -19,13 +19,14 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: SQLDAO.java 39 2016-01-08 12:04:37Z hank $
  */
@@ -33,7 +34,7 @@ public class SQLDAO extends DAO {
 
     private QueryRunner innerRunner;
 
-    public SQLDAO(){
+    public SQLDAO() {
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
             setQueryRunner(DataSourceManager.getQueryRunner());
         } else {
@@ -58,26 +59,39 @@ public class SQLDAO extends DAO {
      * @throws DBException db Exception
      */
     public void update(DBObject obj, String table) throws DBException {
+        update(obj, table, null);
+    }
+
+    /**
+     * update a object's data to database
+     *
+     * @param obj      an object to update his data to database
+     * @param table    table name
+     * @param excludes do not update columns
+     * @throws DBException db operation exception
+     */
+    public void update(DBObject obj, String table, final Set<String> excludes) throws DBException {
         try {
             Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
             Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(table);
-            Object[] objs = new Object[columns.size() + primary_keys.size()];
+            int rsize = (excludes == null) ? 0 : excludes.size();
+            Object[] objs = new Object[columns.size() + primary_keys.size() - rsize];
             int count = 0;
             for (String column : columns) {
-                objs[count] = obj.getValueByField(column);
-                count++;
+                if (excludes == null || !excludes.contains(column)) {
+                    objs[count] = obj.getValueByField(column);
+                    count++;
+                }
             }
 
             for (String primary_key : primary_keys) {
                 objs[count] = obj.getValueByField(primary_key);
                 count++;
             }
-            String sql = SQLBuilder.getUpdateSQLByTable(table);
+            String sql = SQLBuilder.getOpUpdate(table, excludes);
             obj.beforeUpdate(innerRunner);
             int mount = innerRunner.update(sql, objs);
             if (mount < 1) {
-//                System.err.println(map);
-//                System.err.println(DBObjectHelper.getTableAllColumns(table));
                 throw new SQLException("No data update." + sql + "\n" + obj);
             }
             obj.afterUpdate(innerRunner);
@@ -109,17 +123,25 @@ public class SQLDAO extends DAO {
             String sql = SQLBuilder.getInsertSQLByTable(table);
             // no thread safe
             obj.beforeInsert(innerRunner);
-            int mount = 0; // innerInsertRunner.insert(obj, keyField, sql, objs);
             Connection conn = innerRunner.getDataSource().getConnection();
             PreparedStatement stmt = null;
             int rows = 0;
             ResultSet autoKeyRs = null;
             // Clear generatedKeys first, in case an exception is thrown
             try {
-                stmt = conn.prepareStatement(sql);
+                // if (keyField != null) {
+                //     stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                // } else {
+                //     stmt = conn.prepareStatement(sql);
+                // }
+                stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
                 innerRunner.fillStatement(stmt, objs);
                 rows = stmt.executeUpdate();
                 autoKeyRs = stmt.getGeneratedKeys();
+                if (rows < 1) {
+                    throw new SQLException("No data insert." + sql + "\n" + obj);
+                }
                 if (rows == 1 && keyField != null) {
                     Long generatedKeys = new ScalarHandler<Long>().handle(autoKeyRs);
                     if (keyField.getType().equals(Integer.TYPE)) {
@@ -137,10 +159,6 @@ public class SQLDAO extends DAO {
                 DbUtils.close(stmt);
                 DbUtils.close(conn);
             }
-
-            if (mount < 1) {
-                throw new SQLException("No data insert." + sql + "\n" + obj);
-            }
             obj.afterInsert(innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,7 +167,7 @@ public class SQLDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(DBObject obj,String table) throws DBException {
+    public DBObject getObject(DBObject obj, String table) throws DBException {
         String sql = SQLBuilder.getObjectSQLByTable(table);
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
         if (primary_keys.size() == 0) {
@@ -162,7 +180,7 @@ public class SQLDAO extends DAO {
             count++;
         }
         try {
-            return innerRunner.query(sql,MapToDBObject.newRsHandler(obj.getClass()),objs);
+            return innerRunner.query(sql, MapToDBObject.newRsHandler(obj.getClass()), objs);
         } catch (SQLException e) {
             throw new DBException(e.getMessage());
         }
@@ -173,7 +191,7 @@ public class SQLDAO extends DAO {
      *
      * @param obj   a Object relate the table's row data
      * @param table table name
-     * @throws DBException
+     * @throws DBException db operation exception
      */
     public void delete(DBObject obj, String table) throws DBException {
         try {
@@ -322,39 +340,39 @@ public class SQLDAO extends DAO {
 
      */
 
-    public void update(Connection conn,DBObject obj) throws DBException {
-        update(innerRunner,conn,obj,obj.getTableName());
+    public void update(Connection conn, DBObject obj) throws DBException {
+        update(innerRunner, conn, obj, obj.getTableName());
     }
 
-    public void update(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
-        update(queryRunner,conn,obj,obj.getTableName());
+    public void update(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
+        update(queryRunner, conn, obj, obj.getTableName());
     }
 
-    public void update(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
-        SQLTransaction.update(queryRunner,conn,obj,table);
+    public void update(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.update(queryRunner, conn, obj, table);
     }
 
-    public void insert(Connection conn,DBObject obj) throws DBException {
-        insert(innerRunner,conn,obj,obj.getTableName());
+    public void insert(Connection conn, DBObject obj) throws DBException {
+        insert(innerRunner, conn, obj, obj.getTableName());
     }
 
-    public void insert(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
-        insert(queryRunner,conn,obj,obj.getTableName());
+    public void insert(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
+        insert(queryRunner, conn, obj, obj.getTableName());
     }
 
-    public void insert(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
-        SQLTransaction.insert(queryRunner,conn,obj,table);
+    public void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.insert(queryRunner, conn, obj, table);
     }
 
-    public void delete(Connection conn,DBObject obj) throws DBException {
-        delete(innerRunner,conn,obj,obj.getTableName());
+    public void delete(Connection conn, DBObject obj) throws DBException {
+        delete(innerRunner, conn, obj, obj.getTableName());
     }
 
-    public void delete(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
-        delete(queryRunner,conn,obj,obj.getTableName());
+    public void delete(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
+        delete(queryRunner, conn, obj, obj.getTableName());
     }
 
-    public void delete(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
-        SQLTransaction.delete(queryRunner,conn,obj,table);
+    public void delete(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.delete(queryRunner, conn, obj, table);
     }
 }

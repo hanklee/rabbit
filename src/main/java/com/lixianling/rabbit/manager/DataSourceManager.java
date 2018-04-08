@@ -109,6 +109,14 @@ public final class DataSourceManager {
         return INSTANCE.newQueryRunner();
     }
 
+    public static DataSource getDataSource() {
+        return INSTANCE.dataSource;
+    }
+
+    public static DataSource getDataSource(String name) {
+        return INSTANCE.dataSources.get(name);
+    }
+
     /**
      * synchronize this method.
      *

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SQLBuilder {
 
-    private static Map<String, String> SQLCACHE = new ConcurrentHashMap<String, String>(80,0.5f);
+    private static Map<String, String> SQLCACHE = new ConcurrentHashMap<String, String>(80, 0.5f);
 
     private static final String OP_INSERT = "_OP_INSERT";
     private static final String OP_UPDATE = "_OP_UPDATE";
@@ -25,9 +25,16 @@ public class SQLBuilder {
 
     public static void registerTable(final String table) {
         SQLCACHE.put(table + OP_INSERT, makeInsertSQL(table));
-        SQLCACHE.put(table + OP_UPDATE, makeUpdateSQL(table));
+        SQLCACHE.put(table + OP_UPDATE, makeUpdateSQL(table, null));
         SQLCACHE.put(table + OP_DELETE, makeDeleteSQL(table));
         SQLCACHE.put(table + OP_GETOBJ, makeGetObjectSQL(table));
+    }
+
+    public static String getOpUpdate(final String table, Set<String> excludes) {
+        if (excludes == null) {
+            return SQLCACHE.get(table + OP_UPDATE);
+        }
+        return makeUpdateSQL(table, excludes);
     }
 
     /*
@@ -53,8 +60,7 @@ public class SQLBuilder {
     }
 
     /**
-     *     PRIVATE METHODS
-     *
+     * PRIVATE METHODS
      */
 
     private static String makeGetObjectSQL(String table) {
@@ -91,17 +97,20 @@ public class SQLBuilder {
         return s.append(sv).toString();
     }
 
-    private static String makeUpdateSQL(String table) {
+    private static String makeUpdateSQL(String table, Set<String> excludes) {
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
         StringBuilder s = new StringBuilder("update ").append(table).append(" set ");
         Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(table);
-        int size = columns.size();
+        int rsize = (excludes == null) ? 0 : excludes.size();
+        int size = columns.size() - rsize;
         for (String column : columns) {
-            if (--size == 0) {
-                // last item
-                s.append('`').append(column).append("`=? ");
-            } else {
-                s.append('`').append(column).append("`=?, ");
+            if (excludes == null || !excludes.contains(column)) {
+                if (--size == 0) {
+                    // last item
+                    s.append('`').append(column).append("`=? ");
+                } else {
+                    s.append('`').append(column).append("`=?, ");
+                }
             }
         }
         s.append(" where ");

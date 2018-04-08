@@ -13,6 +13,7 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
@@ -84,11 +85,18 @@ public final class SQLTransaction {
             ResultSet autoKeyRs = null;
             // Clear generatedKeys first, in case an exception is thrown
             try {
-                // lock this conn
-                stmt = conn.prepareStatement(sql);
+                // if (keyField != null) {
+                //     stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                // } else {
+                //     stmt = conn.prepareStatement(sql);
+                // }
+                stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 queryRunner.fillStatement(stmt, objs);
                 rows = stmt.executeUpdate();
                 autoKeyRs = stmt.getGeneratedKeys();
+                if (rows < 1) {
+                    throw new SQLException("No data insert." + sql + "\n" + obj);
+                }
                 if (rows == 1 && keyField != null) {
                     Long generatedKeys = new ScalarHandler<Long>().handle(autoKeyRs);
                     if (keyField.getType().equals(Integer.TYPE)) {
@@ -104,11 +112,6 @@ public final class SQLTransaction {
             } finally {
                 DbUtils.close(autoKeyRs);
                 DbUtils.close(stmt);
-                DbUtils.close(conn);
-            }
-
-            if (rows < 1) {
-                throw new SQLException("No data insert." + sql + "\n" + obj);
             }
             obj.afterInsert(queryRunner);
         } catch (Exception e) {
