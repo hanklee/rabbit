@@ -12,10 +12,14 @@ import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DataSourceManager;
 import com.lixianling.rabbit.manager.RabbitManager;
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Set;
@@ -28,8 +32,6 @@ import java.util.Set;
 public class SQLDAO extends DAO {
 
     private QueryRunner innerRunner;
-
-    private GenKeyQueryRunner innerInsertRunner;
 
     public SQLDAO(){
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
@@ -45,8 +47,6 @@ public class SQLDAO extends DAO {
 
     public void setQueryRunner(QueryRunner queryRunner) {
         innerRunner = queryRunner;
-        innerInsertRunner = new GenKeyQueryRunner(queryRunner.getDataSource(),
-                new ScalarHandler<Long>());
     }
 
 
@@ -108,12 +108,40 @@ public class SQLDAO extends DAO {
 
             String sql = SQLBuilder.getInsertSQLByTable(table);
             // no thread safe
-            obj.beforeInsert(innerInsertRunner);
-            int mount = innerInsertRunner.insert(obj, keyField, sql, objs);
+            obj.beforeInsert(innerRunner);
+            int mount = 0; // innerInsertRunner.insert(obj, keyField, sql, objs);
+            Connection conn = innerRunner.getDataSource().getConnection();
+            PreparedStatement stmt = null;
+            int rows = 0;
+            ResultSet autoKeyRs = null;
+            // Clear generatedKeys first, in case an exception is thrown
+            try {
+                stmt = conn.prepareStatement(sql);
+                innerRunner.fillStatement(stmt, objs);
+                rows = stmt.executeUpdate();
+                autoKeyRs = stmt.getGeneratedKeys();
+                if (rows == 1 && keyField != null) {
+                    Long generatedKeys = new ScalarHandler<Long>().handle(autoKeyRs);
+                    if (keyField.getType().equals(Integer.TYPE)) {
+                        keyField.set(obj, generatedKeys.intValue());
+                    } else if (keyField.getType().equals(Long.TYPE)) {
+                        keyField.set(obj, generatedKeys);
+                    }
+                }
+            } catch (SQLException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new SQLException(e.getMessage());
+            } finally {
+                DbUtils.close(autoKeyRs);
+                DbUtils.close(stmt);
+                DbUtils.close(conn);
+            }
+
             if (mount < 1) {
                 throw new SQLException("No data insert." + sql + "\n" + obj);
             }
-            obj.afterInsert(innerInsertRunner);
+            obj.afterInsert(innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());
@@ -190,12 +218,6 @@ public class SQLDAO extends DAO {
     @Override
     public <T> T execute(final DAOHandler<T> daoHandler) throws DBException {
         return daoHandler.handle(this.innerRunner);
-//        return new SQLExecute<T>(this.innerRunner) {
-//            @Override
-//            public T execute(Object con) throws DBException {
-//                return daoHandler.handle(con);
-//            }
-//        }.run();
     }
 
     public void update(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
@@ -293,5 +315,46 @@ public class SQLDAO extends DAO {
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
+    }
+
+    /*
+         TRANSACTION METHOD
+
+     */
+
+    public void update(Connection conn,DBObject obj) throws DBException {
+        update(innerRunner,conn,obj,obj.getTableName());
+    }
+
+    public void update(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
+        update(queryRunner,conn,obj,obj.getTableName());
+    }
+
+    public void update(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
+        SQLTransaction.update(queryRunner,conn,obj,table);
+    }
+
+    public void insert(Connection conn,DBObject obj) throws DBException {
+        insert(innerRunner,conn,obj,obj.getTableName());
+    }
+
+    public void insert(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
+        insert(queryRunner,conn,obj,obj.getTableName());
+    }
+
+    public void insert(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
+        SQLTransaction.insert(queryRunner,conn,obj,table);
+    }
+
+    public void delete(Connection conn,DBObject obj) throws DBException {
+        delete(innerRunner,conn,obj,obj.getTableName());
+    }
+
+    public void delete(QueryRunner queryRunner, Connection conn,DBObject obj) throws DBException {
+        delete(queryRunner,conn,obj,obj.getTableName());
+    }
+
+    public void delete(QueryRunner queryRunner, Connection conn,DBObject obj, String table) throws DBException {
+        SQLTransaction.delete(queryRunner,conn,obj,table);
     }
 }
