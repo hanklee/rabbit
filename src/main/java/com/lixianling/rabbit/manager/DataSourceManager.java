@@ -10,6 +10,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,11 +36,11 @@ public final class DataSourceManager {
         init(RabbitManager.RABBIT_CONFIG.dataSources);
     }
 
-    protected static void register(){
+    protected static void register() {
         // nothing to do
     }
 
-    public static DataSourceManager getInstance(){
+    public static DataSourceManager getInstance() {
         return INSTANCE;
     }
 
@@ -107,6 +109,18 @@ public final class DataSourceManager {
 
     public static QueryRunner getQueryRunner() {
         return INSTANCE.newQueryRunner();
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return INSTANCE.dataSource.getConnection();
+    }
+
+    public static Connection getConnection(String name) throws SQLException {
+        DataSource ds = getDataSource(name);
+        if (ds != null) {
+            return ds.getConnection();
+        }
+        return null;
     }
 
     public static DataSource getDataSource() {
