@@ -48,7 +48,7 @@ public final class DataSourceManager {
      *
      *
      */
-    public void init(Map<String, DataSourceConfig> _dataSourceConf) {
+    private void init(Map<String, DataSourceConfig> _dataSourceConf) {
         for (String name : _dataSourceConf.keySet()) {
             DataSourceConfig dataSourceConf = _dataSourceConf.get(name);
             try {
@@ -138,61 +138,5 @@ public final class DataSourceManager {
      */
     public static QueryRunner getQueryRunner(final String name) {
         return INSTANCE.newQueryRunner(name);
-        // dbcp
-        // if (DBDataSourceHelper.dataSource == null) {
-        // BasicDataSource dbcpDataSource = new BasicDataSource();
-        // dbcpDataSource
-        // .setUrl("jdbc:mysql://localhost:3306/game?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull");
-        // dbcpDataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        // dbcpDataSource.setUsername("root");
-        // dbcpDataSource.setPassword("hank");
-        // dbcpDataSource.setDefaultAutoCommit(true);
-        // dbcpDataSource.setMaxActive(100);
-        // dbcpDataSource.setMaxIdle(30);
-        // dbcpDataSource.setMaxWait(500);
-        //
-        // DBDataSourceHelper.dataSource = (DataSource) dbcpDataSource;
-        // System.out.println("Initialize dbcp...");
-        // }
-//        Properties p = FileHelper.getProperties(fileName);
-
-//        try {
-//            ComboPooledDataSource c3p0DataSource = new ComboPooledDataSource();
-//            c3p0DataSource.setDriverClass(p.getProperty("game.jdbc.driverClassName", DRIVER));
-//            c3p0DataSource.setJdbcUrl(p.getProperty("game.jdbc.url", DB_URL));
-//            c3p0DataSource.setUser(p.getProperty("game.jdbc.user", USER_NAME));
-//            c3p0DataSource.setPassword(p.getProperty("game.jdbc.password", USER_PASS));
-//            //c3p0DataSource.setMaxIdleTime(10); // default is 0 seconds, 0
-//            // means connections never expire
-//            c3p0DataSource.setTestConnectionOnCheckin(true);
-//            c3p0DataSource.setMinPoolSize(3);
-//            c3p0DataSource.setMaxPoolSize(20);
-//            c3p0DataSource.setMaxIdleTime(15000);
-////            c3p0DataSource.setMaxStatements(100);  // this is important
-//            c3p0DataSource.setAcquireIncrement(5);
-////            c3p0DataSource.setAutoCommitOnClose(true);
-//            c3p0DataSource.setIdleConnectionTestPeriod(300);
-////            c3p0DataSource.setMaxPoolSize(20); // default is 15
-//            dataSource = c3p0DataSource;
-
-        // setup the connection pool
-//            BoneCPDataSource boneCPDataSource = new BoneCPDataSource();
-//            boneCPDataSource.setDriverClass(p.getProperty("game.jdbc.driverClassName", DRIVER));
-//            boneCPDataSource.setJdbcUrl(p.getProperty("game.jdbc.url", USER_DB_DB_URL)); //
-//            boneCPDataSource.setUsername(p.getProperty("game.jdbc.user", USER_NAME));
-//            boneCPDataSource.setPassword(p.getProperty("game.jdbc.password", USER_PASS));
-//            boneCPDataSource.setIdleConnectionTestPeriod(300);
-//            boneCPDataSource.setMinConnectionsPerPartition(5);
-//            boneCPDataSource.setMaxConnectionsPerPartition(15);
-////            boneCPDataSource.setPartitionCount(1);
-//            boneCPDataSource.setPartitionCount(3);
-//            boneCPDataSource.setAcquireIncrement(5);
-//            boneCPDataSource.setIdleMaxAge(240);
-//            boneCPDataSource.setConnectionTimeoutInMs(1000);
-//            dataSource = boneCPDataSource;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return new QueryRunner(dataSource);
     }
 }

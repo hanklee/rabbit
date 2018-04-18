@@ -10,7 +10,6 @@ import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.manager.MongoManager;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -21,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 
 /**
  * @author hank
@@ -29,7 +29,7 @@ public class MongoDAO extends DAO {
     private MongoClient client;
 
     public MongoDAO() {
-        this.client = MongoManager.getInatnce().getClient();
+        this.client = MongoManager.getInstance().getClient();
     }
 
     @Override
@@ -170,11 +170,6 @@ public class MongoDAO extends DAO {
 
     @Override
     public <T> T execute(final DAOHandler<T> daoHandler) throws DBException {
-        return (new MongoExecute<T>(this.client) {
-            @Override
-            public T execute(Object con) throws DBException {
-                return daoHandler.handle(con);
-            }
-        }).run();
+        return daoHandler.handle(this.client);
     }
 }

@@ -153,12 +153,7 @@ public class ElasticDAO extends DAO {
 
     @Override
     public <T> T execute(final DAOHandler<T> daoHandler) throws DBException {
-        return new ElasticExecute<T>(client) {
-            @Override
-            public T execute(Object _client) throws DBException {
-                return daoHandler.handle(_client);
-            }
-        }.run();
+        return daoHandler.handle(this.client);
     }
 
 }

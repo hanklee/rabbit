@@ -8,10 +8,8 @@ import com.lixianling.rabbit.conf.RabbitConfig;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -22,11 +20,11 @@ import java.util.List;
  */
 public final class ElasticManager {
 
-    private static final ElasticManager INATNCE;
+    private static final ElasticManager INSTANCE;
 
     static {
         // just init cache manager
-        INATNCE = new ElasticManager(RabbitManager.RABBIT_CONFIG);
+        INSTANCE = new ElasticManager(RabbitManager.RABBIT_CONFIG);
     }
 
     private Settings settings;
@@ -34,7 +32,7 @@ public final class ElasticManager {
     private TransportClient client;
 
     public static ElasticManager getInstance() {
-        return INATNCE;
+        return INSTANCE;
     }
 
     protected static void register() {

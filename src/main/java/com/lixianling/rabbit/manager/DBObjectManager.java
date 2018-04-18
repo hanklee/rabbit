@@ -86,8 +86,8 @@ public final class DBObjectManager {
     /**
      * register dbobject to relate database
      *
-     * @param config
-     * @throws SQLException
+     * @param config config data
+     * @throws DBException db Exception
      */
     private static void registerTables(RabbitConfig config) throws DBException {
         for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
@@ -301,15 +301,15 @@ public final class DBObjectManager {
     /**
      * 注册 object 对应的 key 名字，生成 $table_name:$key1:$key2
      *
-     * @param table_name
-     * @param attrs
+     * @param table_name 表名
+     * @param attrs 属性
      */
     protected static void registerJSONKey(String table_name, String attrs) {
         registerJSONKey(table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
     }
 
     /**
-     * @param table_name
+     * @param table_name 表名
      * @param attrs      String...
      */
     protected static void registerJSONKey(String table_name, String... attrs) {
@@ -330,7 +330,7 @@ public final class DBObjectManager {
     /**
      * 注册 object 对应的json 字符 生成 {$attr1:$value1,$attr2:value2.....}
      *
-     * @param table_name
+     * @param table_name 表名
      * @param attrs      "dungeonId:times:reset:day:star:bide"
      */
     protected static void registerJSONAttr(String table_name, String attrs) {

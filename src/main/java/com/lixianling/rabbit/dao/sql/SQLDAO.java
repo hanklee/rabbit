@@ -238,6 +238,15 @@ public class SQLDAO extends DAO {
         return daoHandler.handle(this.innerRunner);
     }
 
+    public <T> T executeTransaction(final DAOHandler<T> daoHandler) throws DBException {
+        return new SQLExecute<T>(this.innerRunner) {
+            @Override
+            public T execute(Object con) throws DBException {
+                return daoHandler.handle(con);
+            }
+        }.run();
+    }
+
     public void update(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
         try {
             Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);

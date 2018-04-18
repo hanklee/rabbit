@@ -21,15 +21,15 @@ public final class MongoManager {
     private MongoClient client;
 
 
-    private static final MongoManager INATNCE;
+    private static final MongoManager INSTANCE;
 
     static {
         // just init cache manager
-        INATNCE = new MongoManager(RabbitManager.RABBIT_CONFIG);
+        INSTANCE = new MongoManager(RabbitManager.RABBIT_CONFIG);
     }
 
-    public static MongoManager getInatnce() {
-        return INATNCE;
+    public static MongoManager getInstance() {
+        return INSTANCE;
     }
 
     protected static void register() {
