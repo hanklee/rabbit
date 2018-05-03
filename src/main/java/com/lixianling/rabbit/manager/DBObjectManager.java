@@ -11,6 +11,7 @@ import com.lixianling.rabbit.IdGenerator;
 import com.lixianling.rabbit.conf.DBObjectConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.sql.SQLBuilder;
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 
 import java.lang.reflect.Field;
@@ -202,10 +203,12 @@ public final class DBObjectManager {
                 if (rs != null) {
                     rs.close();
                 }
+                if (con != null) {
+                    DbUtils.close(con);
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-//            DbUtils.close(con);
         }
 
         // 缓存table相关的sql语句
