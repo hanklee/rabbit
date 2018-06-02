@@ -29,7 +29,9 @@ public abstract class SQLExecute<T> implements DAOExecute<T> {
             try {
                 conn = innerRunner.getDataSource().getConnection();
                 conn.setAutoCommit(false);
-                return execute(conn);
+                T result = execute(conn);
+                conn.commit();
+                return result;
             } catch (SQLException e) {
                 if (conn != null) {
                     conn.rollback();
@@ -46,7 +48,6 @@ public abstract class SQLExecute<T> implements DAOExecute<T> {
             } finally {
                 try {
                     if (conn != null) {
-                        conn.commit();
                         conn.setAutoCommit(true);
                         DbUtils.close(conn);
                     }
