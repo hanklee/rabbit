@@ -4,10 +4,11 @@
  */
 package com.lixianling.rabbit;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import org.json.JSONObject;
+//import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 
@@ -71,7 +72,7 @@ public class RedisDBObject extends DBObject {
                 Jedis con = (Jedis) obj;
                 RedisDBObject clone = (RedisDBObject) this.clone();
                 String value = con.get(this.toKeyString(this.getTableName()));
-                clone.JsonToObj(new JSONObject(value));
+                clone.JsonToObj((JSONObject) JSONObject.parse(value));
                 if (!this.email.equals(clone.email)) {
                     String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
                     String temp = con.hget(uniqueEmail, this.email);
@@ -142,7 +143,7 @@ public class RedisDBObject extends DBObject {
 
     private static void testDelete(RedisDAO dao, String name) {
         try {
-            RedisDBObject obj = testQuery(dao,name);
+            RedisDBObject obj = testQuery(dao, name);
             if (obj != null) {
                 dao.delete(obj);
                 System.out.println("delete success:" + obj.toJson().toString());
@@ -167,13 +168,13 @@ public class RedisDBObject extends DBObject {
                     String value = connection.get(uniqueValue);
                     if (value == null)
                         throw new DBException("not found value");
-                    obj.JsonToObj(new JSONObject(value));
+                    obj.JsonToObj((JSONObject) JSONObject.parse(value));
                     return obj;
                 }
             });
             System.out.println("execute get obj:" + obj1.toJson().toString());
             return obj1;
-        } catch (Exception e){
+        } catch (Exception e) {
 //            e.printStackTrace();
 //            e.printStackTrace();
         }
@@ -193,7 +194,7 @@ public class RedisDBObject extends DBObject {
                         RedisDBObject no = new RedisDBObject();
                         String value = connection.get(sr);
                         if (value != null) {
-                            no.JsonToObj(new JSONObject(value));
+                            no.JsonToObj((JSONObject) JSONObject.parse(value));
                             result.add(no);
                         }
                     }
@@ -228,7 +229,7 @@ public class RedisDBObject extends DBObject {
 //        System.out.println(obj.uniqueValue());
 
         RedisDBObject obj2 = new RedisDBObject();
-        obj2.JsonToObj(new JSONObject("{\"list1\":[1],\"list3\":[7.5,8.5,9.5],\"list2\":[],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}"));
+        obj2.JsonToObj((JSONObject) JSONObject.parse("{\"list1\":[1],\"list3\":[7.5,8.5,9.5],\"list2\":[],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}"));
         System.out.println(obj2.toJson().toString());
         System.out.println(obj2.toDBJson().toString());
 

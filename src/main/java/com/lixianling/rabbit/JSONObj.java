@@ -4,10 +4,12 @@
  */
 package com.lixianling.rabbit;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.primitives.Primitives;
 import com.lixianling.rabbit.manager.DBObjectManager;
-import org.json.JSONArray;
-import org.json.JSONObject;
+//import org.json.JSONArray;
+//import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -51,7 +53,8 @@ public abstract class JSONObj implements Serializable {
     public void JsonToObj(JSONObject json) {
         Map<String, Field> allFields = getAllFields();
         for (Object attr : json.keySet()) {
-            Object value = json.opt((String) attr);
+//            Object value = json.opt((String) attr);
+            Object value = json.get(attr);
             Field field = allFields.get(attr);
             if (field != null
                     && value != null) {
@@ -65,7 +68,8 @@ public abstract class JSONObj implements Serializable {
         Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
         Map<String, Field> allFields = getAllFields();
         for (Object attr : attrs) {
-            Object value = json.opt((String) attr);
+            Object value = json.get(attr);
+//            Object value = json.opt((String) attr);
             Field field = allFields.get(attr);
             if (field != null
                     && value != null) {
@@ -95,7 +99,7 @@ public abstract class JSONObj implements Serializable {
                     if (JSONObj.class.isAssignableFrom(listClass)) {
                         List tmp = new ArrayList();
                         JSONArray jsonArray = (JSONArray) value;
-                        for (int i = 0; i < jsonArray.length(); i++) {
+                        for (int i = 0; i < jsonArray.size(); i++) {
                             Object o = listClass.newInstance();
                             ((JSONObj) o).JsonToObj(jsonArray.getJSONObject(i));
                             tmp.add(o);
@@ -104,7 +108,7 @@ public abstract class JSONObj implements Serializable {
                     } else {
                         List tmp = new ArrayList();
                         JSONArray jsonArray = (JSONArray) value;
-                        for (int i = 0; i < jsonArray.length(); i++) {
+                        for (int i = 0; i < jsonArray.size(); i++) {
                             tmp.add(jsonArray.get(i));
                         }
                         field.set(this, tmp);
@@ -156,7 +160,7 @@ public abstract class JSONObj implements Serializable {
                     field.set(this, o);
                 } else if (value instanceof String) {
                     Object o = type.newInstance();
-                    ((JSONObj) o).JsonToObj(new JSONObject((String) value));
+                    ((JSONObj) o).JsonToObj((JSONObject) JSONObject.parse((String) value));
                     field.set(this, o);
                 } else if (value instanceof Map) {
                     Object o = type.newInstance();
@@ -192,11 +196,13 @@ public abstract class JSONObj implements Serializable {
                             Object check = tmp.get(0);
                             if (check instanceof JSONObj) {
                                 for (Object o : tmp) {
-                                    jsonArray.put(((JSONObj) o).toJson());
+                                    jsonArray.add(((JSONObj) o).toJson());
+//                                    jsonArray.put(((JSONObj) o).toJson());
                                 }
                             } else {
                                 for (Object o : tmp) {
-                                    jsonArray.put(o);
+                                    jsonArray.add(o);
+//                                    jsonArray.put(o);
                                 }
                             }
                         }

@@ -3,6 +3,7 @@
  */
 package com.lixianling.rabbit.dao.mongodb;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
@@ -14,13 +15,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.regex;
+
+//import org.json.JSONObject;
 
 /**
  * @author hank
@@ -131,7 +132,8 @@ public class MongoDAO extends DAO {
         if (myDoc != null) {
 //            System.out.println(myDoc.toJson());
             DBObject clone = obj.clone();
-            clone.JsonToObj(new JSONObject(myDoc.toJson()), table);
+//            clone.JsonToObj(new JSONObject(myDoc.toJson()), table);
+            clone.JsonToObj((JSONObject) JSONObject.parse(myDoc.toJson()), table);
 
             try {
                 if (idf.getType().equals(String.class)) {

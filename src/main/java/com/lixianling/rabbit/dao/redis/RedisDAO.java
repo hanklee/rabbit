@@ -4,15 +4,14 @@
  */
 package com.lixianling.rabbit.dao.redis;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.manager.RabbitManager;
 import com.lixianling.rabbit.manager.RedisManager;
-import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
@@ -22,6 +21,8 @@ import java.util.Collection;
 
 import static com.lixianling.rabbit.DBException.CODE_EXIST_VALUE;
 import static com.lixianling.rabbit.DBException.CODE_NOTFOUND;
+
+//import org.json.JSONObject;
 
 /**
  * if dbobject has key filed , redis will increase number store in next_xxx_id
@@ -188,7 +189,7 @@ public class RedisDAO extends DAO {
                     if (value == null)
                         throw new DBException("not found!");
                     DBObject clone = obj.clone();
-                    clone.JsonToObj(new JSONObject(value));
+                    clone.JsonToObj((JSONObject) JSONObject.parse(value));
                     return clone;
                 } catch (DBException e) {
                     throw e;

@@ -58,3 +58,5 @@ MIX mode is data operate in redis , mysql backup the data.
 No support redis cluster
 
 Log System
+
+json change to fastjson

@@ -4,10 +4,11 @@
  */
 package com.lixianling.rabbit;
 
-import com.lixianling.rabbit.conf.RabbitConfig;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.manager.DBObjectManager;
-import org.json.JSONArray;
-import org.json.JSONObject;
+//import org.json.JSONArray;
+//import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -301,12 +302,14 @@ public abstract class DBObject extends JSONObj {
                             if (check instanceof DBObject) {
                                 String tmp_table_name = table_name + "_" + attr;
                                 for (Object o : tmp) {
-                                    jsonArray.put(((DBObject) o).toDBJson(tmp_table_name));
+//                                    jsonArray.put(((DBObject) o).toDBJson(tmp_table_name));
+                                    jsonArray.add(((DBObject) o).toDBJson(tmp_table_name));
                                 }
                                 json.put(attr, jsonArray);
                             } else {
                                 for (Object o : tmp) {
-                                    jsonArray.put(o);
+//                                    jsonArray.put(o);
+                                    jsonArray.add(o);
                                 }
 
                             }

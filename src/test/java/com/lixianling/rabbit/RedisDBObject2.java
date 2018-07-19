@@ -4,9 +4,9 @@
  */
 package com.lixianling.rabbit;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
-import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class RedisDBObject2 extends DBObject {
                         RedisDBObject2 no = new RedisDBObject2();
                         String value = connection.get(sr);
                         if (value != null) {
-                            no.JsonToObj(new JSONObject(value));
+                            no.JsonToObj((JSONObject) JSONObject.parse(value));
                             result.add(no);
                         }
                     }
