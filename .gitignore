@@ -6,3 +6,4 @@ target
 rabbit.iml
 .vscode
 .DS_Store
+.factorypath
