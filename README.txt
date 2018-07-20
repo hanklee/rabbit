@@ -44,6 +44,8 @@ if handler return false the MapToObject return null
 2.0.1  move BoneCP to HikariCP, add no-sql(redis,elasticsearch,mongodb) support.
 DBObjectDAO change name to SQLDAO
 
+2.1.1 json change to fastjson, support java bean setter getter.
+
 Add Redis DAO operation
 
 Remove cache Operation, MIXDao directly operate the db (mostly is redis for fast), can sync to other db(mostly is Mysql).
@@ -59,4 +61,4 @@ No support redis cluster
 
 Log System
 
-json change to fastjson
+

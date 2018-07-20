@@ -31,7 +31,6 @@ public class TestObj2 extends TestCase {
         System.out.println(mObj.toJson());
 
         MyObject2 mObj2 = new MyObject2();
-        ;
         mObj2.JsonToObj(JSON.parseObject(jsonData));
         System.out.println(mObj2.toString());
         System.out.println(mObj2.toJson());
@@ -49,23 +48,30 @@ public class TestObj2 extends TestCase {
     static void printFieldInfos(List<FieldInfo> fieldInfoList) {
         for (FieldInfo info : fieldInfoList) {
             if (info.field != null) {
+                if (Modifier.isFinal(info.field.getModifiers())
+                        || Modifier.isStatic(info.field.getModifiers())
+                        || info.field.getType().isArray()) {
+                    continue;
+                }
                 if ((Modifier.isPublic(info.field.getModifiers()))) {
                     System.out.println(info.name + "," + info.fieldAccess + "," + info.field);
-                } else if (Modifier.isPublic(info.method.getModifiers())){
+                } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")){
 //                    System.out.println(info.name + "," + info.method + "," + info.field);
-                    System.out.println(info.method + "," + info.field);
+                    System.out.println(info.method + "," + info.field +","+info.name);
                 }
             }
         }
     }
 
     public static class MyObject extends DBObject {
+        public String table_name = "test1";
         public long id1;
         public int id2;
         public String name;
     }
 
     public static class MyObject2 extends DBObject {
+        public String table_name = "test2";
         private long id1;
         private int id2;
         private String name;

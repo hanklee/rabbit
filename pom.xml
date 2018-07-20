@@ -26,6 +26,12 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resource</directory>
+            </testResource>
+        </testResources>
     </build>
 
     <dependencies>
@@ -35,9 +41,9 @@
             <version>1.6</version>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>com.jolbox</groupId>-->
-            <!--<artifactId>bonecp</artifactId>-->
-            <!--<version>0.8.0.RELEASE</version>-->
+        <!--<groupId>com.jolbox</groupId>-->
+        <!--<artifactId>bonecp</artifactId>-->
+        <!--<version>0.8.0.RELEASE</version>-->
         <!--</dependency>-->
 
         <dependency>
@@ -52,9 +58,9 @@
         </dependency>
 
         <!--<dependency>-->
-            <!--<groupId>org.json</groupId>-->
-            <!--<artifactId>json</artifactId>-->
-            <!--<version>20140107</version>-->
+        <!--<groupId>org.json</groupId>-->
+        <!--<artifactId>json</artifactId>-->
+        <!--<version>20140107</version>-->
         <!--</dependency>-->
 
         <dependency>

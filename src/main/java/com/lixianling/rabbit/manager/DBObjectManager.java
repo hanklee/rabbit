@@ -4,6 +4,8 @@
  */
 package com.lixianling.rabbit.manager;
 
+import com.alibaba.fastjson.util.FieldInfo;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.lixianling.rabbit.DBException;
@@ -20,10 +22,7 @@ import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,14 +45,14 @@ public final class DBObjectManager {
     private static final String OBJECT_ATTR_EXCLUDE_SPLIT_KEY = ",";
 
 
-    private static Map<String, Set<String>> ObjectColumnsCache = new ConcurrentHashMap<String, Set<String>>(40,0.5f);
+    private static Map<String, Set<String>> ObjectColumnsCache = new ConcurrentHashMap<String, Set<String>>(40, 0.5f);
 
-    private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>(40,0.5f);
-    private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>(40,0.5f);
-    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40,0.5f);
-    private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40,0.5f);
+    private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>(40, 0.5f);
+    private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>(40, 0.5f);
+    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
+    private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40, 0.5f);
 
-    private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>(40,0.5f);
+    private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>(40, 0.5f);
 
     public static IdGenerator idGenerator;
 
@@ -155,7 +154,7 @@ public final class DBObjectManager {
                 Collections.addAll(excludes, sss);
 
                 no_key_columns.removeAll(excludes); // remove update attribute
-                
+
                 ImmutableSet.Builder<String> no_incr_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> no_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> all_columnsBuilder = ImmutableSet.builder();
@@ -275,14 +274,29 @@ public final class DBObjectManager {
             ImmutableMap.Builder<String, Field> classMap = ImmutableMap.builder();
             Class uper = clazz;
             while (uper != null) {
-                for (Field field : uper.getDeclaredFields()) {
-                    if (Modifier.isFinal(field.getModifiers())
-                            || Modifier.isStatic(field.getModifiers())
-                            || !Modifier.isPublic(field.getModifiers())
-                            || field.getType().isArray())
-                        continue;
-                    classMap.put(field.getName(), field);
+                List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(uper, null);
+                for (FieldInfo info : fieldInfoList) {
+                    if (info.field != null) {
+                        if (Modifier.isFinal(info.field.getModifiers())
+                                || Modifier.isStatic(info.field.getModifiers())
+                                || info.field.getType().isArray()) {
+                            continue;
+                        }
+                        if ((Modifier.isPublic(info.field.getModifiers()))) {
+                            classMap.put(info.field.getName(), info.field);
+                        } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")) {
+                            classMap.put(info.field.getName(), info.field);
+                        }
+                    }
                 }
+//                for (Field field : uper.getDeclaredFields()) {
+//                    if (Modifier.isFinal(field.getModifiers())
+//                            || Modifier.isStatic(field.getModifiers())
+//                            || !Modifier.isPublic(field.getModifiers())
+//                            || field.getType().isArray())
+//                        continue;
+//                    classMap.put(field.getName(), field);
+//                }
                 uper = uper.getSuperclass();
             }
             ObjectFieldCache.put(clazz, classMap.build());
@@ -305,7 +319,7 @@ public final class DBObjectManager {
      * 注册 object 对应的 key 名字，生成 $table_name:$key1:$key2
      *
      * @param table_name 表名
-     * @param attrs 属性
+     * @param attrs      属性
      */
     protected static void registerJSONKey(String table_name, String attrs) {
         registerJSONKey(table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
@@ -401,7 +415,6 @@ public final class DBObjectManager {
     public static String getDataSourceByObject(Class clazz) {
         return ObjectSource.get(clazz);
     }
-
 
     public static String md5(String input) {
         synchronized (MD5LOCK) {

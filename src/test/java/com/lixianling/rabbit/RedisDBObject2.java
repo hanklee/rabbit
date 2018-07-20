@@ -7,6 +7,7 @@ package com.lixianling.rabbit;
 import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.redis.RedisDAO;
+import junit.framework.TestCase;
 import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
@@ -17,23 +18,27 @@ import java.util.Set;
  * @author Xianling Li(hanklee)
  * $Id: RedisDBObject2.java 40 2016-01-08 17:11:07Z hank $
  */
-public class RedisDBObject2 extends DBObject {
+public class RedisDBObject2 extends TestCase {
 
-    public int id;
-    public String name;
-    public String email;
+    public static class DataDBObject2 extends DBObject {
+        public int id;
+        public String name;
+        public String email;
+    }
+
+
 
     public static void testList(RedisDAO dao) {
         try {
             System.out.println("OBJECT LIST:");
-            List<RedisDBObject2> list = dao.execute(new DAOHandler<List<RedisDBObject2>>() {
+            List<DataDBObject2> list = dao.execute(new DAOHandler<List<DataDBObject2>>() {
                 @Override
-                public List<RedisDBObject2> handle(Object con) throws DBException {
+                public List<DataDBObject2> handle(Object con) throws DBException {
                     Jedis connection = (Jedis) con;
-                    List<RedisDBObject2> result = new ArrayList<RedisDBObject2>();
+                    List<DataDBObject2> result = new ArrayList<DataDBObject2>();
                     Set<String> srs = connection.zrange(RedisDAO.getTableIds("myobjects2"), 0, 5);
                     for (String sr : srs) {
-                        RedisDBObject2 no = new RedisDBObject2();
+                        DataDBObject2 no = new DataDBObject2();
                         String value = connection.get(sr);
                         if (value != null) {
                             no.JsonToObj((JSONObject) JSONObject.parse(value));
@@ -53,10 +58,10 @@ public class RedisDBObject2 extends DBObject {
 
     public static void main(String[] args) throws Exception {
 
-        RedisDBObject test = new RedisDBObject();
+        RedisDBObject.DataDBObject test = new RedisDBObject.DataDBObject();
         System.out.println(test.getTableName());
 
-        RedisDBObject2 obj = new RedisDBObject2();
+        DataDBObject2 obj = new DataDBObject2();
         obj.id = 1;
         obj.name = "hank";
         obj.email = "hank.dev@gmail.com";
