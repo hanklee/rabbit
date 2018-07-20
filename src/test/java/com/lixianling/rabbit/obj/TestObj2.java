@@ -11,6 +11,7 @@ import com.alibaba.fastjson.util.TypeUtils;
 import com.lixianling.rabbit.DBObject;
 import junit.framework.TestCase;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -37,17 +38,25 @@ public class TestObj2 extends TestCase {
 
         JavaBeanSerializer serializer = new JavaBeanSerializer(MyObject2.class);
         List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(MyObject2.class, null);
+        printFieldInfos(fieldInfoList);
 
-//        SerializeBeanInfo beanInfo = TypeUtils.buildBeanInfo(MyObject2.class, null, null);
-        for (FieldInfo info : fieldInfoList) {
-            System.out.println(info.name + "," + info.method + "," + info.field);
-        }
-
+        System.out.println("---------------------");
         fieldInfoList = TypeUtils.computeGetters(MyObject.class, null);
-        for (FieldInfo info : fieldInfoList) {
-            System.out.println(info.name + "," + info.method + "," + info.field);
-        }
+        printFieldInfos(fieldInfoList);
 //        serializer.
+    }
+
+    static void printFieldInfos(List<FieldInfo> fieldInfoList) {
+        for (FieldInfo info : fieldInfoList) {
+            if (info.field != null) {
+                if ((Modifier.isPublic(info.field.getModifiers()))) {
+                    System.out.println(info.name + "," + info.fieldAccess + "," + info.field);
+                } else if (Modifier.isPublic(info.method.getModifiers())){
+//                    System.out.println(info.name + "," + info.method + "," + info.field);
+                    System.out.println(info.method + "," + info.field);
+                }
+            }
+        }
     }
 
     public static class MyObject extends DBObject {
