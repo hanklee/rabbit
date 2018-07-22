@@ -91,15 +91,15 @@ public final class DBObjectManager {
      */
     private static void registerTables(RabbitConfig config) throws DBException {
         for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
-            String[] modes = dbset.mode.split(",");
-            for (String tmp : modes) {
-                if ("redis".equals(tmp) || "elastic".equals(tmp)
-                        || "mongo".equals(tmp)) {
-                    registerJsonTables(config, dbset);
-                } else if ("mysql".equals(tmp)) {
+            if (dbset.mode.contains("redis") || dbset.mode.contains("elastic")
+                    || dbset.mode.contains("mongo")) {
+                registerJsonTables(config, dbset);
+            } else if (dbset.mode.contains("mysql")) {
+                if (DataSourceManager.getQueryRunner(dbset.datasource) != null) {
                     registerMySQLTables(config, dbset);
                 }
             }
+
         }
     }
 

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: JSONObj.java 39 2016-01-08 12:04:37Z hank $
  */
@@ -64,7 +63,7 @@ public abstract class JSONObj implements Serializable {
         }
     }
 
-    public void JsonToObj(JSONObject json,String table_name) {
+    public void JsonToObj(JSONObject json, String table_name) {
         Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
         Map<String, Field> allFields = getAllFields();
         for (Object attr : attrs) {
@@ -164,7 +163,7 @@ public abstract class JSONObj implements Serializable {
                     field.set(this, o);
                 } else if (value instanceof Map) {
                     Object o = type.newInstance();
-                    ((JSONObj) o).MapToObj((Map)value);
+                    ((JSONObj) o).MapToObj((Map) value);
                     field.set(this, o);
                 }
             }
@@ -227,6 +226,11 @@ public abstract class JSONObj implements Serializable {
 
      */
 
+    @Override
+    protected Object clone() {
+        return cloneObj();
+    }
+
     /**
      * clone just copy the attribute value include, int, string, long, bool,
      * <p/>
@@ -234,19 +238,30 @@ public abstract class JSONObj implements Serializable {
      *
      * @return
      */
-    @Override
-    public JSONObj clone() {
-        Object obj = null;
+    public <T extends JSONObj> T cloneObj() {
+        T obj = null;
         try {
-            Class myClazz = getClass();
-            obj = myClazz.newInstance();
+//            Class myClazz = getClass();
+            obj = (T) this.getClass().newInstance();
             __getObjectValue(obj, this);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-        return (JSONObj) obj;
+        return obj;
+    }
+
+    public <T extends JSONObj> T cloneObj(JSONObject data) {
+        T obj = cloneObj();
+        obj.JsonToObj(data);
+        return obj;
+    }
+
+    public <T extends JSONObj> T cloneObj(String datastring) {
+        T obj = cloneObj();
+        obj.JsonToObj(JSONObject.parseObject(datastring));
+        return obj;
     }
 
     /**
