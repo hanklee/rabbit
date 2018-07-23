@@ -248,15 +248,13 @@ public abstract class DBObject extends JSONObj {
         String tname = DBObjectManager.getTableNameByObject(clazz);
         if (tname == null) {
             try {
-                Field field = clazz.getField("table_name");
-                while (field == null && clazz.getSuperclass() != null) {
-                    clazz = clazz.getSuperclass();
-                    field = clazz.getField("table_name");
-                }
-                if (field == null) {
+                Object oname = getValueByField("table_name");
+//                Field field = clazz.getField("table_name");
+                if (oname == null) {
                     tname = clazz.getSimpleName().toLowerCase() + "s";
-                } else
-                    tname = (String) field.get(this);
+                } else {
+                    tname = oname.toString();
+                }
             } catch (Exception e) {
                 tname = clazz.getSimpleName().toLowerCase() + "s";
             }

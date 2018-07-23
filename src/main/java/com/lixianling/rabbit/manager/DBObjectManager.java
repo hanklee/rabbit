@@ -272,9 +272,9 @@ public final class DBObjectManager {
     private static void registerTableClassField(Class clazz) {
         if (ObjectFieldCache.get(clazz) == null) {
             ImmutableMap.Builder<String, Field> classMap = ImmutableMap.builder();
-            Class uper = clazz;
-            while (uper != null) {
-                List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(uper, null);
+//            Class uper = clazz;
+//            while (uper != null) {
+                List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(clazz, null);
                 for (FieldInfo info : fieldInfoList) {
                     if (info.field != null) {
                         if (Modifier.isFinal(info.field.getModifiers())
@@ -297,8 +297,8 @@ public final class DBObjectManager {
 //                        continue;
 //                    classMap.put(field.getName(), field);
 //                }
-                uper = uper.getSuperclass();
-            }
+//                uper = uper.getSuperclass();
+//            }
             ObjectFieldCache.put(clazz, classMap.build());
         }
     }

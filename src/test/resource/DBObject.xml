@@ -33,6 +33,20 @@
         <table_name>myTest</table_name>
     </dbobject>
 
+    <dbobject datasource="test" mode="mysql">
+        <class_name>com.lixianling.rabbit.table.InsertTableTest$InserData</class_name>
+        <table_name>test1</table_name>
+    </dbobject>
+
+    <dbobject datasource="test" mode="mysql">
+        <class_name>com.lixianling.rabbit.obj.TestObj4$TestData4</class_name>
+        <table_name>test1</table_name>
+    </dbobject>
+
+    <dbobject datasource="test" mode="mysql">
+        <class_name>com.lixianling.rabbit.obj.TestObj4$TestData5</class_name>
+        <table_name>test1</table_name>
+    </dbobject>
 
     <!-- redis dbobject -->
     <!--

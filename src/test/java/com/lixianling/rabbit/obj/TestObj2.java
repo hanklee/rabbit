@@ -40,6 +40,7 @@ public class TestObj2 extends TestCase {
         printFieldInfos(fieldInfoList);
 
         System.out.println("---------------------");
+        // 获取对象里 是getter或者是public 的field
         fieldInfoList = TypeUtils.computeGetters(MyObject.class, null);
         printFieldInfos(fieldInfoList);
 //        serializer.
