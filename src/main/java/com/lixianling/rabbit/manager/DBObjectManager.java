@@ -9,6 +9,7 @@ import com.alibaba.fastjson.util.TypeUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.lixianling.rabbit.DBException;
+import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.IdGenerator;
 import com.lixianling.rabbit.conf.DBObjectConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
@@ -52,7 +53,7 @@ public final class DBObjectManager {
     private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40, 0.5f);
 
-    private static Map<String, Field> TableInsertIncrKeyField = new ConcurrentHashMap<String, Field>(40, 0.5f);
+    private static Map<String, String> TableInsertIncrKeyField = new ConcurrentHashMap<String, String>(40, 0.5f);
 
     public static IdGenerator idGenerator;
 
@@ -105,11 +106,14 @@ public final class DBObjectManager {
 
     private static void registerMySQLTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
         // 获取数据源table相关的columns(类的属性与之相关)
+        String table = dbset.table_name;
+        if (getTableAllColumns(table) != null) {
+            return;
+        }
         String key;
         Connection con = null;
         ResultSet rs = null;
         QueryRunner queryRunner = DataSourceManager.getQueryRunner(dbset.datasource);
-        String table = dbset.table_name;
         try {
             try {
                 con = queryRunner.getDataSource().getConnection();
@@ -184,7 +188,7 @@ public final class DBObjectManager {
                 if (incrKey != null) {
                     Field field = ObjectFieldCache.get(clazz).get(incrKey);
                     if (field != null) {
-                        TableInsertIncrKeyField.put(table, field);
+                        TableInsertIncrKeyField.put(table, field.getName());
                     }
                 }
 
@@ -217,6 +221,9 @@ public final class DBObjectManager {
 
     private static void registerJsonTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
         String table = dbset.table_name;
+        if (getTableAllColumns(table) != null) {
+            return;
+        }
         Set<String> keys = new HashSet<String>();
         Set<String> allField = new HashSet<String>();
         String[] sss = dbset.table_field.split(OBJECT_ATTR_SPLIT_KEY);
@@ -257,7 +264,7 @@ public final class DBObjectManager {
         if (incrKey != null) {
             Field field = ObjectFieldCache.get(clazz).get(incrKey);
             if (field != null) {
-                TableInsertIncrKeyField.put(table, field);
+                TableInsertIncrKeyField.put(table, field.getName());
             }
         }
         // 缓存table相关的类
@@ -274,21 +281,21 @@ public final class DBObjectManager {
             ImmutableMap.Builder<String, Field> classMap = ImmutableMap.builder();
 //            Class uper = clazz;
 //            while (uper != null) {
-                List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(clazz, null);
-                for (FieldInfo info : fieldInfoList) {
-                    if (info.field != null) {
-                        if (Modifier.isFinal(info.field.getModifiers())
-                                || Modifier.isStatic(info.field.getModifiers())
-                                || info.field.getType().isArray()) {
-                            continue;
-                        }
-                        if ((Modifier.isPublic(info.field.getModifiers()))) {
-                            classMap.put(info.field.getName(), info.field);
-                        } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")) {
-                            classMap.put(info.field.getName(), info.field);
-                        }
+            List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(clazz, null);
+            for (FieldInfo info : fieldInfoList) {
+                if (info.field != null) {
+                    if (Modifier.isFinal(info.field.getModifiers())
+                            || Modifier.isStatic(info.field.getModifiers())
+                            || info.field.getType().isArray()) {
+                        continue;
+                    }
+                    if ((Modifier.isPublic(info.field.getModifiers()))) {
+                        classMap.put(info.field.getName(), info.field);
+                    } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")) {
+                        classMap.put(info.field.getName(), info.field);
                     }
                 }
+            }
 //                for (Field field : uper.getDeclaredFields()) {
 //                    if (Modifier.isFinal(field.getModifiers())
 //                            || Modifier.isStatic(field.getModifiers())
@@ -311,8 +318,17 @@ public final class DBObjectManager {
         return ObjectTable.get(table_name);
     }
 
-    public static Field getInsertIncrKeyField(String table_name) {
+    public static String getInsertIncrKeyField(String table_name) {
         return TableInsertIncrKeyField.get(table_name);
+    }
+
+    public static Field getInsertIncrKeyField(String table_name, DBObject obj) {
+        String keyFieldName = TableInsertIncrKeyField.get(table_name);
+        Field keyField = null;
+        if (keyFieldName != null) {
+            keyField = obj.getAllFields().get(keyFieldName);
+        }
+        return keyField;
     }
 
     /**

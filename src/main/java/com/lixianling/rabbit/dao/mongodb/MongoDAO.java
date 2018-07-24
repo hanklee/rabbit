@@ -90,7 +90,7 @@ public class MongoDAO extends DAO {
                 db.createCollection(table);
             }
             docs = db.getCollection(table);
-            obj.beforeInsert(docs);
+            obj.beforeInsert(this, table,docs);
             Document doc = Document.parse(obj.toDBJson(table).toString());
             docs.insertOne(doc);
 

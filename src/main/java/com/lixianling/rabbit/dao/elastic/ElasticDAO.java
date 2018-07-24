@@ -51,7 +51,7 @@ public class ElasticDAO extends DAO {
         updateRequest.index(obj.getDatasource());
         updateRequest.type(table);
         updateRequest.id(value);
-        obj.beforeUpdate(client);
+        obj.beforeUpdate(this,table, client);
         try {
             XContentBuilder json = jsonBuilder()
                     .startObject();
@@ -79,7 +79,7 @@ public class ElasticDAO extends DAO {
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
-        obj.beforeDelete(client);
+        obj.beforeDelete(this,table, client);
         DeleteResponse response = client.prepareDelete(obj.getDatasource(), table, value).get();
         RestStatus restStatus = response.status();
         if (restStatus.equals(RestStatus.NOT_FOUND)) {
@@ -92,7 +92,7 @@ public class ElasticDAO extends DAO {
     public void insert(final DBObject obj, final String table) throws DBException {
 
         try {
-            obj.beforeInsert(client);
+            obj.beforeInsert(this,table, client);
             IndexResponse response = client.prepareIndex(obj.getDatasource(), table)
                     .setSource(obj.toDBJson(table).toString(), XContentType.JSON)
                     .get();

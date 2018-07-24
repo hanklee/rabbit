@@ -3,7 +3,10 @@
  */
 package com.lixianling.rabbit.table;
 
+import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.dao.DAO;
+import com.lixianling.rabbit.dao.sql.SQLDAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import junit.framework.TestCase;
 
@@ -19,9 +22,19 @@ public class InsertTableTest extends TestCase {
         Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr("test1");
         System.out.println(primary_keys);
         System.out.println(columns);
+        InsertData testData = new InsertData();
+        testData.setName("insert data");
+        DAO dao = new SQLDAO();
+        try {
+            dao.insert(testData);
+
+            dao.delete(testData);
+        } catch (DBException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static class InserData extends DBObject {
+    public static class InsertData extends DBObject {
         private String table_name = "test1";
         private int id;
         private String name;

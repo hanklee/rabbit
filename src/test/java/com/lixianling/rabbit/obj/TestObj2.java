@@ -46,7 +46,7 @@ public class TestObj2 extends TestCase {
 //        serializer.
     }
 
-    static void printFieldInfos(List<FieldInfo> fieldInfoList) {
+    public static void printFieldInfos(List<FieldInfo> fieldInfoList) {
         for (FieldInfo info : fieldInfoList) {
             if (info.field != null) {
                 if (Modifier.isFinal(info.field.getModifiers())

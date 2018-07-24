@@ -80,9 +80,9 @@ public class RedisDAO extends DAO {
                     if (value == null) {
                         throw new DBException("Not found data.", CODE_NOTFOUND);
                     }
-                    obj.beforeUpdate(connection);
+                    obj.beforeUpdate(RedisDAO.this, table, connection);
                     connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
-                    obj.afterUpdate(connection);
+                    obj.afterUpdate(RedisDAO.this, connection);
                 } catch (Exception e) {
                     throw new DBException(e.getMessage());
                 }
@@ -97,14 +97,14 @@ public class RedisDAO extends DAO {
             public Void execute(Object con) throws DBException {
                 Jedis connection = (Jedis) con;
                 try {
-                    obj.beforeDelete(connection);
+                    obj.beforeDelete(RedisDAO.this, table, connection);
                     Pipeline pipeline = connection.pipelined();
                     pipeline.multi();
                     pipeline.del(obj.toKeyString(table));
 //                        pipeline.srem(table + TABLE_IDS, obj.toKeyString(table));
                     pipeline.zrem(getTableIds(table), obj.toKeyString(table));
                     pipeline.exec();
-                    obj.afterDelete(connection);
+                    obj.afterDelete(RedisDAO.this, table, connection);
                 } catch (Exception e) {
                     throw new DBException(e.getMessage());
                 }
@@ -122,7 +122,7 @@ public class RedisDAO extends DAO {
                 try {
                     Long incrId = connection.incr(getTableNextId(table));
                     Pipeline pipeline = connection.pipelined();
-                    Field keyField = DBObjectManager.getInsertIncrKeyField(table);
+                    Field keyField = DBObjectManager.getInsertIncrKeyField(table, obj);
                     //                    Transaction transaction = connection.multi();
                     if (keyField != null) {
                         if (keyField.getType().equals(Integer.TYPE)) {
@@ -141,12 +141,12 @@ public class RedisDAO extends DAO {
                             throw new DBException("Has exist data.", CODE_EXIST_VALUE);
                         }
                     }
-                    obj.beforeInsert(connection);
+                    obj.beforeInsert(RedisDAO.this, table, connection);
                     pipeline.multi();
                     pipeline.zadd(table + TABLE_IDS, incrId, obj.getKeyStringByRegisterKey(table));
                     pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
                     pipeline.exec();
-                    obj.afterInsert(connection);
+                    obj.afterInsert(RedisDAO.this, table, connection);
                 } catch (DBException e) {
                     throw e;
                 } catch (Exception e) {

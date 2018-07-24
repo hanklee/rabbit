@@ -36,22 +36,24 @@ public final class RabbitManager {
     }
 
     private static void init() {
-        
-        String[] modes = RabbitManager.RABBIT_CONFIG.mode.split(",");
-        for (String tmp : modes) {
-            if ("redis".equals(tmp)) {
-                // register redis
-                RedisManager.register();
-            } else if ("mysql".equals(tmp)) {
-                // register datasource
-                DataSourceManager.register();                
-            } else if ("mongo".equals(tmp)) {
-                // register mongodb
-                DataSourceManager.register();                   
-            } else if ("elast".equals(tmp)) {
-                // register elastic
-                ElasticManager.register();                   
-            }
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("redis")) {
+            // register redis
+            RedisManager.register();
+        }
+
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
+            // register datasource
+            DataSourceManager.register();
+        }
+
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("elast")) {
+            // register elastic
+            ElasticManager.register();
+        }
+
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("mongo")) {
+            // register mongodb
+            MongoManager.register();
         }
 
         // register db object

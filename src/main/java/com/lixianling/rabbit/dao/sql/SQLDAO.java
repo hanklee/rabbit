@@ -89,12 +89,12 @@ public class SQLDAO extends DAO {
                 count++;
             }
             String sql = SQLBuilder.getOpUpdate(table, excludes);
-            obj.beforeUpdate(innerRunner);
+            obj.beforeUpdate(this, table, innerRunner);
             int mount = innerRunner.update(sql, objs);
             if (mount < 1) {
                 throw new SQLException("No data update." + sql + "\n" + obj);
             }
-            obj.afterUpdate(innerRunner);
+            obj.afterUpdate(this, innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());
@@ -109,9 +109,9 @@ public class SQLDAO extends DAO {
      * @throws DBException db Exception
      */
     public void insert(DBObject obj, String table) throws DBException {
-//        obj.generateId(table, idGen);
         try {
-            Field keyField = DBObjectManager.getInsertIncrKeyField(table);
+            obj.beforeInsert(this, table, innerRunner);
+            Field keyField = DBObjectManager.getInsertIncrKeyField(table, obj);
             Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(table); // true means if it is not auto increase then add key's column
             Object[] objs = new Object[columns.size()];
             int count = 0;
@@ -121,8 +121,6 @@ public class SQLDAO extends DAO {
             }
 
             String sql = SQLBuilder.getInsertSQLByTable(table);
-            // no thread safe
-            obj.beforeInsert(innerRunner);
             Connection conn = innerRunner.getDataSource().getConnection();
             PreparedStatement stmt = null;
             int rows = 0;
@@ -159,7 +157,7 @@ public class SQLDAO extends DAO {
                 DbUtils.close(stmt);
                 DbUtils.close(conn);
             }
-            obj.afterInsert(innerRunner);
+            obj.afterInsert(this, table, innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());
@@ -203,12 +201,12 @@ public class SQLDAO extends DAO {
                 count++;
             }
             String sql = SQLBuilder.getDeleteSQLByTable(table);
-            obj.beforeDelete(innerRunner);
+            obj.beforeDelete(this, table, innerRunner);
             int mount = innerRunner.update(sql, objs);
             if (mount < 1) {
                 throw new SQLException("No data delete." + sql + "\n" + obj);
             }
-            obj.afterDelete(innerRunner);
+            obj.afterDelete(this, table, innerRunner);
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
@@ -256,7 +254,7 @@ public class SQLDAO extends DAO {
             Object[][] data = new Object[objs.size()][];
             int data_index = 0;
             for (DBObject obj : objs) {
-                obj.beforeUpdate(queryRunner);
+                obj.beforeUpdate(this, table, queryRunner);
                 Object[] objss = new Object[columns.size() + primary_keys.size()];
                 int count = 0;
                 for (String column : columns) {
@@ -272,7 +270,7 @@ public class SQLDAO extends DAO {
             }
             queryRunner.batch(sql, data);
             for (DBObject obj : objs) {
-                obj.afterUpdate(queryRunner);
+                obj.afterUpdate(this, queryRunner);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -288,7 +286,7 @@ public class SQLDAO extends DAO {
             Object[][] data = new Object[objs.size()][];
             int data_index = 0;
             for (DBObject obj : objs) {
-                obj.beforeInsert(queryRunner);
+                obj.beforeInsert(this, table, queryRunner);
                 Object[] objss = new Object[columns.size()];
                 int count = 0;
                 for (String column : columns) {
@@ -300,7 +298,7 @@ public class SQLDAO extends DAO {
             }
             queryRunner.batch(sql, data);
             for (DBObject obj : objs) {
-                obj.afterInsert(queryRunner);
+                obj.afterInsert(this, table, queryRunner);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -324,7 +322,7 @@ public class SQLDAO extends DAO {
 
             int data_index = 0;
             for (DBObject obj : objs) {
-                obj.beforeDelete(queryRunner);
+                obj.beforeDelete(this, table, queryRunner);
                 Object[] objss = new Object[primary_keys.size()];
                 int count = 0;
                 for (String column : primary_keys) {
@@ -337,7 +335,7 @@ public class SQLDAO extends DAO {
 
             queryRunner.batch(sql, keys);
             for (DBObject obj : objs) {
-                obj.beforeDelete(queryRunner);
+                obj.beforeDelete(this, table, queryRunner);
             }
         } catch (Exception e) {
             throw new DBException(e.getMessage());
@@ -358,7 +356,7 @@ public class SQLDAO extends DAO {
     }
 
     public void update(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.update(queryRunner, conn, obj, table);
+        SQLTransaction.update(this, queryRunner, conn, obj, table);
     }
 
     public void insert(Connection conn, DBObject obj) throws DBException {
@@ -370,7 +368,7 @@ public class SQLDAO extends DAO {
     }
 
     public void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.insert(queryRunner, conn, obj, table);
+        SQLTransaction.insert(this, queryRunner, conn, obj, table);
     }
 
     public void delete(Connection conn, DBObject obj) throws DBException {
@@ -382,6 +380,6 @@ public class SQLDAO extends DAO {
     }
 
     public void delete(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.delete(queryRunner, conn, obj, table);
+        SQLTransaction.delete(this, queryRunner, conn, obj, table);
     }
 }

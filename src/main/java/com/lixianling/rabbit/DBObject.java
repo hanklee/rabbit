@@ -6,6 +6,7 @@ package com.lixianling.rabbit;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
 //import org.json.JSONArray;
 //import org.json.JSONObject;
@@ -25,27 +26,27 @@ public abstract class DBObject extends JSONObj {
     /**
      * Operation extends method
      */
-    public void beforeInsert(Object ignored) throws DBException {
+    public void beforeInsert(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 
-    public void beforeUpdate(Object ignored) throws DBException {
+    public void beforeUpdate(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 
-    public void beforeDelete(Object ignored) throws DBException {
+    public void beforeDelete(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 
-    public void afterInsert(Object ignored) throws DBException {
+    public void afterInsert(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 
-    public void afterUpdate(Object ignored) throws DBException {
+    public void afterUpdate(DAO dao, Object ignored) throws DBException {
         //nothing to do
     }
 
-    public void afterDelete(Object ignored) throws DBException {
+    public void afterDelete(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 
@@ -98,7 +99,7 @@ public abstract class DBObject extends JSONObj {
         return _keyString;
     }
 
-    public Map<String, Object> ObjToMap(String table_name){
+    public Map<String, Object> ObjToMap(String table_name) {
         return ObjToMap(DBObjectManager.getObjectJSONAttr(table_name));
     }
 

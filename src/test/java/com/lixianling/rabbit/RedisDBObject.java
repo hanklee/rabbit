@@ -44,7 +44,7 @@ public class RedisDBObject extends TestCase {
      */
 
         @Override
-        public void beforeInsert(Object obj) throws DBException {
+        public void beforeInsert(DAO dao,String table, Object obj) throws DBException {
             synchronized (LOCK_INSERT) {
                 if (obj instanceof Jedis) {
                     Jedis con = (Jedis) obj;
@@ -65,7 +65,7 @@ public class RedisDBObject extends TestCase {
         }
 
         @Override
-        public void beforeUpdate(Object obj) throws DBException {
+        public void beforeUpdate(DAO dao,String table, Object obj) throws DBException {
             synchronized (LOCK_INSERT) {
                 if (obj instanceof Jedis) {
                     Jedis con = (Jedis) obj;
@@ -95,7 +95,7 @@ public class RedisDBObject extends TestCase {
         }
 
         @Override
-        public void afterDelete(Object obj) throws DBException {
+        public void afterDelete(DAO dao,String table, Object obj) throws DBException {
             synchronized (LOCK_INSERT) {
                 if (obj instanceof Jedis) {
                     // After must using Pipeline for this exception:
