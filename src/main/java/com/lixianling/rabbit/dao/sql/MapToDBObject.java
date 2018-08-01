@@ -5,11 +5,11 @@
 package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.JSONObj;
 
 import java.util.Map;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: MapToDBObject.java 36 2016-01-06 17:24:04Z hank $
  */
@@ -32,8 +32,7 @@ public class MapToDBObject<T extends DBObject> implements MapToObject<T> {
     public T toObject(Map<String, Object> map) {
         T obj = null;
         try {
-            obj = clazz.newInstance();
-            obj.MapToObj(map);
+            obj = JSONObj.newDataObj(clazz, map);
             if (!this.handler.handler(obj)) {
                 return null;
             }

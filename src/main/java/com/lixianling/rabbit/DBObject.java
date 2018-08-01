@@ -50,6 +50,8 @@ public abstract class DBObject extends JSONObj {
         //nothing to do
     }
 
+
+
     /**
      * clone just copy the attribute value include, int, string, long, bool,
      * <p/>

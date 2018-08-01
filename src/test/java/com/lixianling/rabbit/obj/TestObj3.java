@@ -3,6 +3,7 @@
  */
 package com.lixianling.rabbit.obj;
 
+import com.alibaba.fastjson.JSON;
 import com.lixianling.rabbit.DBObject;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -20,7 +21,7 @@ public class TestObj3 extends TestCase{
         DataObject3 d2 = (DataObject3) d1.clone();
         Assert.assertEquals(d2.getId1(),0);
 
-        DataObject3 d3 = d1.cloneObj(jsonData);
+        DataObject3 d3 = d1.cloneObj(JSON.parseObject(jsonData));
         Assert.assertEquals(d3.getId1(),10);
     }
 

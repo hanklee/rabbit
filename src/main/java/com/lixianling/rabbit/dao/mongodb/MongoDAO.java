@@ -131,9 +131,8 @@ public class MongoDAO extends DAO {
         Document myDoc = docs.find(eq("_id", objId)).first();
         if (myDoc != null) {
 //            System.out.println(myDoc.toJson());
-            DBObject clone = obj.clone();
+            DBObject clone = obj.cloneTableObj((JSONObject) JSONObject.parse(myDoc.toJson()), table);
 //            clone.JsonToObj(new JSONObject(myDoc.toJson()), table);
-            clone.JsonToObj((JSONObject) JSONObject.parse(myDoc.toJson()), table);
 
             try {
                 if (idf.getType().equals(String.class)) {

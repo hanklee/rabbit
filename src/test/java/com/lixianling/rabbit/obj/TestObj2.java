@@ -9,6 +9,7 @@ import com.alibaba.fastjson.serializer.SerializeBeanInfo;
 import com.alibaba.fastjson.util.FieldInfo;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.lixianling.rabbit.DBObject;
+import com.lixianling.rabbit.JSONObj;
 import junit.framework.TestCase;
 
 import java.lang.reflect.Modifier;
@@ -21,17 +22,16 @@ import java.util.Map;
 public class TestObj2 extends TestCase {
 
     public void test_cast() {
-        MyObject mObj = new MyObject();
         String jsonData = "{\"id2\":100,\"id1\":10,\"name\":\"test\"}";
-        mObj.JsonToObj(JSON.parseObject(jsonData));
+        MyObject mObj = JSONObj.newDataObj(MyObject.class, JSON.parseObject(jsonData));
+
 //        mObj.id1 = 10;
 //        mObj.id2 = 100;
 //        mObj.name = "test";
         System.out.println(mObj.toString());
         System.out.println(mObj.toJson());
 
-        MyObject2 mObj2 = new MyObject2();
-        mObj2.JsonToObj(JSON.parseObject(jsonData));
+        MyObject2 mObj2 = JSONObj.newDataObj(MyObject2.class, JSON.parseObject(jsonData));
         System.out.println(mObj2.toString());
         System.out.println(mObj2.toJson());
 
@@ -56,9 +56,9 @@ public class TestObj2 extends TestCase {
                 }
                 if ((Modifier.isPublic(info.field.getModifiers()))) {
                     System.out.println(info.name + "," + info.fieldAccess + "," + info.field);
-                } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")){
+                } else if (Modifier.isPublic(info.method.getModifiers()) && !info.name.equals("allFields")) {
 //                    System.out.println(info.name + "," + info.method + "," + info.field);
-                    System.out.println(info.method + "," + info.field +","+info.name);
+                    System.out.println(info.method + "," + info.field + "," + info.name);
                 }
             }
         }

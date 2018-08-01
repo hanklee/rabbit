@@ -33,7 +33,7 @@ public abstract class JSONObj implements Serializable {
         return _allFields;
     }
 
-    public void MapToObj(Map<String, Object> map) {
+    protected void MapToObj(Map<String, Object> map) {
         Map<String, Field> allFields = getAllFields();
         for (String fieldName : map.keySet()) {
             Field field = allFields.get(fieldName);
@@ -49,7 +49,7 @@ public abstract class JSONObj implements Serializable {
      * JSON OPERATION
      */
 
-    public void JsonToObj(JSONObject json) {
+    protected void JsonToObj(JSONObject json) {
         Map<String, Field> allFields = getAllFields();
         for (Object attr : json.keySet()) {
 //            Object value = json.opt((String) attr);
@@ -63,7 +63,7 @@ public abstract class JSONObj implements Serializable {
         }
     }
 
-    public void JsonToObj(JSONObject json, String table_name) {
+    protected void JsonToObj(JSONObject json, String table_name) {
         Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
         Map<String, Field> allFields = getAllFields();
         for (Object attr : attrs) {
@@ -252,15 +252,92 @@ public abstract class JSONObj implements Serializable {
         return obj;
     }
 
+    public <T extends JSONObj> T cloneObj(Map<String, Object> map) {
+        T obj = cloneObj();
+        obj.MapToObj(map);
+        return obj;
+    }
+
     public <T extends JSONObj> T cloneObj(JSONObject data) {
         T obj = cloneObj();
         obj.JsonToObj(data);
         return obj;
     }
 
-    public <T extends JSONObj> T cloneObj(String datastring) {
+    public <T extends JSONObj> T cloneTableObj(JSONObject data, String table) {
         T obj = cloneObj();
-        obj.JsonToObj(JSONObject.parseObject(datastring));
+        obj.JsonToObj(data, table);
+        return obj;
+    }
+
+
+    /**
+     * clone Object , do not copy this object data
+     *
+     * @param <T> Object
+     * @return
+     */
+    public <T extends JSONObj> T newObj() {
+        T obj = null;
+        try {
+            obj = (T) this.getClass().newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
+    public <T extends JSONObj> T newObj(Map<String, Object> map) {
+        T obj = newObj();
+        obj.MapToObj(map);
+        return obj;
+    }
+
+    public <T extends JSONObj> T newObj(JSONObject data) {
+        T obj = newObj();
+        obj.JsonToObj(data);
+        return obj;
+    }
+
+    /**
+     *  create template object by class, inject the map data
+     * @param clazz Class of object
+     * @param data json data
+     * @param <T> template object
+     * @return object
+     */
+    public static <T extends JSONObj> T newDataObj(Class<T> clazz, JSONObject data) {
+        T obj = null;
+        try {
+            obj = clazz.newInstance();
+            obj.JsonToObj(data);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
+    /**
+     *  create template object by class, inject the map data
+     * @param clazz Class of object
+     * @param map data
+     * @param <T> template object
+     * @return object
+     */
+    public static <T extends JSONObj> T newDataObj(Class<T> clazz, Map<String, Object> map) {
+        T obj = null;
+        try {
+            obj = clazz.newInstance();
+            obj.MapToObj(map);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
         return obj;
     }
 

@@ -188,9 +188,7 @@ public class RedisDAO extends DAO {
                     String value = connection.get(obj.toKeyString(table));
                     if (value == null)
                         throw new DBException("not found!");
-                    DBObject clone = obj.clone();
-                    clone.JsonToObj((JSONObject) JSONObject.parse(value));
-                    return clone;
+                    return obj.cloneObj((JSONObject) JSONObject.parse(value));
                 } catch (DBException e) {
                     throw e;
                 }

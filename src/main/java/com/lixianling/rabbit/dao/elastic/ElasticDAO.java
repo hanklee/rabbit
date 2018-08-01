@@ -125,9 +125,7 @@ public class ElasticDAO extends DAO {
         if (source == null || source.keySet().size() == 0) {
             return null;
         }
-        DBObject clone = obj.clone();
-        clone.MapToObj(source);
-        return clone;
+        return obj.cloneObj(source);
     }
 
     @Override
