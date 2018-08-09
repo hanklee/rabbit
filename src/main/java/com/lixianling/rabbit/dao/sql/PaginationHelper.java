@@ -4,8 +4,11 @@
  */
 package com.lixianling.rabbit.dao.sql;
 
+import com.lixianling.rabbit.DBException;
+import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.dao.Page;
+import com.mongodb.DB;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
@@ -18,11 +21,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: PaginationHelper.java 39 2016-01-08 12:04:37Z hank $
  */
-public class PaginationHelper<E> {
+public class PaginationHelper {
     private static Map<String, Page> page_cache = new ConcurrentHashMap<String, Page>();
     private static Map<String, Set<String>> key_relate = new ConcurrentHashMap<String, Set<String>>();
 
@@ -47,39 +49,55 @@ public class PaginationHelper<E> {
     }
 
 
-
-    public Page<E> fetchCachePage(
+    public static <T extends DBObject> Page<T> fetchCachePage(
             final QueryRunner qRunner,
             final String sqlFetchRows,
             int pageNo,
             int pageSize,
-            final ResultSetHandler<List<E>> objectListHandler,
+            final ResultSetHandler<List<T>> objectListHandler,
             final String cache_key,
-            final Object... params) {
+            final Object... params) throws DBException{
         String backSQL = sqlFetchRows.substring(sqlFetchRows.toUpperCase().indexOf("FROM"), sqlFetchRows.length());
         backSQL = "SELECT count(*) " + backSQL;
         return fetchCachePage(qRunner, backSQL, sqlFetchRows, pageNo, pageSize, objectListHandler, cache_key, params);
     }
 
-    public Page<E> fetchCachePage(
+    /**
+     *
+     *  fetch cache need cache key
+     *
+     *   cache key use for clear cache
+     *
+     * @param qRunner database query runner
+     * @param sqlCountRows sql count
+     * @param sqlFetchRows sql fetch
+     * @param pageNo page number
+     * @param pageSize page size
+     * @param objectListHandler transfer the object to list
+     * @param cache_key fetch cache need cache key
+     * @param params parameter
+     * @param <T> Template object extends dbobject
+     * @return Page object
+     */
+    public static <T extends DBObject> Page<T> fetchCachePage(
             final QueryRunner qRunner,
             final String sqlCountRows,
             final String sqlFetchRows,
             int pageNo,
             int pageSize,
-            final ResultSetHandler<List<E>> objectListHandler,
+            final ResultSetHandler<List<T>> objectListHandler,
             final String cache_key,
-            final Object... params) {
+            final Object... params) throws DBException {
         try {
 
             String tmp = sqlFetchRows;
-            for(Object o:params) {
+            for (Object o : params) {
                 tmp += o;
             }
 
             String md5Key = DBObjectManager.md5(tmp);
 
-            Page<E> cachePage = (Page<E>)page_cache.get(md5Key);
+            Page<T> cachePage = (Page<T>) page_cache.get(md5Key);
             if (cachePage != null) {
                 return cachePage;
             }
@@ -97,7 +115,7 @@ public class PaginationHelper<E> {
                 pageNo = pageCount;
 
             // create the page object
-            final Page<E> page = new Page<E>();
+            final Page<T> page = new Page<T>();
             page.setPageNumber(pageNo);
             page.setPagesAvailable(pageCount);
             page.setPageSize(pageSize);
@@ -107,7 +125,7 @@ public class PaginationHelper<E> {
             // Mysql sql
             final int startRow = (pageNo - 1) * pageSize;
             String mySqlFetch = sqlFetchRows + " LIMIT " + startRow + " , " + pageSize;
-            List<E> objects = qRunner.query(
+            List<T> objects = qRunner.query(
                     mySqlFetch,
                     objectListHandler, params);
 
@@ -116,7 +134,7 @@ public class PaginationHelper<E> {
             Set<String> keys = key_relate.get(cache_key);
             if (keys == null) {
                 keys = new HashSet<String>();
-                key_relate.put(cache_key,keys);
+                key_relate.put(cache_key, keys);
             }
 //            System.err.println(md5Key+","+cache_key);
             keys.add(md5Key);
@@ -124,9 +142,9 @@ public class PaginationHelper<E> {
             return page;
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
-            return new Page<E>();
+//            return new Page<T>();
+            throw new DBException(sqlEx.getMessage());
         }
-
     }
 
     /**
@@ -141,14 +159,14 @@ public class PaginationHelper<E> {
      * @param params            sql parameter
      * @return page object
      */
-    public Page<E> fetchPage(
+    public static <T extends DBObject> Page<T> fetchPage(
             final QueryRunner qRunner,
             final String sqlCountRows,
             final String sqlFetchRows,
             int pageNo,
             int pageSize,
-            final ResultSetHandler<List<E>> objectListHandler,
-            final Object... params) {
+            final ResultSetHandler<List<T>> objectListHandler,
+            final Object... params) throws DBException{
         try {
 
             // determine how many rows are available
@@ -165,7 +183,7 @@ public class PaginationHelper<E> {
                 pageNo = pageCount;
 
             // create the page object
-            final Page<E> page = new Page<E>();
+            final Page<T> page = new Page<T>();
             page.setPageNumber(pageNo);
             page.setPagesAvailable(pageCount);
             page.setPageSize(pageSize);
@@ -176,7 +194,7 @@ public class PaginationHelper<E> {
             final int startRow = (pageNo - 1) * pageSize;
             String mySqlFetch = sqlFetchRows + " LIMIT " + startRow + " , " + pageSize;
 
-            List<E> objects = qRunner.query(
+            List<T> objects = qRunner.query(
                     mySqlFetch,
                     objectListHandler, params);
 
@@ -185,18 +203,19 @@ public class PaginationHelper<E> {
             return page;
         } catch (SQLException sqlEx) {
             sqlEx.printStackTrace();
-            return new Page<E>();
+//            return new Page<T>();
+            throw new DBException(sqlEx.getMessage());
         }
 
     }
 
-    public Page<E> fetchPage(
+    public static <T extends DBObject> Page<T> fetchPage(
             final QueryRunner qRunner,
             final String sqlFetchRows,
             int pageNo,
             int pageSize,
-            final ResultSetHandler<List<E>> objectListHandler,
-            final Object... params) {
+            final ResultSetHandler<List<T>> objectListHandler,
+            final Object... params) throws DBException {
         String backSQL = sqlFetchRows.substring(sqlFetchRows.toUpperCase().indexOf("FROM"), sqlFetchRows.length());
         backSQL = "SELECT count(*) " + backSQL;
         return fetchPage(qRunner, backSQL, sqlFetchRows, pageNo, pageSize, objectListHandler, params);
