@@ -51,7 +51,6 @@ public abstract class DBObject extends JSONObj {
     }
 
 
-
     /**
      * clone just copy the attribute value include, int, string, long, bool,
      * <p/>
@@ -235,7 +234,7 @@ public abstract class DBObject extends JSONObj {
             try {
                 return field.get(this);
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
         return null;
@@ -247,23 +246,18 @@ public abstract class DBObject extends JSONObj {
      * @return table name
      */
     public String getTableName() {
-        Class clazz = getClass();
-        String tname = DBObjectManager.getTableNameByObject(clazz);
-        if (tname == null) {
-            try {
-                Object oname = getValueByField("table_name");
-//                Field field = clazz.getField("table_name");
-                if (oname == null) {
-                    tname = clazz.getSimpleName().toLowerCase() + "s";
-                } else {
-                    tname = oname.toString();
-                }
-            } catch (Exception e) {
+        Object oname = getValueByField("table_name");
+        if (oname == null) {
+            Class clazz = getClass();
+            String tname = DBObjectManager.getTableNameByObject(clazz);
+            if (tname == null) {
                 tname = clazz.getSimpleName().toLowerCase() + "s";
+                DBObjectManager.setTableNameByClass(clazz, tname);
             }
-            DBObjectManager.setTableNameByClass(clazz, tname);
+            return tname;
+        } else {
+            return oname.toString();
         }
-        return tname;
     }
 
     public String getDatasource() {

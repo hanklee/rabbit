@@ -31,6 +31,14 @@ public class TableNameTest extends TestCase {
         Assert.assertEquals("test_table", tObj2.getTableName());
     }
 
+    public void test_v2(){
+        TableNameObj3 tObj3 = new TableNameObj3();
+        Assert.assertEquals("test_table", tObj3.getTableName());
+
+        tObj3.setTable_name("test_table3");
+        Assert.assertEquals("test_table3", tObj3.getTableName());
+    }
+
     /*
 
     修改对象类相关对应的表(Table) 的两种方法:
@@ -45,6 +53,17 @@ public class TableNameTest extends TestCase {
         private String table_name = "test_table";
         public String getTable_name() {
             return table_name;
+        }
+    }
+
+    public static class TableNameObj3 extends DBObject {
+        private String table_name = "test_table";
+        public String getTable_name() {
+            return table_name;
+        }
+
+        public void setTable_name(String table_name) {
+            this.table_name = table_name;
         }
     }
 
