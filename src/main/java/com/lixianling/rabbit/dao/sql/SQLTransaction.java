@@ -58,7 +58,7 @@ public final class SQLTransaction {
 //                System.err.println(DBObjectHelper.getTableAllColumns(table));
                 throw new SQLException("No data update." + sql + "\n" + obj);
             }
-            obj.afterUpdate(dao, queryRunner);
+            obj.afterUpdate(dao, table, queryRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());

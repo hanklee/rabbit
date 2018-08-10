@@ -4,13 +4,17 @@
  */
 package com.lixianling.rabbit.manager;
 
+import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +42,35 @@ public final class DataSourceManager {
 
     protected static void register() {
         // nothing to do
+        for (String key : INSTANCE.dataSources.keySet()) {
+            Connection conn = null;
+            ResultSet rs = null;
+            QueryRunner queryRunner = getQueryRunner(key);
+            try {
+                try {
+                    conn = queryRunner.getDataSource().getConnection();
+                    DatabaseMetaData md = conn.getMetaData();
+                    rs = md.getTables(null, null, "%", null);
+                    while (rs.next()) {
+                        String table_name = rs.getString(3);
+                        DBObjectManager._registerMySQLTable(key, table_name);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (conn != null) {
+                        DbUtils.close(conn);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static DataSourceManager getInstance() {
@@ -94,6 +127,7 @@ public final class DataSourceManager {
 //            }
         }
     }
+
 
     public QueryRunner newQueryRunner() {
         return new QueryRunner(dataSource);

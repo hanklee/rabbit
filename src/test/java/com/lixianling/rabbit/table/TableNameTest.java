@@ -7,10 +7,13 @@ import com.lixianling.rabbit.DBObject;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
 /**
+ *
+ * 设置table_name 的 3 种方法
+ *
+ * 填写变量table_name
+ * 填写xml <table_name mark="true"></table_name>
+ * 类名字 + s 与table_name 一致
  * @author Xianling Li
  */
 public class TableNameTest extends TestCase {
@@ -31,12 +34,19 @@ public class TableNameTest extends TestCase {
         Assert.assertEquals("test_table", tObj2.getTableName());
     }
 
-    public void test_v2(){
+    public void test_v2() {
         TableNameObj3 tObj3 = new TableNameObj3();
         Assert.assertEquals("test_table", tObj3.getTableName());
 
         tObj3.setTable_name("test_table3");
         Assert.assertEquals("test_table3", tObj3.getTableName());
+    }
+
+    public void test_v3() {
+//        System.out.println(DBObjectManager.getClassByTable("test2"));
+//        System.out.println(DBObjectManager.getTableNameByObject(TableNameObj4.class));
+        TableNameObj4 tObj4 = new TableNameObj4();
+        Assert.assertEquals("test2", tObj4.getTableName());
     }
 
     /*
@@ -51,6 +61,7 @@ public class TableNameTest extends TestCase {
 
     public static class TableNameObj2 extends DBObject {
         private String table_name = "test_table";
+
         public String getTable_name() {
             return table_name;
         }
@@ -58,6 +69,7 @@ public class TableNameTest extends TestCase {
 
     public static class TableNameObj3 extends DBObject {
         private String table_name = "test_table";
+
         public String getTable_name() {
             return table_name;
         }
@@ -65,6 +77,9 @@ public class TableNameTest extends TestCase {
         public void setTable_name(String table_name) {
             this.table_name = table_name;
         }
+    }
+
+    public static class TableNameObj4 extends DBObject {
     }
 
 }

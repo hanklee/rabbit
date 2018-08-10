@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class DBObjectConfig {
 
-    public List<DBObjectSet> dbObjectSets = new ArrayList<DBObjectSet>();;
+    public List<DBObjectSet> dbObjectSets = new ArrayList<DBObjectSet>();
 
     public static class DBObjectSet{
         public String class_name;
@@ -21,10 +21,11 @@ public class DBObjectConfig {
         public String mode;
         public String table_name;
         public String mark_table;
+        public String mark_class;
 
         public String table_field;
         public String incr_field;
-        public String exclude_field;
+//        public String exclude_field; // remove field, using update exclude_columns
         public String key_field;
     }
 

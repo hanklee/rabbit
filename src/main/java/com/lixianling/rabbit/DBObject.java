@@ -8,14 +8,15 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
-//import org.json.JSONArray;
-//import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+//import org.json.JSONArray;
+//import org.json.JSONObject;
 
 /**
  * @author Xianling Li(hanklee)
@@ -42,7 +43,7 @@ public abstract class DBObject extends JSONObj {
         //nothing to do
     }
 
-    public void afterUpdate(DAO dao, Object ignored) throws DBException {
+    public void afterUpdate(DAO dao, String table, Object ignored) throws DBException {
         //nothing to do
     }
 

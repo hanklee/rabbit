@@ -6,9 +6,8 @@ package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.manager.DBObjectManager;
 import com.lixianling.rabbit.dao.Page;
-import com.mongodb.DB;
+import com.lixianling.rabbit.manager.DBObjectManager;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;

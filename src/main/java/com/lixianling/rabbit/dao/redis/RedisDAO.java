@@ -82,7 +82,7 @@ public class RedisDAO extends DAO {
                     }
                     obj.beforeUpdate(RedisDAO.this, table, connection);
                     connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
-                    obj.afterUpdate(RedisDAO.this, connection);
+                    obj.afterUpdate(RedisDAO.this, table, connection);
                 } catch (Exception e) {
                     throw new DBException(e.getMessage());
                 }

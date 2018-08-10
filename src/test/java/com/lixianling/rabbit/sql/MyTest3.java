@@ -21,6 +21,9 @@ import java.util.List;
 import static com.lixianling.rabbit.obj.TestObj2.printFieldInfos;
 
 /**
+ *
+ *  两个继承类(表)的操作
+ *
  * @author Xianling Li
  */
 public class MyTest3 extends TestCase {

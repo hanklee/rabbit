@@ -39,18 +39,13 @@
     </dbobject>
 
     <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.obj.TestObj4$TestData4</class_name>
-        <table_name>test1</table_name>
-    </dbobject>
-
-    <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.obj.TestObj4$TestData5</class_name>
-        <table_name>test1</table_name>
-    </dbobject>
-
-    <dbobject datasource="test" mode="mysql">
         <class_name>com.lixianling.rabbit.sql.MyTest3$TestData6</class_name>
         <table_name>test2</table_name>
+    </dbobject>
+
+    <dbobject datasource="test" mode="mysql">
+        <class_name>com.lixianling.rabbit.table.TableNameTest$TableNameObj4</class_name>
+        <table_name mark="true">test2</table_name>
     </dbobject>
 
     <!-- redis dbobject -->

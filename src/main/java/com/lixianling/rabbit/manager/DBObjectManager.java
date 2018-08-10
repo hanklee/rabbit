@@ -104,16 +104,11 @@ public final class DBObjectManager {
         }
     }
 
-    private static void registerMySQLTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
-        // 获取数据源table相关的columns(类的属性与之相关)
-        String table = dbset.table_name;
-        if (getTableAllColumns(table) != null) {
-            return;
-        }
+    protected static void _registerMySQLTable(String datasource, String table) throws DBException {
         String key;
         Connection con = null;
         ResultSet rs = null;
-        QueryRunner queryRunner = DataSourceManager.getQueryRunner(dbset.datasource);
+        QueryRunner queryRunner = DataSourceManager.getQueryRunner(datasource);
         try {
             try {
                 con = queryRunner.getDataSource().getConnection();
@@ -153,16 +148,9 @@ public final class DBObjectManager {
                     }
                 }
 
-                Set<String> excludes = new HashSet<String>();
-                String[] sss = dbset.exclude_field.split(OBJECT_ATTR_EXCLUDE_SPLIT_KEY);
-                Collections.addAll(excludes, sss);
-
-                no_key_columns.removeAll(excludes); // remove update attribute
-
                 ImmutableSet.Builder<String> no_incr_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> no_key_columnsBuilder = ImmutableSet.builder();
                 ImmutableSet.Builder<String> all_columnsBuilder = ImmutableSet.builder();
-
 
                 // 所有键值除了自增长的关键值
                 ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columnsBuilder.addAll(no_incr_key_columns).build());
@@ -171,35 +159,19 @@ public final class DBObjectManager {
                 // 所有键值
                 ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columnsBuilder.addAll(all_columns).build());
 
-
-                String className = dbset.class_name;
-
-                Class clazz = Class.forName(className);
-
-                // 缓存table类的属性
-                registerTableClassField(clazz);
+                // 缓存table自增长的关键值
+                if (incrKey != null) {
+                    TableInsertIncrKeyField.put(table, incrKey);
+                }
 
                 // must register json attribute and then json register key
                 DBObjectManager.registerJSONAttr(table, all_columns.toArray(new String[all_columns.size()]));
                 DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
-                DBObjectManager.registerTableClass(table, clazz);
-
-                // 缓存table自增长的关键值
-                if (incrKey != null) {
-                    Field field = ObjectFieldCache.get(clazz).get(incrKey);
-                    if (field != null) {
-                        TableInsertIncrKeyField.put(table, field.getName());
-                    }
-                }
-
-                // 缓存table相关的类
-                if ("true".equals(dbset.mark_table)) {
-                    setTableNameByClass(clazz, table);
-                }
+                // 缓存table相关的sql语句
+                SQLBuilder.registerTable(table);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new DBException(ex.getMessage());
-
             }
         } finally {
             try {
@@ -213,10 +185,27 @@ public final class DBObjectManager {
                 e.printStackTrace();
             }
         }
+    }
 
-        // 缓存table相关的sql语句
-        SQLBuilder.registerTable(table);
+    private static void registerMySQLTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
+        // 获取数据源table相关的columns(类的属性与之相关)
+        String table = dbset.table_name;
+        try {
+            String className = dbset.class_name;
+            Class clazz = Class.forName(className);
+            // 缓存table类的属性
+            registerTableClassField(clazz);
+            if ("true".equals(dbset.mark_class)) {
+                DBObjectManager.registerTableClass(table, clazz);
+            }
 
+            // 缓存table相关的类
+            if ("true".equals(dbset.mark_table)) {
+                setTableNameByClass(clazz, table);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void registerJsonTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
@@ -314,7 +303,7 @@ public final class DBObjectManager {
         ObjectTable.put(table_name, clazz);
     }
 
-    public static Class getClassByTable(String table_name) {
+    public static <T extends DBObject> Class<T> getClassByTable(String table_name) {
         return ObjectTable.get(table_name);
     }
 

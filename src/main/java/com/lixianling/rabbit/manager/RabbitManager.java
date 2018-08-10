@@ -167,7 +167,7 @@ public final class RabbitManager {
                     Element setE = (Element) subList.item(i);
                     String key = setE.getElementsByTagName("name").item(0).getTextContent();
                     String value = setE.getElementsByTagName("value").item(0).getTextContent();
-                    elasticConfig.settings.put(key,value);
+                    elasticConfig.settings.put(key, value);
                 }
 
                 subList = tE.getElementsByTagName("host");
@@ -214,25 +214,22 @@ public final class RabbitManager {
 
                 NodeList subList = tE.getElementsByTagName("class_name");
                 if (subList.getLength() > 0) {
-                    String class_name = subList.item(0).getTextContent();
+                    Element classE = (Element) subList.item(0);
                     NodeList subList2 = tE.getElementsByTagName("table_name");
                     Element tableE = (Element) subList2.item(0);
-                    String tMark = tableE.getAttribute("mark");
+
+                    String class_name = classE.getTextContent();
                     String table_name = tableE.getTextContent();
+                    String cMark = classE.getAttribute("mark");
+                    String tMark = tableE.getAttribute("mark");
                     dbset.class_name = class_name;
                     dbset.table_name = table_name;
+                    dbset.mark_class = cMark;
                     dbset.mark_table = tMark;
 
                 }
 
-                NodeList subList3 = tE.getElementsByTagName("exclude_field");
-                if (subList3.getLength() > 0) {
-                    dbset.exclude_field = subList3.item(0).getTextContent();
-                } else {
-                    dbset.exclude_field = "";
-                }
-
-                subList3 = tE.getElementsByTagName("table_field");
+                NodeList subList3 = tE.getElementsByTagName("table_field");
                 if (subList3.getLength() > 0) {
                     dbset.table_field = subList3.item(0).getTextContent();
                 } else {

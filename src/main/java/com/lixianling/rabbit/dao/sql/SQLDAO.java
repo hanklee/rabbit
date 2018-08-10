@@ -6,10 +6,9 @@ package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.conf.RabbitConfig;
+import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.manager.DBObjectManager;
-import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DataSourceManager;
 import com.lixianling.rabbit.manager.RabbitManager;
 import org.apache.commons.dbutils.DbUtils;
@@ -17,13 +16,8 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -94,7 +88,7 @@ public class SQLDAO extends DAO {
             if (mount < 1) {
                 throw new SQLException("No data update." + sql + "\n" + obj);
             }
-            obj.afterUpdate(this, innerRunner);
+            obj.afterUpdate(this, table, innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());
@@ -165,18 +159,28 @@ public class SQLDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(DBObject obj, String table) throws DBException {
+    public DBObject getObject(String table, Object... objs) throws DBException {
         String sql = SQLBuilder.getObjectSQLByTable(table);
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
+        Class objclazz = DBObjectManager.getClassByTable(table);
+        if (objclazz == null) {
+            throw new DBException("not found table class");
+        }
+        DBObject obj = null;
+        try {
+            obj = (DBObject) objclazz.newInstance();
+        } catch (Exception e) {
+            throw new DBException("wrong table class:" + objclazz.toString());
+        }
         if (primary_keys.size() == 0) {
             throw new DBException("Not support table has not primary key.");
         }
-        Object[] objs = new Object[primary_keys.size()];
-        int count = 0;
-        for (String primary_key : primary_keys) {
-            objs[count] = obj.getValueByField(primary_key);
-            count++;
-        }
+//        Object[] objs = new Object[primary_keys.size()];
+//        int count = 0;
+//        for (String primary_key : primary_keys) {
+//            objs[count] = obj.getValueByField(primary_key);
+//            count++;
+//        }
         try {
             return innerRunner.query(sql, MapToDBObject.newRsHandler(obj.getClass()), objs);
         } catch (SQLException e) {
@@ -270,7 +274,7 @@ public class SQLDAO extends DAO {
             }
             queryRunner.batch(sql, data);
             for (DBObject obj : objs) {
-                obj.afterUpdate(this, queryRunner);
+                obj.afterUpdate(this, table, queryRunner);
             }
         } catch (Exception e) {
             e.printStackTrace();

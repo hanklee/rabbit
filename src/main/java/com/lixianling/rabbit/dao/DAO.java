@@ -11,7 +11,6 @@ import com.lixianling.rabbit.IdGenerator;
 import java.util.Collection;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: DAO.java 38 2016-01-07 17:07:06Z hank $
  */
@@ -35,10 +34,6 @@ public abstract class DAO {
         delete(obj, obj.getTableName());
     }
 
-    public DBObject getObject(DBObject obj) throws DBException {
-        return getObject(obj, obj.getTableName());
-    }
-
     /*
       abstract method
     */
@@ -49,7 +44,7 @@ public abstract class DAO {
 
     public abstract void insert(DBObject obj, String table) throws DBException;
 
-    public abstract DBObject getObject(DBObject obj,String table) throws DBException;
+    public abstract DBObject getObject(String table, Object... objs) throws DBException;
 
     /*
 
