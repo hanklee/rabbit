@@ -94,11 +94,15 @@ public abstract class DBObject extends JSONObj {
     // heroes_bag:5
     private String _keyString = null;
 
-    public synchronized String toKeyString(String table_name) throws DBException {
+    public String keyString() throws DBException {
         if (_keyString == null) {
-            _keyString = getKeyStringByRegisterKey(table_name);
+            _keyString = keyString(this.getTableName());
         }
         return _keyString;
+    }
+
+    public synchronized String keyString(String table_name) throws DBException {
+        return __getKeyStringByRegisterKey(table_name);
     }
 
     public Map<String, Object> ObjToMap(String table_name) {
@@ -157,9 +161,8 @@ public abstract class DBObject extends JSONObj {
      *
      * @param table_name String
      * @return String
-     * @throws DBException
      */
-    public String getKeyStringByRegisterKey(String table_name) throws DBException {
+    private String __getKeyStringByRegisterKey(String table_name) throws DBException {
         Set<String> keys = DBObjectManager.getObjectJSONKeys(table_name);
         Map<String, Field> allFields = getAllFields();
         StringBuilder sb = new StringBuilder();
@@ -176,7 +179,6 @@ public abstract class DBObject extends JSONObj {
                     if (value != null) {
                         if (value instanceof Integer) {
                             if (0 == ((Integer) value)) {
-                                System.err.println(this);
                                 throw new DBException("No key value.");
                             }
                         }
@@ -187,6 +189,7 @@ public abstract class DBObject extends JSONObj {
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
+                throw new DBException(ex.getMessage());
             }
         } else {
             // no Primary Keys

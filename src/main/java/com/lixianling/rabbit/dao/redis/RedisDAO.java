@@ -76,12 +76,12 @@ public class RedisDAO extends DAO {
             public Void execute(Object con) throws DBException {
                 Jedis connection = (Jedis) con;
                 try {
-                    String value = connection.get(obj.toKeyString(table));
+                    String value = connection.get(obj.keyString(table));
                     if (value == null) {
                         throw new DBException("Not found data.", CODE_NOTFOUND);
                     }
                     obj.beforeUpdate(RedisDAO.this, table, connection);
-                    connection.set(obj.toKeyString(table), obj.toDBJson(table).toString());
+                    connection.set(obj.keyString(table), obj.toDBJson(table).toString());
                     obj.afterUpdate(RedisDAO.this, table, connection);
                 } catch (Exception e) {
                     throw new DBException(e.getMessage());
@@ -100,9 +100,9 @@ public class RedisDAO extends DAO {
                     obj.beforeDelete(RedisDAO.this, table, connection);
                     Pipeline pipeline = connection.pipelined();
                     pipeline.multi();
-                    pipeline.del(obj.toKeyString(table));
+                    pipeline.del(obj.keyString(table));
 //                        pipeline.srem(table + TABLE_IDS, obj.toKeyString(table));
-                    pipeline.zrem(getTableIds(table), obj.toKeyString(table));
+                    pipeline.zrem(getTableIds(table), obj.keyString(table));
                     pipeline.exec();
                     obj.afterDelete(RedisDAO.this, table, connection);
                 } catch (Exception e) {
@@ -136,15 +136,15 @@ public class RedisDAO extends DAO {
 //                            pipeline.multi();
 //                            pipeline.sadd(table + TABLE_IDS, obj.getKeyStringByRegisterKey(table));
                     } else {
-                        String value = connection.get(obj.getKeyStringByRegisterKey(table));
+                        String value = connection.get(obj.keyString(table));
                         if (value != null) {
                             throw new DBException("Has exist data.", CODE_EXIST_VALUE);
                         }
                     }
                     obj.beforeInsert(RedisDAO.this, table, connection);
                     pipeline.multi();
-                    pipeline.zadd(table + TABLE_IDS, incrId, obj.getKeyStringByRegisterKey(table));
-                    pipeline.set(obj.getKeyStringByRegisterKey(table), obj.toDBJson(table).toString());
+                    pipeline.zadd(table + TABLE_IDS, incrId, obj.keyString(table));
+                    pipeline.set(obj.keyString(table), obj.toDBJson(table).toString());
                     pipeline.exec();
                     obj.afterInsert(RedisDAO.this, table, connection);
                 } catch (DBException e) {

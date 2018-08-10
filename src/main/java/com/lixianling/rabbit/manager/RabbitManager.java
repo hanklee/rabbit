@@ -71,6 +71,7 @@ public final class RabbitManager {
     private static RabbitConfig readConfig() {
         RabbitConfig rabbitConfig = new RabbitConfig();
         rabbitConfig.dbObjectConfig = new DBObjectConfig();
+        rabbitConfig.jsonTableConfig = new TableConfig();
 
         rabbitConfig.dataSources = new HashMap<String, DataSourceConfig>();
         try {
@@ -201,17 +202,9 @@ public final class RabbitManager {
             Document objectXML = parseXML(DBOBJECT_CONF_FILE, false);
 
             list = objectXML.getElementsByTagName("dbobject");
-
             for (int i = 0; i < list.getLength(); i++) {
                 Element tE = (Element) list.item(i);
                 DBObjectConfig.DBObjectSet dbset = new DBObjectConfig.DBObjectSet();
-                dbset.mode = tE.getAttribute("mode");
-                String tDatasource = tE.getAttribute("datasource");
-                if (tDatasource == null || tDatasource.length() < 1) {
-                    tDatasource = defaultName;
-                }
-                dbset.datasource = tDatasource;
-
                 NodeList subList = tE.getElementsByTagName("class_name");
                 if (subList.getLength() > 0) {
                     Element classE = (Element) subList.item(0);
@@ -226,32 +219,43 @@ public final class RabbitManager {
                     dbset.table_name = table_name;
                     dbset.mark_class = cMark;
                     dbset.mark_table = tMark;
+                }
 
+                rabbitConfig.dbObjectConfig.dbObjectSets.add(dbset);
+            }
+
+            list = objectXML.getElementsByTagName("jsontable");
+            for (int i = 0; i < list.getLength(); i++) {
+                Element tE = (Element) list.item(i);
+                TableConfig.TableObject jTable = new TableConfig.TableObject();
+                NodeList subList = tE.getElementsByTagName("table_name");
+                if (subList.getLength() > 0) {
+                    Element tableE = (Element) subList.item(0);
+                    jTable.table_name = tableE.getTextContent();
                 }
 
                 NodeList subList3 = tE.getElementsByTagName("table_field");
                 if (subList3.getLength() > 0) {
-                    dbset.table_field = subList3.item(0).getTextContent();
+                    jTable.table_field = subList3.item(0).getTextContent();
                 } else {
-                    dbset.table_field = "";
+                    jTable.table_field = "";
                 }
 
                 subList3 = tE.getElementsByTagName("incr_field");
                 if (subList3.getLength() > 0) {
-                    dbset.incr_field = subList3.item(0).getTextContent();
+                    jTable.incr_field = subList3.item(0).getTextContent();
                 } else {
-                    dbset.incr_field = "";
+                    jTable.incr_field = "";
                 }
 
                 subList3 = tE.getElementsByTagName("key_field");
                 if (subList3.getLength() > 0) {
-                    dbset.key_field = subList3.item(0).getTextContent();
+                    jTable.key_field = subList3.item(0).getTextContent();
                 } else {
-                    dbset.key_field = "";
+                    jTable.key_field = "";
                 }
 
-                rabbitConfig.dbObjectConfig.dbObjectSets.add(dbset);
-
+                rabbitConfig.jsonTableConfig.jsontables.add(jTable);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

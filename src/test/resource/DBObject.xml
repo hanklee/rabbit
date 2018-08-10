@@ -1,62 +1,74 @@
-<dbobjects>
-    <!--
-    <dbobject>
-        <class_name>com.lixianling.rabbit.example.Hero</class_name>
-        <table_name>heroes</table_name>
-        <exclude_field>rank</exclude_field>
-    </dbobject>
-
-    <dbobject>
-        <class_name>com.lixianling.rabbit.example.Material</class_name>
-        <table_name>materials</table_name>
-    </dbobject>
-
-    <dbobject>
-        <class_name>com.lixianling.rabbit.example.Material</class_name>
-        <table_name mark="true">heroes_bag</table_name>
-    </dbobject>
--->
-
-    <!--
-
-    mode: mysql, redis , mix
-
-    -->
-    <dbobject datasource="test" mode="mysql">
-        <class_name mark="true">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
+<root>
+    <jsontables>
         <!--
 
-        mark true : the class will refer to the table name
-        beware may be one class can refer to two tables
+        json table register for NoSQL
 
         -->
-        <table_name>myTest</table_name>
-    </dbobject>
+        <jsontable>
+            <table_name>myobjects</table_name>
+            <table_field>id:name:email:list1:list2:list3</table_field>
+            <key_field>id</key_field>
+        </jsontable>
 
-    <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.table.InsertTableTest$InsertData</class_name>
-        <table_name>test1</table_name>
-    </dbobject>
+        <jsontable>
+            <table_name>myobjects2</table_name>
+            <table_field>id:name:email:list3</table_field>
+            <key_field>id</key_field>
+        </jsontable>
 
-    <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.sql.MyTest3$TestData6</class_name>
-        <table_name>test2</table_name>
-    </dbobject>
+    </jsontables>
 
-    <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.table.TableNameTest$TableNameObj4</class_name>
-        <table_name mark="true">test2</table_name>
-    </dbobject>
+    <dbobjects>
 
-    <!-- redis dbobject -->
-    <!--
+        <dbobject>
+            <class_name>com.lixianling.rabbit.table.JsonTableTest$Myobject</class_name>
+            <table_name mark="true">myobjects2</table_name>
+        </dbobject>
 
-    in MIX mode and MYSQL mode
+        <!--
 
-    redis attribute must set true,otherwise the rabbit will check the database whether has the table
+        <dbobject>
+            <class_name>com.lixianling.rabbit.example.Material</class_name>
+            <table_name>materials</table_name>
+        </dbobject>
 
+        <dbobject>
+            <class_name>com.lixianling.rabbit.example.Material</class_name>
+            <table_name mark="true">heroes_bag</table_name>
+        </dbobject>
     -->
-    <!--<dbobject mode="redis">-->
+
+        <!--
+
+        mode: mysql, redis , mix
+
+        -->
+        <dbobject>
+            <class_name mark="true">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
+            <!--
+
+            mark true : the class will refer to the table name
+            beware may be one class can refer to two tables
+
+            -->
+            <table_name>myTest</table_name>
+        </dbobject>
+
+        <dbobject>
+            <class_name>com.lixianling.rabbit.table.TableNameTest$TableNameObj4</class_name>
+            <table_name mark="true">test2</table_name>
+        </dbobject>
+
+        <!-- redis dbobject -->
+        <!--
+
+        in MIX mode and MYSQL mode
+
+        redis attribute must set true,otherwise the rabbit will check the database whether has the table
+
+        -->
+        <!--<dbobject mode="redis">-->
         <!--<class_name>com.lixianling.rabbit.RedisDBObject</class_name>-->
         <!--<table_name mark="true">myobjects</table_name>-->
         <!--<table_field>id:name:email:list1:list2:list3</table_field>-->
@@ -65,11 +77,11 @@
         <!--REDIS:-->
         <!--same key_field but be key string using increase number-->
 
-         <!--&ndash;&gt;-->
+        <!--&ndash;&gt;-->
         <!--<incr_field>id</incr_field>-->
-    <!--</dbobject>-->
+        <!--</dbobject>-->
 
-    <!--<dbobject mode="redis">-->
+        <!--<dbobject mode="redis">-->
         <!--<class_name>com.lixianling.rabbit.RedisDBObject2</class_name>-->
         <!--<table_name mark="true">myobjects2</table_name>-->
         <!--<table_field>id:name:email</table_field>-->
@@ -78,11 +90,11 @@
         <!--REDIS-->
         <!--key field is use for generating key string for redis key-->
 
-         <!--&ndash;&gt;-->
+        <!--&ndash;&gt;-->
         <!--<key_field>id</key_field>-->
-    <!--</dbobject>-->
+        <!--</dbobject>-->
 
-    <!--<dbobject mode="redis,elastic,mongo" datasource="qiqu_index">-->
+        <!--<dbobject mode="redis,elastic,mongo" datasource="qiqu_index">-->
         <!--<class_name>com.lixianling.rabbit.redis.Gencontent</class_name>-->
         <!--<table_name mark="true">gencontent</table_name>-->
         <!--<table_field>title:contents</table_field>-->
@@ -91,9 +103,9 @@
         <!--REDIS:-->
         <!--same key_field but be key string using increase number-->
 
-         <!--&ndash;&gt;-->
+        <!--&ndash;&gt;-->
         <!--<incr_field>id</incr_field>-->
-    <!--</dbobject>-->
+        <!--</dbobject>-->
 
-
-</dbobjects>
+    </dbobjects>
+</root>

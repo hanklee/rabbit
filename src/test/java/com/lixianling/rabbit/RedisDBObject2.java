@@ -66,7 +66,7 @@ public class RedisDBObject2 extends TestCase {
         obj.name = "hank";
         obj.email = "hank.dev@gmail.com";
         System.out.println(obj.toJson().toString());
-        System.out.println(obj.toKeyString(obj.getTableName()));
+        System.out.println(obj.keyString());
 //        System.out.println(obj.uniqueValue());
 
         RedisDAO dao = new RedisDAO();

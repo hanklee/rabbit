@@ -4,7 +4,6 @@
  */
 package com.lixianling.rabbit.manager;
 
-import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.conf.DataSourceConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -53,7 +52,7 @@ public final class DataSourceManager {
                     rs = md.getTables(null, null, "%", null);
                     while (rs.next()) {
                         String table_name = rs.getString(3);
-                        DBObjectManager._registerMySQLTable(key, table_name);
+                        DBObjectManager.registerMySQLTable(key, table_name);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

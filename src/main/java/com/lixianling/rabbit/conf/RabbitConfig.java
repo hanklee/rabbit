@@ -4,9 +4,7 @@
  */
 package com.lixianling.rabbit.conf;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Xianling Li(hanklee)
@@ -23,4 +21,5 @@ public final class RabbitConfig {
     public DBObjectConfig dbObjectConfig;
     public ElasticConfig elasticConfig;
     public MongoConfig mongoConfig;
+    public TableConfig jsonTableConfig;
 }

@@ -4,8 +4,6 @@
  */
 package com.lixianling.rabbit.conf;
 
-import java.util.Set;
-
 /**
  * @author Xianling Li(hanklee)
  * $Id: DataSourceConfig.java 35 2016-01-06 15:27:41Z hank $

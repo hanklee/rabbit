@@ -58,8 +58,8 @@ public class RedisDBObject extends TestCase {
                     if (temp != null) {
                         throw new DBException("has exist name", MYCODE_EXIST_NAME);
                     }
-                    con.hset(uniqueEmail, this.email, this.getKeyStringByRegisterKey(this.getTableName()));
-                    con.hset(uniqueName, this.name, this.getKeyStringByRegisterKey(this.getTableName()));
+                    con.hset(uniqueEmail, this.email, this.keyString(this.getTableName()));
+                    con.hset(uniqueName, this.name, this.keyString(this.getTableName()));
                 }
             }
         }
@@ -70,7 +70,7 @@ public class RedisDBObject extends TestCase {
                 if (obj instanceof Jedis) {
                     Jedis con = (Jedis) obj;
                     DataDBObject clone = (DataDBObject) this.clone();
-                    String value = con.get(this.toKeyString(this.getTableName()));
+                    String value = con.get(this.keyString());
                     clone.JsonToObj((JSONObject) JSONObject.parse(value));
                     if (!this.email.equals(clone.email)) {
                         String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
@@ -79,7 +79,7 @@ public class RedisDBObject extends TestCase {
                             throw new DBException("has exist email", MYCODE_EXIST_EMAIL);
                         }
                         con.hdel(uniqueEmail, clone.email);
-                        con.hset(uniqueEmail, this.email, this.getKeyStringByRegisterKey(this.getTableName()));
+                        con.hset(uniqueEmail, this.email, this.keyString());
                     }
                     if (!this.name.equals(clone.name)) {
                         String uniqueName = this.getTableName() + RedisDAO.TABLE_UNIQUE + "name";
@@ -88,7 +88,7 @@ public class RedisDBObject extends TestCase {
                             throw new DBException("has exist name", MYCODE_EXIST_NAME);
                         }
                         con.hdel(uniqueName, clone.name);
-                        con.hset(uniqueName, this.name, this.getKeyStringByRegisterKey(this.getTableName()));
+                        con.hset(uniqueName, this.name, this.keyString());
                     }
                 }
             }
@@ -227,8 +227,8 @@ public class RedisDBObject extends TestCase {
         obj.list3.add(9.5);
         System.out.println(obj.toJson().toString());
         System.out.println(obj.toDBJson().toString());
-        System.out.println(obj.toKeyString(obj.getTableName()));
-        System.out.println(obj.getKeyStringByRegisterKey(obj.getTableName()));
+        System.out.println(obj.keyString());
+//        System.out.println(obj.keyString());
 //        System.out.println(obj.uniqueValue());
 
         DataDBObject obj2 = new DataDBObject();

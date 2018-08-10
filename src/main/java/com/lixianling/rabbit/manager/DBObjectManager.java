@@ -13,6 +13,7 @@ import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.IdGenerator;
 import com.lixianling.rabbit.conf.DBObjectConfig;
 import com.lixianling.rabbit.conf.RabbitConfig;
+import com.lixianling.rabbit.conf.TableConfig;
 import com.lixianling.rabbit.dao.sql.SQLBuilder;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
@@ -91,20 +92,19 @@ public final class DBObjectManager {
      * @throws DBException db Exception
      */
     private static void registerTables(RabbitConfig config) throws DBException {
-        for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
-            if (dbset.mode.contains("redis") || dbset.mode.contains("elastic")
-                    || dbset.mode.contains("mongo")) {
-                registerJsonTables(config, dbset);
-            } else if (dbset.mode.contains("mysql")) {
-                if (DataSourceManager.getQueryRunner(dbset.datasource) != null) {
-                    registerMySQLTables(config, dbset);
-                }
-            }
+        for (TableConfig.TableObject tableObject : config.jsonTableConfig.jsontables) {
+            registerJsonTables(tableObject);
+        }
 
+        for (DBObjectConfig.DBObjectSet dbset : config.dbObjectConfig.dbObjectSets) {
+            registerObject(dbset);
         }
     }
 
-    protected static void _registerMySQLTable(String datasource, String table) throws DBException {
+    protected static void registerMySQLTable(String datasource, String table) throws DBException {
+        if (getTableAllColumns(table) != null) {
+            return;
+        }
         String key;
         Connection con = null;
         ResultSet rs = null;
@@ -187,13 +187,13 @@ public final class DBObjectManager {
         }
     }
 
-    private static void registerMySQLTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
+    private static void registerObject(DBObjectConfig.DBObjectSet dbset) throws DBException {
         // 获取数据源table相关的columns(类的属性与之相关)
         String table = dbset.table_name;
         try {
             String className = dbset.class_name;
             Class clazz = Class.forName(className);
-            // 缓存table类的属性
+            // table对应的类
             registerTableClassField(clazz);
             if ("true".equals(dbset.mark_class)) {
                 DBObjectManager.registerTableClass(table, clazz);
@@ -203,28 +203,34 @@ public final class DBObjectManager {
             if ("true".equals(dbset.mark_table)) {
                 setTableNameByClass(clazz, table);
             }
+
+//            if (dbset.mode.contains("elastic")
+//                    || dbset.mode.contains("mongo")) {
+//                ObjectSource.put(clazz, dbset.datasource);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static void registerJsonTables(RabbitConfig config, DBObjectConfig.DBObjectSet dbset) throws DBException {
-        String table = dbset.table_name;
+    private static void registerJsonTables(TableConfig.TableObject tableObject) throws DBException {
+        String table = tableObject.table_name;
         if (getTableAllColumns(table) != null) {
             return;
         }
         Set<String> keys = new HashSet<String>();
         Set<String> allField = new HashSet<String>();
-        String[] sss = dbset.table_field.split(OBJECT_ATTR_SPLIT_KEY);
+        String[] sss = tableObject.table_field.split(OBJECT_ATTR_SPLIT_KEY);
         Collections.addAll(allField, sss);
 
-        String incrKey = dbset.incr_field;
+        String incrKey = tableObject.incr_field;
         if (incrKey != null && incrKey.length() > 0) {
-            sss = incrKey.split(OBJECT_ATTR_SPLIT_KEY);
-            Collections.addAll(keys, sss);
+//            sss = incrKey.split(OBJECT_ATTR_SPLIT_KEY);
+//            Collections.addAll(keys, sss);
+            keys.add(incrKey);
         }
 
-        String keyField = dbset.key_field;
+        String keyField = tableObject.key_field;
 
         if (keyField != null && keyField.length() > 0) {
             sss = keyField.split(OBJECT_ATTR_SPLIT_KEY);
@@ -236,32 +242,11 @@ public final class DBObjectManager {
         ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
         ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allFieldBuilder.addAll(allField).build());
 
-        String className = dbset.class_name;
-        Class clazz = null;
-        try {
-            clazz = Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            throw new DBException(e.getMessage());
-        }
-        // 缓存table类的属性
-        registerTableClassField(clazz);
-
         DBObjectManager.registerJSONAttr(table, allField.toArray(new String[allField.size()]));
         DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
-        DBObjectManager.registerTableClass(table, clazz);
 
         if (incrKey != null) {
-            Field field = ObjectFieldCache.get(clazz).get(incrKey);
-            if (field != null) {
-                TableInsertIncrKeyField.put(table, field.getName());
-            }
-        }
-        // 缓存table相关的类
-        setTableNameByClass(clazz, table);
-
-        if (dbset.mode.contains("elastic")
-                || dbset.mode.contains("mongo")) {
-            ObjectSource.put(clazz, dbset.datasource);
+            TableInsertIncrKeyField.put(table, incrKey);
         }
     }
 

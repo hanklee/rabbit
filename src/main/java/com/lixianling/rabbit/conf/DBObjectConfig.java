@@ -17,16 +17,10 @@ public class DBObjectConfig {
 
     public static class DBObjectSet{
         public String class_name;
-        public String datasource;
-        public String mode;
         public String table_name;
         public String mark_table;
         public String mark_class;
 
-        public String table_field;
-        public String incr_field;
-//        public String exclude_field; // remove field, using update exclude_columns
-        public String key_field;
     }
 
 
