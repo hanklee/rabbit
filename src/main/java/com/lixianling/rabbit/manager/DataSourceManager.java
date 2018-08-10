@@ -54,6 +54,7 @@ public final class DataSourceManager {
                         String table_name = rs.getString(3);
                         DBObjectManager.registerMySQLTable(key, table_name);
                     }
+                    // FIX may be two source have same table name
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
