@@ -51,7 +51,7 @@ public final class DBObjectManager {
 
     private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>(40, 0.5f);
     private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>(40, 0.5f);
-    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
+//    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40, 0.5f);
 
     private static Map<String, String> TableInsertIncrKeyField = new ConcurrentHashMap<String, String>(40, 0.5f);
@@ -400,10 +400,6 @@ public final class DBObjectManager {
 
     public static void setTableNameByClass(Class clazz, String table_name) {
         ObjectCache.put(clazz, table_name);
-    }
-
-    public static String getDataSourceByObject(Class clazz) {
-        return ObjectSource.get(clazz);
     }
 
     public static String md5(String input) {

@@ -264,11 +264,6 @@ public abstract class DBObject extends JSONObj {
         }
     }
 
-    public String getDatasource() {
-        Class clazz = getClass();
-        return DBObjectManager.getDataSourceByObject(clazz);
-    }
-
     public JSONObject toDBJson() {
         JSONObject json = new JSONObject();
         setJsonValueByDBAttr(json, getTableName());

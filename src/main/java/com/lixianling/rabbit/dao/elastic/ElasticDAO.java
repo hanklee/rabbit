@@ -30,9 +30,10 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class ElasticDAO extends DAO {
 
     private TransportClient client;
-
-    public ElasticDAO() {
+    private final String source;
+    public ElasticDAO(String source) {
         client = ElasticManager.getInstance().getClient();
+        this.source = source;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class ElasticDAO extends DAO {
             throw new DBException(e.getMessage());
         }
         UpdateRequest updateRequest = new UpdateRequest();
-        updateRequest.index(obj.getDatasource());
+        updateRequest.index(source);
         updateRequest.type(table);
         updateRequest.id(value);
         obj.beforeUpdate(this,table, client);
@@ -80,7 +81,7 @@ public class ElasticDAO extends DAO {
             throw new DBException(e.getMessage());
         }
         obj.beforeDelete(this,table, client);
-        DeleteResponse response = client.prepareDelete(obj.getDatasource(), table, value).get();
+        DeleteResponse response = client.prepareDelete(source, table, value).get();
         RestStatus restStatus = response.status();
         if (restStatus.equals(RestStatus.NOT_FOUND)) {
             throw new DBException("NOT Found");
@@ -93,7 +94,7 @@ public class ElasticDAO extends DAO {
 
         try {
             obj.beforeInsert(this,table, client);
-            IndexResponse response = client.prepareIndex(obj.getDatasource(), table)
+            IndexResponse response = client.prepareIndex(source, table)
                     .setSource(obj.toDBJson(table).toString(), XContentType.JSON)
                     .get();
             String _id = response.getId();
@@ -132,7 +133,7 @@ public class ElasticDAO extends DAO {
 //        } catch (IllegalAccessException e) {
 //            throw new DBException(e.getMessage());
 //        }
-        GetResponse response = client.prepareGet(obj.getDatasource(), table, value).get();
+        GetResponse response = client.prepareGet(source, table, value).get();
         Map<String, Object> source = response.getSourceAsMap();
         if (source == null || source.keySet().size() == 0) {
             return null;

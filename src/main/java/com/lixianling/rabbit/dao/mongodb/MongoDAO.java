@@ -28,9 +28,10 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class MongoDAO extends DAO {
     private MongoClient client;
-
-    public MongoDAO() {
+    private final String source;
+    public MongoDAO(String source) {
         this.client = MongoManager.getInstance().getClient();
+        this.source = source;
     }
 
     @Override
@@ -51,7 +52,7 @@ public class MongoDAO extends DAO {
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
-        MongoDatabase db = this.client.getDatabase(obj.getDatasource());
+        MongoDatabase db = this.client.getDatabase(source);
         MongoCollection<Document> docs = db.getCollection(table);
         Document document = Document.parse(obj.toDBJson(table).toString());
         docs.replaceOne(eq("_id", objId), document);
@@ -76,7 +77,7 @@ public class MongoDAO extends DAO {
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
-        MongoDatabase db = this.client.getDatabase(obj.getDatasource());
+        MongoDatabase db = this.client.getDatabase(source);
         MongoCollection<Document> docs = db.getCollection(table);
         docs.deleteOne(eq("_id", objId));
     }
@@ -84,7 +85,7 @@ public class MongoDAO extends DAO {
     @Override
     public void insert(DBObject obj, String table) throws DBException {
         try {
-            MongoDatabase db = this.client.getDatabase(obj.getDatasource());
+            MongoDatabase db = this.client.getDatabase(source);
             MongoCollection<Document> docs = db.getCollection(table);
             if (docs == null) {
                 db.createCollection(table);
@@ -137,7 +138,7 @@ public class MongoDAO extends DAO {
 //        } catch (IllegalAccessException e) {
 //            throw new DBException(e.getMessage());
 //        }
-        MongoDatabase db = this.client.getDatabase(obj.getDatasource());
+        MongoDatabase db = this.client.getDatabase(source);
         MongoCollection<Document> docs = db.getCollection(table);
         Document myDoc = docs.find(eq("_id", objId)).first();
         if (myDoc != null) {
