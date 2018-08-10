@@ -31,7 +31,9 @@ public class ElasticDAO extends DAO {
 
     private TransportClient client;
     private final String source;
+
     public ElasticDAO(String source) {
+        super(source);
         client = ElasticManager.getInstance().getClient();
         this.source = source;
     }
@@ -52,7 +54,7 @@ public class ElasticDAO extends DAO {
         updateRequest.index(source);
         updateRequest.type(table);
         updateRequest.id(value);
-        obj.beforeUpdate(this,table, client);
+        obj.beforeUpdate(this, table, client);
         try {
             XContentBuilder json = jsonBuilder()
                     .startObject();
@@ -80,7 +82,7 @@ public class ElasticDAO extends DAO {
         } catch (IllegalAccessException e) {
             throw new DBException(e.getMessage());
         }
-        obj.beforeDelete(this,table, client);
+        obj.beforeDelete(this, table, client);
         DeleteResponse response = client.prepareDelete(source, table, value).get();
         RestStatus restStatus = response.status();
         if (restStatus.equals(RestStatus.NOT_FOUND)) {
@@ -93,7 +95,7 @@ public class ElasticDAO extends DAO {
     public void insert(final DBObject obj, final String table) throws DBException {
 
         try {
-            obj.beforeInsert(this,table, client);
+            obj.beforeInsert(this, table, client);
             IndexResponse response = client.prepareIndex(source, table)
                     .setSource(obj.toDBJson(table).toString(), XContentType.JSON)
                     .get();
@@ -111,7 +113,7 @@ public class ElasticDAO extends DAO {
 
     @Override
     public DBObject getObject(final String table, Object... objs) throws DBException {
-        Class objclazz = DBObjectManager.getClassByTable(table);
+        Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
             throw new DBException("not found table class");
         }

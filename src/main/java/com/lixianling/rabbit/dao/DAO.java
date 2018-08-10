@@ -17,6 +17,23 @@ import java.util.Collection;
 public abstract class DAO {
 
     protected IdGenerator idGen;
+    protected final String source;
+
+    public DAO(String source) {
+        this.source = source;
+    }
+
+    public IdGenerator getIdGen() {
+        return idGen;
+    }
+
+    public void setIdGen(IdGenerator idGen) {
+        this.idGen = idGen;
+    }
+
+    public String getSource() {
+        return source;
+    }
 
     public void setIdGenerator(IdGenerator idGen) {
         this.idGen = idGen;

@@ -18,6 +18,8 @@ public final class RedisManager {
     private static final JedisPool pool;
 //    private static final MixJedisCommands commands;
 
+    private static String source;
+
     static {
         // just init cache manager
         pool = init(RabbitManager.RABBIT_CONFIG);
@@ -49,6 +51,8 @@ public final class RedisManager {
         if (pwd == null || pwd.trim().length() == 0) {
             pwd = null;
         }
+
+        source = String.valueOf(db);
 
         config.setMaxTotal(200);
         config.setMaxIdle(50);
@@ -100,6 +104,10 @@ public final class RedisManager {
      */
     public static JedisPool getPool() {
         return pool;
+    }
+
+    public static String getSourcel() {
+        return source;
     }
 
 

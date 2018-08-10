@@ -6,10 +6,12 @@ package com.lixianling.rabbit.sql;
 import com.alibaba.fastjson.util.FieldInfo;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.lixianling.rabbit.DBException;
+import com.lixianling.rabbit.conf.RabbitConfig;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.DAOHandler;
 import com.lixianling.rabbit.dao.sql.MapToDBObject;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
+import com.lixianling.rabbit.manager.RabbitManager;
 import com.lixianling.rabbit.obj.TestObj4;
 import junit.framework.TestCase;
 import org.apache.commons.dbutils.QueryRunner;
@@ -32,6 +34,7 @@ public class MyTest3 extends TestCase {
     public void test_v1() {
         List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(TestData6.class, null);
         printFieldInfos(fieldInfoList);
+        RabbitManager.register();
         DAO dao = new SQLDAO();
         final TestData6 td6 = new TestData6();
         td6.setName("name");
@@ -139,6 +142,7 @@ public class MyTest3 extends TestCase {
         @Override
         public void beforeInsert(DAO dao, String table, Object ignored) throws DBException {
             if (!table.equals("test1")) {
+//                System.out.println("insert:.............."+table);
                 dao.insert(this, "test1");
             }
         }
@@ -146,6 +150,7 @@ public class MyTest3 extends TestCase {
         @Override
         public void afterDelete(DAO dao, String table, Object ignored) throws DBException {
             if (!table.equals("test1")) {
+//                System.out.println("delete:.............."+table);
                 dao.delete(this, "test1");
             }
         }

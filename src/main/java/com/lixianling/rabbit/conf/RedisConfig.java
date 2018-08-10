@@ -5,7 +5,6 @@
 package com.lixianling.rabbit.conf;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  *

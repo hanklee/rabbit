@@ -7,14 +7,16 @@
         -->
         <jsontable>
             <table_name>myobjects</table_name>
+            <table_source>jsontable</table_source>
             <table_field>id:name:email:list1:list2:list3</table_field>
             <key_field>id</key_field>
         </jsontable>
 
         <jsontable>
             <table_name>myobjects2</table_name>
+            <table_source>jsontable</table_source>
             <table_field>id:name:email:list3</table_field>
-            <key_field>id</key_field>
+            <incr_field>id</incr_field>
         </jsontable>
 
     </jsontables>
@@ -22,7 +24,7 @@
     <dbobjects>
 
         <dbobject>
-            <class_name>com.lixianling.rabbit.table.JsonTableTest$Myobject</class_name>
+            <class_name mark="true" sources="jsontable">com.lixianling.rabbit.table.JsonTableTest$Myobject</class_name>
             <table_name mark="true">myobjects2</table_name>
         </dbobject>
 
@@ -45,7 +47,7 @@
 
         -->
         <dbobject>
-            <class_name mark="true">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
+            <class_name mark="true" sources="test">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
             <!--
 
             mark true : the class will refer to the table name

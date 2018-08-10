@@ -29,21 +29,33 @@ public class SQLDAO extends DAO {
     private QueryRunner innerRunner;
 
     public SQLDAO() {
+        super(RabbitManager.RABBIT_CONFIG.sources);
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
             setQueryRunner(DataSourceManager.getQueryRunner());
+
         } else {
             throw new RuntimeException("must config the data source in rabbit.xml file.");
         }
     }
 
-    public SQLDAO(QueryRunner queryRunner) {
-        setQueryRunner(queryRunner);
+    public SQLDAO(String source) {
+        super(source);
+        if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
+            setQueryRunner(DataSourceManager.getQueryRunner(source));
+
+        } else {
+            throw new RuntimeException("must config the data source in rabbit.xml file.");
+        }
+    }
+
+    public SQLDAO(String source, QueryRunner queryRunner) {
+        super(source);
+        innerRunner = queryRunner;
     }
 
     public void setQueryRunner(QueryRunner queryRunner) {
         innerRunner = queryRunner;
     }
-
 
     /**
      * update a object's data to database
@@ -66,8 +78,8 @@ public class SQLDAO extends DAO {
      */
     public void update(DBObject obj, String table, final Set<String> excludes) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(source, table);
             int rsize = (excludes == null) ? 0 : excludes.size();
             Object[] objs = new Object[columns.size() + primary_keys.size() - rsize];
             int count = 0;
@@ -82,7 +94,7 @@ public class SQLDAO extends DAO {
                 objs[count] = obj.getValueByField(primary_key);
                 count++;
             }
-            String sql = SQLBuilder.getOpUpdate(table, excludes);
+            String sql = SQLBuilder.getOpUpdate(source, table, excludes);
             obj.beforeUpdate(this, table, innerRunner);
             int mount = innerRunner.update(sql, objs);
             if (mount < 1) {
@@ -105,8 +117,8 @@ public class SQLDAO extends DAO {
     public void insert(DBObject obj, String table) throws DBException {
         try {
             obj.beforeInsert(this, table, innerRunner);
-            Field keyField = DBObjectManager.getInsertIncrKeyField(table, obj);
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(table); // true means if it is not auto increase then add key's column
+            Field keyField = DBObjectManager.getInsertIncrKeyField(source, table, obj);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(source, table); // true means if it is not auto increase then add key's column
             Object[] objs = new Object[columns.size()];
             int count = 0;
             for (String column : columns) {
@@ -114,7 +126,7 @@ public class SQLDAO extends DAO {
                 count++;
             }
 
-            String sql = SQLBuilder.getInsertSQLByTable(table);
+            String sql = SQLBuilder.getInsertSQLByTable(source, table);
             Connection conn = innerRunner.getDataSource().getConnection();
             PreparedStatement stmt = null;
             int rows = 0;
@@ -160,9 +172,9 @@ public class SQLDAO extends DAO {
 
     @Override
     public DBObject getObject(String table, Object... objs) throws DBException {
-        String sql = SQLBuilder.getObjectSQLByTable(table);
-        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
-        Class objclazz = DBObjectManager.getClassByTable(table);
+        String sql = SQLBuilder.getObjectSQLByTable(source, table);
+        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+        Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
             throw new DBException("not found table class");
         }
@@ -197,14 +209,14 @@ public class SQLDAO extends DAO {
      */
     public void delete(DBObject obj, String table) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
             Object[] objs = new Object[primary_keys.size()];
             int count = 0;
             for (String primary_key : primary_keys) {
                 objs[count] = obj.getValueByField(primary_key);
                 count++;
             }
-            String sql = SQLBuilder.getDeleteSQLByTable(table);
+            String sql = SQLBuilder.getDeleteSQLByTable(source, table);
             obj.beforeDelete(this, table, innerRunner);
             int mount = innerRunner.update(sql, objs);
             if (mount < 1) {
@@ -251,10 +263,10 @@ public class SQLDAO extends DAO {
 
     public void update(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(source, table);
 
-            String sql = SQLBuilder.getUpdateSQLByTable(table);
+            String sql = SQLBuilder.getUpdateSQLByTable(source, table);
             Object[][] data = new Object[objs.size()][];
             int data_index = 0;
             for (DBObject obj : objs) {
@@ -285,8 +297,8 @@ public class SQLDAO extends DAO {
 
     public void insert(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
         try {
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(table); // true means if it is not auto increase then add key's column
-            String sql = SQLBuilder.getInsertSQLByTable(table);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(source, table); // true means if it is not auto increase then add key's column
+            String sql = SQLBuilder.getInsertSQLByTable(source, table);
             Object[][] data = new Object[objs.size()][];
             int data_index = 0;
             for (DBObject obj : objs) {
@@ -320,8 +332,8 @@ public class SQLDAO extends DAO {
      */
     public void delete(QueryRunner queryRunner, Collection<? extends DBObject> objs, String table) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
-            String sql = SQLBuilder.getDeleteSQLByTable(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+            String sql = SQLBuilder.getDeleteSQLByTable(source, table);
             Object[][] keys = new Object[objs.size()][];
 
             int data_index = 0;

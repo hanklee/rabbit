@@ -6,6 +6,7 @@ package com.lixianling.rabbit.sql;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
+import com.lixianling.rabbit.manager.RabbitManager;
 import com.mongodb.DB;
 import junit.framework.TestCase;
 
@@ -46,6 +47,7 @@ public class MyTest extends TestCase {
 
 
     public void test_Performance(int testNum) throws Exception {
+        RabbitManager.register();
         DAO dao = new SQLDAO();
 
 

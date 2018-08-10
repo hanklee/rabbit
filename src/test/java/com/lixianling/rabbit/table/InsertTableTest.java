@@ -17,9 +17,9 @@ import java.util.Set;
  */
 public class InsertTableTest extends TestCase {
 
-    public void test_v1(){
-        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey("test1");
-        Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr("test1");
+    public void test_v1() {
+        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey("test", "test1");
+        Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr("test", "test1");
         System.out.println(primary_keys);
         System.out.println(columns);
         InsertData testData = new InsertData();

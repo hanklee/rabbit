@@ -5,7 +5,6 @@ package com.lixianling.rabbit.conf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -18,6 +17,7 @@ public class DBObjectConfig {
     public static class DBObjectSet{
         public String class_name;
         public String table_name;
+        public String table_sources;
         public String mark_table;
         public String mark_class;
 

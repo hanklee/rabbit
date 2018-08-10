@@ -33,15 +33,15 @@ public class JsonTableTest extends TestCase {
         obj.list3.add(9.5);
 //        System.out.println(obj.toJson().toString());
 //        System.out.println(obj.toDBJson().toString());
-        Assert.assertEquals("myobjects2:1", obj.keyString());
+        Assert.assertEquals("myobjects2:1", obj.keyString("jsontable"));
     }
 
     public void test_v2() throws DBException {
         Myobject obj2 = JSONObj.newDataObj(Myobject.class, JSONObject.parseObject("{\"list1\":[1],\"list3\":[7.5,8.5,9.5],\"list2\":[],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}"));
 //        System.out.println(obj2.toDBJson().toString());
 //        System.out.println(obj2.toJson());
-        Assert.assertEquals("{\"list3\":[7.5,8.5,9.5],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}", obj2.toDBJson().toString());
-        Assert.assertEquals("myobjects2:1", obj2.keyString());
+        Assert.assertEquals("{\"list3\":[7.5,8.5,9.5],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}", obj2.toDBJson("jsontable").toString());
+        Assert.assertEquals("myobjects2:1", obj2.keyString("jsontable"));
     }
 
     public static class Myobject extends DBObject {

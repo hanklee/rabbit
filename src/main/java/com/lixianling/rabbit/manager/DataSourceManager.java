@@ -25,15 +25,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * $Id: DataSourceManager.java 39 2016-01-08 12:04:37Z hank $
  */
 public final class DataSourceManager {
-    private static final DataSourceManager INSTANCE;
+    private static final DataSourceManager INSTANCE = new DataSourceManager();
 
-    static {
-        INSTANCE = new DataSourceManager();
-    }
+
 
     private Map<String, DataSource> dataSources = new ConcurrentHashMap<String, DataSource>(10);
 
     private DataSource dataSource = null;
+    private String defaultName = null;
 
     private DataSourceManager() {
         init(RabbitManager.RABBIT_CONFIG.dataSources);
@@ -54,7 +53,7 @@ public final class DataSourceManager {
                         String table_name = rs.getString(3);
                         DBObjectManager.registerMySQLTable(key, table_name);
                     }
-                    // FIX may be two source have same table name
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -81,7 +80,7 @@ public final class DataSourceManager {
      *
      *
      */
-    private void init(Map<String, DataSourceConfig> _dataSourceConf) {
+    private synchronized void init(Map<String, DataSourceConfig> _dataSourceConf) {
         for (String name : _dataSourceConf.keySet()) {
             DataSourceConfig dataSourceConf = _dataSourceConf.get(name);
             try {
@@ -114,8 +113,11 @@ public final class DataSourceManager {
 //                boneCPDataSource.setConnectionTimeoutInMs(10000); // process time out
 //                boneCPDataSource.setIdleConnectionTestPeriodInMinutes(10);
 //                boneCPDataSource.setConnectionTestStatement("/* ping */ SELECT 1");
-                if (dataSourceConf._default)
+                if (dataSourceConf._default) {
                     dataSource = ds;
+//                    defaultName = name;
+                }
+                defaultName = name;
                 dataSources.put(name, ds);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -159,6 +161,10 @@ public final class DataSourceManager {
 
     public static DataSource getDataSource() {
         return INSTANCE.dataSource;
+    }
+
+    public static String getDefaultName() {
+        return INSTANCE.defaultName;
     }
 
     public static DataSource getDataSource(String name) {

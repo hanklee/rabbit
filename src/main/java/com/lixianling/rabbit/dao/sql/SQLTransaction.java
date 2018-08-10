@@ -5,7 +5,6 @@ package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
-import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
@@ -24,8 +23,8 @@ import java.util.Set;
  */
 public final class SQLTransaction {
 
-    public static void update(QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
-        update(new SQLDAO(queryRunner), queryRunner, con, obj, table);
+    public static void update(String source, QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
+        update(new SQLDAO(source, queryRunner), queryRunner, con, obj, table);
     }
 
     /**
@@ -37,8 +36,8 @@ public final class SQLTransaction {
      */
     public static void update(SQLDAO dao, QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(dao.getSource(), table);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(dao.getSource(), table);
             Object[] objs = new Object[columns.size() + primary_keys.size()];
             int count = 0;
             for (String column : columns) {
@@ -50,7 +49,7 @@ public final class SQLTransaction {
                 objs[count] = obj.getValueByField(primary_key);
                 count++;
             }
-            String sql = SQLBuilder.getUpdateSQLByTable(table);
+            String sql = SQLBuilder.getUpdateSQLByTable(dao.getSource(), table);
             obj.beforeUpdate(dao, table, queryRunner);
             int mount = queryRunner.update(con, sql, objs);
             if (mount < 1) {
@@ -65,8 +64,8 @@ public final class SQLTransaction {
         }
     }
 
-    public static void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        insert(new SQLDAO(queryRunner), queryRunner, conn, obj, table);
+    public static void insert(String source, QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
+        insert(new SQLDAO(source, queryRunner), queryRunner, conn, obj, table);
     }
 
     /**
@@ -78,8 +77,8 @@ public final class SQLTransaction {
      */
     public static void insert(SQLDAO dao, QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
         try {
-            Field keyField = DBObjectManager.getInsertIncrKeyField(table, obj);
-            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(table); // true means if it is not auto increase then add key's column
+            Field keyField = DBObjectManager.getInsertIncrKeyField(dao.getSource(), table, obj);
+            Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(dao.getSource(), table); // true means if it is not auto increase then add key's column
             Object[] objs = new Object[columns.size()];
             int count = 0;
             for (String column : columns) {
@@ -87,7 +86,7 @@ public final class SQLTransaction {
                 count++;
             }
 
-            String sql = SQLBuilder.getInsertSQLByTable(table);
+            String sql = SQLBuilder.getInsertSQLByTable(dao.getSource(), table);
             obj.beforeInsert(dao, table, queryRunner);
             //int mount = queryRunner.insert(con,obj, keyField, sql, objs);
             PreparedStatement stmt = null;
@@ -130,20 +129,20 @@ public final class SQLTransaction {
         }
     }
 
-    public static void delete(QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
-        delete(new SQLDAO(queryRunner), queryRunner, con, obj, table);
+    public static void delete(String source, QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
+        delete(new SQLDAO(source, queryRunner), queryRunner, con, obj, table);
     }
 
     public static void delete(SQLDAO dao, QueryRunner queryRunner, Connection con, DBObject obj, String table) throws DBException {
         try {
-            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(table);
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(dao.getSource(), table);
             Object[] objs = new Object[primary_keys.size()];
             int count = 0;
             for (String primary_key : primary_keys) {
                 objs[count] = obj.getValueByField(primary_key);
                 count++;
             }
-            String sql = SQLBuilder.getDeleteSQLByTable(table);
+            String sql = SQLBuilder.getDeleteSQLByTable(dao.getSource(), table);
             obj.beforeDelete(dao, table, queryRunner);
             int mount = queryRunner.update(con, sql, objs);
             if (mount < 1) {

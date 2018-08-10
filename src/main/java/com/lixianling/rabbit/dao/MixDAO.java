@@ -5,7 +5,6 @@
 package com.lixianling.rabbit.dao;
 
 import com.lixianling.rabbit.DBException;
-import com.lixianling.rabbit.DBObject;
 
 /**
  *
@@ -15,6 +14,10 @@ import com.lixianling.rabbit.DBObject;
  *         $Id: MixDAO.java 38 2016-01-07 17:07:06Z hank $
  */
 public abstract class MixDAO extends DAO {
+
+    public MixDAO(String source) {
+        super(source);
+    }
 
     // SYNC operation
 

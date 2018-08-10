@@ -28,10 +28,10 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class MongoDAO extends DAO {
     private MongoClient client;
-    private final String source;
+
     public MongoDAO(String source) {
+        super(source);
         this.client = MongoManager.getInstance().getClient();
-        this.source = source;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class MongoDAO extends DAO {
                 db.createCollection(table);
             }
             docs = db.getCollection(table);
-            obj.beforeInsert(this, table,docs);
+            obj.beforeInsert(this, table, docs);
             Document doc = Document.parse(obj.toDBJson(table).toString());
             docs.insertOne(doc);
 
@@ -111,7 +111,7 @@ public class MongoDAO extends DAO {
 
     @Override
     public DBObject getObject(final String table, Object... objs) throws DBException {
-        Class objclazz = DBObjectManager.getClassByTable(table);
+        Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
             throw new DBException("not found table class");
         }

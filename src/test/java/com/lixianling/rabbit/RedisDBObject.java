@@ -70,7 +70,7 @@ public class RedisDBObject extends TestCase {
                 if (obj instanceof Jedis) {
                     Jedis con = (Jedis) obj;
                     DataDBObject clone = (DataDBObject) this.clone();
-                    String value = con.get(this.keyString());
+                    String value = con.get(this.keyString(dao.getSource()));
                     clone.JsonToObj((JSONObject) JSONObject.parse(value));
                     if (!this.email.equals(clone.email)) {
                         String uniqueEmail = this.getTableName() + RedisDAO.TABLE_UNIQUE + "email";
@@ -79,7 +79,7 @@ public class RedisDBObject extends TestCase {
                             throw new DBException("has exist email", MYCODE_EXIST_EMAIL);
                         }
                         con.hdel(uniqueEmail, clone.email);
-                        con.hset(uniqueEmail, this.email, this.keyString());
+                        con.hset(uniqueEmail, this.email, this.keyString(dao.getSource()));
                     }
                     if (!this.name.equals(clone.name)) {
                         String uniqueName = this.getTableName() + RedisDAO.TABLE_UNIQUE + "name";
@@ -88,7 +88,7 @@ public class RedisDBObject extends TestCase {
                             throw new DBException("has exist name", MYCODE_EXIST_NAME);
                         }
                         con.hdel(uniqueName, clone.name);
-                        con.hset(uniqueName, this.name, this.keyString());
+                        con.hset(uniqueName, this.name, this.keyString(dao.getSource()));
                     }
                 }
             }
@@ -157,7 +157,7 @@ public class RedisDBObject extends TestCase {
         }
     }
 
-    private static DataDBObject testQuery(RedisDAO dao, final String query) throws DBException {
+    private static DataDBObject testQuery(final RedisDAO dao, final String query) throws DBException {
         try {
             DataDBObject obj1 = dao.execute(new DAOHandler<DataDBObject>() {
                 @Override
@@ -226,15 +226,15 @@ public class RedisDBObject extends TestCase {
         obj.list3.add(8.5);
         obj.list3.add(9.5);
         System.out.println(obj.toJson().toString());
-        System.out.println(obj.toDBJson().toString());
-        System.out.println(obj.keyString());
+        System.out.println(obj.toDBJson("jsontable").toString());
+        System.out.println(obj.keyString("jsontable"));
 //        System.out.println(obj.keyString());
 //        System.out.println(obj.uniqueValue());
 
         DataDBObject obj2 = new DataDBObject();
         obj2.JsonToObj((JSONObject) JSONObject.parse("{\"list1\":[1],\"list3\":[7.5,8.5,9.5],\"list2\":[],\"name\":\"hank3\",\"id\":1,\"email\":\"hank3.dev@gmail.com\"}"));
         System.out.println(obj2.toJson().toString());
-        System.out.println(obj2.toDBJson().toString());
+        System.out.println(obj2.toDBJson("jsontable").toString());
 
         RedisDAO dao = new RedisDAO();
 

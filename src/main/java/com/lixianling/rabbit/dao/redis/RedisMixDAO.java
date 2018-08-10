@@ -21,13 +21,19 @@ import java.util.Collection;
  */
 public class RedisMixDAO extends MixDAO {
 
-    //    protected CacheDAO cacheDao; // cache operation interface
     private DAO dao;
     private DAO backDao;
 
-    public RedisMixDAO(final QueryRunner queryRunner) {
+    public RedisMixDAO(String source, final QueryRunner queryRunner) {
+        super(source);
         dao = new RedisDAO(RedisManager.getPool());
-        backDao = new SQLDAO(queryRunner);
+        backDao = new SQLDAO(source, queryRunner);
+    }
+
+    public RedisMixDAO(String source,String dbsource, final QueryRunner queryRunner) {
+        super(source);
+        dao = new RedisDAO(RedisManager.getPool());
+        backDao = new SQLDAO(dbsource, queryRunner);
     }
 
     @Override

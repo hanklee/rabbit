@@ -7,6 +7,7 @@ import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
+import com.lixianling.rabbit.manager.RabbitManager;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.List;
 public class MyTest2 extends TestCase {
 
     public void testAdd() {
+//        RabbitManager.register();
         DAO dao = new SQLDAO();
         MyTestData2 test = new MyTestData2();
 
@@ -53,6 +55,7 @@ public class MyTest2 extends TestCase {
     }
 
     public void test_Performance(int testNum) throws Exception {
+        RabbitManager.register();
         DAO dao = new SQLDAO();
 
 

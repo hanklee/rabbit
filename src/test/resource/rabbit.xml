@@ -8,6 +8,9 @@
     -->
     <mode>mysql</mode>
 
+    <!-- default source -->
+    <source>test</source>
+
     <!--  Mix mode or MYSQL mode  -->
 
     <!-- REDIS mode -->
@@ -28,7 +31,7 @@
          -->
         <datasource name="test" default="true">
             <driver>com.mysql.jdbc.Driver</driver>
-            <url>jdbc:mysql://192.168.10.187:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull</url>
+            <url>jdbc:mysql://192.168.31.202:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull</url>
             <user>root</user>
             <password>hank</password>
         </datasource>

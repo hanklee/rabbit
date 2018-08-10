@@ -5,7 +5,6 @@ package com.lixianling.rabbit.dao.sql;
 
 import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.dao.DAOExecute;
-import com.mongodb.DB;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 

@@ -43,7 +43,11 @@ public final class RabbitManager {
 
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
             // register datasource
-            DataSourceManager.register();
+            try {
+                DataSourceManager.register();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
         if (RabbitManager.RABBIT_CONFIG.mode.contains("elast")) {
@@ -58,6 +62,10 @@ public final class RabbitManager {
 
         // register db object
         DBObjectManager.register();
+    }
+
+    public static void register(){
+        // nothing
     }
 
 
@@ -108,7 +116,6 @@ public final class RabbitManager {
                 if (subList.getLength() > 0) {
                     df.driver = subList.item(0).getTextContent();
                 }
-
                 rabbitConfig.dataSources.put(name, df);
             }
 
@@ -123,6 +130,12 @@ public final class RabbitManager {
                 // } else {
                 //     rabbitConfig.mode = RabbitConfig.Mode.MYSQL;
                 // }
+            }
+
+            list = dd.getElementsByTagName("source");
+            if (list.getLength() > 0) {
+                String source = list.item(0).getTextContent();
+                rabbitConfig.sources = source;
             }
 
             RedisConfig redisConfig = new RedisConfig();
@@ -214,9 +227,11 @@ public final class RabbitManager {
                     String class_name = classE.getTextContent();
                     String table_name = tableE.getTextContent();
                     String cMark = classE.getAttribute("mark");
+                    String sources = classE.getAttribute("sources");
                     String tMark = tableE.getAttribute("mark");
                     dbset.class_name = class_name;
                     dbset.table_name = table_name;
+                    dbset.table_sources = sources;
                     dbset.mark_class = cMark;
                     dbset.mark_table = tMark;
                 }
@@ -239,6 +254,13 @@ public final class RabbitManager {
                     jTable.table_field = subList3.item(0).getTextContent();
                 } else {
                     jTable.table_field = "";
+                }
+
+                subList3 = tE.getElementsByTagName("table_source");
+                if (subList3.getLength() > 0) {
+                    jTable.table_source = subList3.item(0).getTextContent();
+                } else {
+                    jTable.table_source = "";
                 }
 
                 subList3 = tE.getElementsByTagName("incr_field");

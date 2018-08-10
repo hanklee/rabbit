@@ -13,7 +13,8 @@ package com.lixianling.rabbit;
  */
 public class DBException extends Exception {
 
-    public static final int CODE_NODEFINE = 0;
+    private static final long serialVersionUID = -7026927863513135082L;
+	public static final int CODE_NODEFINE = 0;
     public static final int CODE_NOTFOUND = 1;
     public static final int CODE_EXIST_VALUE = 2;
 

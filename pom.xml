@@ -4,7 +4,7 @@
 
     <groupId>com.lixianling</groupId>
     <artifactId>rabbit</artifactId>
-    <version>2.2.BETA</version>
+    <version>2.3.BETA</version>
     <packaging>jar</packaging>
 
     <name>rabbit</name>

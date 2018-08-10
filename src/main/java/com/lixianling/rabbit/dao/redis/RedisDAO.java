@@ -41,7 +41,7 @@ public class RedisDAO extends DAO {
     public final static String TABLE_NEXT_ID = ":next_id:";
     public final static String TABLE_UNIQUE = ":unique:";
 
-    public static String getTableIds(final DBObject obj) {
+    public static String getTableIds(final DBObject obj, String source) {
         return obj.getTableName() + TABLE_IDS;
     }
 
@@ -49,7 +49,7 @@ public class RedisDAO extends DAO {
         return table + TABLE_IDS;
     }
 
-    public static String getTableNextId(final DBObject obj) {
+    public static String getTableNextId(final DBObject obj, String source) {
         return obj.getTableName() + TABLE_NEXT_ID;
     }
 
@@ -59,6 +59,7 @@ public class RedisDAO extends DAO {
 
 
     public RedisDAO() {
+        super(RedisManager.getSourcel());
         if (RabbitManager.RABBIT_CONFIG.mode.contains("redis")) {
             this.pool = RedisManager.getPool();
         } else {
@@ -67,6 +68,7 @@ public class RedisDAO extends DAO {
     }
 
     public RedisDAO(JedisPool pool) {
+        super(RedisManager.getSourcel());
         this.pool = pool;
     }
 
@@ -122,7 +124,7 @@ public class RedisDAO extends DAO {
                 try {
                     Long incrId = connection.incr(getTableNextId(table));
                     Pipeline pipeline = connection.pipelined();
-                    Field keyField = DBObjectManager.getInsertIncrKeyField(table, obj);
+                    Field keyField = DBObjectManager.getInsertIncrKeyField(source, table, obj);
                     //                    Transaction transaction = connection.multi();
                     if (keyField != null) {
                         if (keyField.getType().equals(Integer.TYPE)) {
@@ -185,7 +187,7 @@ public class RedisDAO extends DAO {
             public DBObject execute(Object con) throws DBException {
                 Jedis connection = (Jedis) con;
                 try {
-                    Class objclazz = DBObjectManager.getClassByTable(table);
+                    Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
                     if (objclazz == null) {
                         throw new DBException("not found table class");
                     }

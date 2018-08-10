@@ -94,15 +94,15 @@ public abstract class DBObject extends JSONObj {
     // heroes_bag:5
     private String _keyString = null;
 
-    public String keyString() throws DBException {
+    public String keyString(String source) throws DBException {
         if (_keyString == null) {
-            _keyString = keyString(this.getTableName());
+            _keyString = keyString(source, this.getTableName());
         }
         return _keyString;
     }
 
-    public synchronized String keyString(String table_name) throws DBException {
-        return __getKeyStringByRegisterKey(table_name);
+    public synchronized String keyString(String source, String table_name) throws DBException {
+        return __getKeyStringByRegisterKey(source, table_name);
     }
 
     public Map<String, Object> ObjToMap(String table_name) {
@@ -162,8 +162,8 @@ public abstract class DBObject extends JSONObj {
      * @param table_name String
      * @return String
      */
-    private String __getKeyStringByRegisterKey(String table_name) throws DBException {
-        Set<String> keys = DBObjectManager.getObjectJSONKeys(table_name);
+    private String __getKeyStringByRegisterKey(String source, String table_name) throws DBException {
+        Set<String> keys = DBObjectManager.getObjectJSONKeys(source, table_name);
         Map<String, Field> allFields = getAllFields();
         StringBuilder sb = new StringBuilder();
         sb.append(table_name);
@@ -249,6 +249,7 @@ public abstract class DBObject extends JSONObj {
      *
      * @return table name
      */
+
     public String getTableName() {
         Object oname = getValueByField("table_name");
         if (oname == null) {
@@ -266,18 +267,25 @@ public abstract class DBObject extends JSONObj {
 
     public JSONObject toDBJson() {
         JSONObject json = new JSONObject();
-        setJsonValueByDBAttr(json, getTableName());
+        String source = DBObjectManager.getDefaultSource();
+        setJsonValueByDBAttr(json, source, getTableName());
         return json;
     }
 
-    public JSONObject toDBJson(String table_name) {
+    public JSONObject toDBJson(String source) {
         JSONObject json = new JSONObject();
-        setJsonValueByDBAttr(json, table_name);
+        setJsonValueByDBAttr(json, source, getTableName());
         return json;
     }
 
-    protected void setJsonValueByDBAttr(final JSONObject json, final String table_name) {
-        Set<String> attrs = DBObjectManager.getObjectJSONAttr(table_name);
+    public JSONObject toDBJson(String source, String table_name) {
+        JSONObject json = new JSONObject();
+        setJsonValueByDBAttr(json, source, table_name);
+        return json;
+    }
+
+    protected void setJsonValueByDBAttr(final JSONObject json, final String source, final String table_name) {
+        Set<String> attrs = DBObjectManager.getObjectJSONAttr(source, table_name);
         Map<String, Field> allFields = getAllFields();
         try {
             for (String attr : attrs) {
@@ -310,7 +318,7 @@ public abstract class DBObject extends JSONObj {
                         }
                         json.put(attr, jsonArray);
                     } else if (value instanceof DBObject) {
-                        json.put(attr, ((DBObject) value).toDBJson());
+                        json.put(attr, ((DBObject) value).toDBJson(source));
                     } else
                         json.put(attr, value);
                 }

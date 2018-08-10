@@ -51,7 +51,7 @@ public final class DBObjectManager {
 
     private static Map<String, Class> ObjectTable = new ConcurrentHashMap<String, Class>(40, 0.5f);
     private static Map<Class, String> ObjectCache = new ConcurrentHashMap<Class, String>(40, 0.5f);
-//    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
+    //    private static Map<Class, String> ObjectSource = new ConcurrentHashMap<Class, String>(40, 0.5f);
     private static Map<Class, Map<String, Field>> ObjectFieldCache = new ConcurrentHashMap<Class, Map<String, Field>>(40, 0.5f);
 
     private static Map<String, String> TableInsertIncrKeyField = new ConcurrentHashMap<String, String>(40, 0.5f);
@@ -60,6 +60,7 @@ public final class DBObjectManager {
 
     private static MessageDigest md;
     private final static Object MD5LOCK = new Object();
+    private static String defaultSource;
 
     private DBObjectManager() {
     }
@@ -79,10 +80,15 @@ public final class DBObjectManager {
         try {
             md = MessageDigest.getInstance("MD5");
             idGenerator = new IdGenerator.DefaultIdGenerator();
+            registerSources(config);
             registerTables(config);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static void registerSources(RabbitConfig config) {
+        defaultSource = config.sources;
     }
 
     /**
@@ -102,7 +108,7 @@ public final class DBObjectManager {
     }
 
     protected static void registerMySQLTable(String datasource, String table) throws DBException {
-        if (getTableAllColumns(table) != null) {
+        if (getTableAllColumns(datasource, table) != null) {
             return;
         }
         String key;
@@ -128,13 +134,13 @@ public final class DBObjectManager {
 
                 ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
                 // 所有关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
+                ObjectColumnsCache.put(datasource + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
 
                 rs = con.getMetaData().getColumns(null, null, table, null);
                 while (rs.next()) { // column name in the NO. 4
                     String name = rs.getString(4); //rs.getString("COLUMN_NAME");
                     all_columns.add(name);
-                    if (getTablePrimaryKey(table).contains(name)) {
+                    if (getTablePrimaryKey(datasource, table).contains(name)) {
                         if (!"YES".equals(rs.getString("IS_AUTOINCREMENT"))) {
                             no_incr_key_columns.add(name);
                         } else {
@@ -153,22 +159,22 @@ public final class DBObjectManager {
                 ImmutableSet.Builder<String> all_columnsBuilder = ImmutableSet.builder();
 
                 // 所有键值除了自增长的关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columnsBuilder.addAll(no_incr_key_columns).build());
+                ObjectColumnsCache.put(datasource + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_ALL_NO_INCR, no_incr_key_columnsBuilder.addAll(no_incr_key_columns).build());
                 // 所有键值除了关键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_NO_KEY, no_key_columnsBuilder.addAll(no_key_columns).build());
+                ObjectColumnsCache.put(datasource + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_NO_KEY, no_key_columnsBuilder.addAll(no_key_columns).build());
                 // 所有键值
-                ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, all_columnsBuilder.addAll(all_columns).build());
+                ObjectColumnsCache.put(datasource + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_ALL, all_columnsBuilder.addAll(all_columns).build());
 
                 // 缓存table自增长的关键值
                 if (incrKey != null) {
-                    TableInsertIncrKeyField.put(table, incrKey);
+                    TableInsertIncrKeyField.put(datasource + OBJECT_ATTR_SPLIT_KEY + table, incrKey);
                 }
 
                 // must register json attribute and then json register key
-                DBObjectManager.registerJSONAttr(table, all_columns.toArray(new String[all_columns.size()]));
-                DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
+                DBObjectManager.registerJSONAttr(datasource, table, all_columns.toArray(new String[all_columns.size()]));
+                DBObjectManager.registerJSONKey(datasource, table, keys.toArray(new String[keys.size()]));
                 // 缓存table相关的sql语句
-                SQLBuilder.registerTable(table);
+                SQLBuilder.registerTable(datasource, table);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 throw new DBException(ex.getMessage());
@@ -196,7 +202,10 @@ public final class DBObjectManager {
             // table对应的类
             registerTableClassField(clazz);
             if ("true".equals(dbset.mark_class)) {
-                DBObjectManager.registerTableClass(table, clazz);
+                String[] allSources = dbset.table_sources.split(",");
+                for (String source : allSources) {
+                    DBObjectManager.registerTableClass(source, table, clazz);
+                }
             }
 
             // 缓存table相关的类
@@ -213,9 +222,14 @@ public final class DBObjectManager {
         }
     }
 
+    public static String getDefaultSource() {
+        return defaultSource;
+    }
+
     private static void registerJsonTables(TableConfig.TableObject tableObject) throws DBException {
         String table = tableObject.table_name;
-        if (getTableAllColumns(table) != null) {
+        String source = tableObject.table_source;
+        if (getTableAllColumns(source, table) != null) {
             return;
         }
         Set<String> keys = new HashSet<String>();
@@ -239,14 +253,14 @@ public final class DBObjectManager {
 
         ImmutableSet.Builder<String> keysBuilder = ImmutableSet.builder();
         ImmutableSet.Builder<String> allFieldBuilder = ImmutableSet.builder();
-        ObjectColumnsCache.put(table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
-        ObjectColumnsCache.put(table + TABLE_SUFFIX_ALL, allFieldBuilder.addAll(allField).build());
+        ObjectColumnsCache.put(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_KEY, keysBuilder.addAll(keys).build());
+        ObjectColumnsCache.put(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_ALL, allFieldBuilder.addAll(allField).build());
 
-        DBObjectManager.registerJSONAttr(table, allField.toArray(new String[allField.size()]));
-        DBObjectManager.registerJSONKey(table, keys.toArray(new String[keys.size()]));
+        DBObjectManager.registerJSONAttr(source, table, allField.toArray(new String[allField.size()]));
+        DBObjectManager.registerJSONKey(source, table, keys.toArray(new String[keys.size()]));
 
         if (incrKey != null) {
-            TableInsertIncrKeyField.put(table, incrKey);
+            TableInsertIncrKeyField.put(source + OBJECT_ATTR_SPLIT_KEY + table, incrKey);
         }
     }
 
@@ -284,20 +298,20 @@ public final class DBObjectManager {
         }
     }
 
-    protected static void registerTableClass(String table_name, Class clazz) {
-        ObjectTable.put(table_name, clazz);
+    protected static void registerTableClass(String source, String table_name, Class clazz) {
+        ObjectTable.put(source + OBJECT_ATTR_SPLIT_KEY + table_name, clazz);
     }
 
-    public static <T extends DBObject> Class<T> getClassByTable(String table_name) {
-        return ObjectTable.get(table_name);
+    public static <T extends DBObject> Class<T> getClassByTable(String source, String table_name) {
+        return ObjectTable.get(source + OBJECT_ATTR_SPLIT_KEY + table_name);
     }
 
-    public static String getInsertIncrKeyField(String table_name) {
-        return TableInsertIncrKeyField.get(table_name);
+    public static String getInsertIncrKeyField(String source, String table_name) {
+        return TableInsertIncrKeyField.get(source + OBJECT_ATTR_SPLIT_KEY + table_name);
     }
 
-    public static Field getInsertIncrKeyField(String table_name, DBObject obj) {
-        String keyFieldName = TableInsertIncrKeyField.get(table_name);
+    public static Field getInsertIncrKeyField(String source, String table_name, DBObject obj) {
+        String keyFieldName = TableInsertIncrKeyField.get(source + OBJECT_ATTR_SPLIT_KEY + table_name);
         Field keyField = null;
         if (keyFieldName != null) {
             keyField = obj.getAllFields().get(keyFieldName);
@@ -311,24 +325,24 @@ public final class DBObjectManager {
      * @param table_name 表名
      * @param attrs      属性
      */
-    protected static void registerJSONKey(String table_name, String attrs) {
-        registerJSONKey(table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
+    protected static void registerJSONKey(String source, String table_name, String attrs) {
+        registerJSONKey(source, table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
     }
 
     /**
      * @param table_name 表名
      * @param attrs      String...
      */
-    protected static void registerJSONKey(String table_name, String... attrs) {
-        Set<String> keyString = ObjectColumnsCache.get(table_name + TABLE_SUFFIX_JSON_KEY);
+    protected static void registerJSONKey(String source, String table_name, String... attrs) {
+        Set<String> keyString = ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_KEY);
         if (keyString == null) {
             keyString = Collections.synchronizedSet(new HashSet<String>());
-            ObjectColumnsCache.put(table_name + TABLE_SUFFIX_JSON_KEY, keyString);
+            ObjectColumnsCache.put(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_KEY, keyString);
         }
-        Set<String> attrString = ObjectColumnsCache.get(table_name + TABLE_SUFFIX_JSON_ATTR);
+        Set<String> attrString = ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_ATTR);
         if (attrString == null) {
             attrString = Collections.synchronizedSet(new HashSet<String>());
-            ObjectColumnsCache.put(table_name + TABLE_SUFFIX_JSON_ATTR, attrString);
+            ObjectColumnsCache.put(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_ATTR, attrString);
         }
         Collections.addAll(keyString, attrs);
         Collections.addAll(attrString, attrs);
@@ -340,42 +354,50 @@ public final class DBObjectManager {
      * @param table_name 表名
      * @param attrs      "dungeonId:times:reset:day:star:bide"
      */
-    protected static void registerJSONAttr(String table_name, String attrs) {
-        registerJSONAttr(table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
+    protected static void registerJSONAttr(String source, String table_name, String attrs) {
+        registerJSONAttr(source, table_name, attrs.split(OBJECT_ATTR_SPLIT_KEY));
     }
 
-    protected static void registerJSONAttr(String table_name, String... attrs) {
-        Set<String> attrString = ObjectColumnsCache.get(table_name + TABLE_SUFFIX_JSON_ATTR);
+    protected static void registerJSONAttr(String source, String table_name, String... attrs) {
+        Set<String> attrString = ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_ATTR);
         if (attrString == null) {
             attrString = Collections.synchronizedSet(new HashSet<String>());
-            ObjectColumnsCache.put(table_name + TABLE_SUFFIX_JSON_ATTR, attrString);
+            ObjectColumnsCache.put(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_ATTR, attrString);
         }
         Collections.addAll(attrString, attrs);
 //        ObjectColumnsCache.put(table_name + TABLE_SUFFIX_JSON_ATTR, Collections.synchronizedSet(attrString));
     }
 
-    public static Set<String> getObjectJSONKeys(String table_name) {
-        return ObjectColumnsCache.get(table_name + TABLE_SUFFIX_JSON_KEY);
+    public static Set<String> getObjectJSONKeys(String source_table) {
+        return ObjectColumnsCache.get(source_table + TABLE_SUFFIX_JSON_KEY);
     }
 
-    public static Set<String> getObjectJSONAttr(String table_name) {
-        return ObjectColumnsCache.get(table_name + TABLE_SUFFIX_JSON_ATTR);
+    public static Set<String> getObjectJSONKeys(String source, String table_name) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_KEY);
     }
 
-    public static Set<String> getTableAllColumns(String table) {
-        return ObjectColumnsCache.get(table + TABLE_SUFFIX_ALL);
+    public static Set<String> getObjectJSONAttr(String source_table_name) {
+        return ObjectColumnsCache.get(source_table_name + TABLE_SUFFIX_JSON_ATTR);
     }
 
-    public static Set<String> getTableAllColumnsNoIncr(String table) {
-        return ObjectColumnsCache.get(table + TABLE_SUFFIX_ALL_NO_INCR);
+    public static Set<String> getObjectJSONAttr(String source, String table_name) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table_name + TABLE_SUFFIX_JSON_ATTR);
     }
 
-    public static Set<String> getTableAllColumnsNoKey(String table) {
-        return ObjectColumnsCache.get(table + TABLE_SUFFIX_NO_KEY);
+    public static Set<String> getTableAllColumns(String source, String table) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_ALL);
     }
 
-    public static Set<String> getTablePrimaryKey(String table) {
-        return ObjectColumnsCache.get(table + TABLE_SUFFIX_KEY);
+    public static Set<String> getTableAllColumnsNoIncr(String source, String table) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_ALL_NO_INCR);
+    }
+
+    public static Set<String> getTableAllColumnsNoKey(String source, String table) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_NO_KEY);
+    }
+
+    public static Set<String> getTablePrimaryKey(String source, String table) {
+        return ObjectColumnsCache.get(source + OBJECT_ATTR_SPLIT_KEY + table + TABLE_SUFFIX_KEY);
     }
 
 
