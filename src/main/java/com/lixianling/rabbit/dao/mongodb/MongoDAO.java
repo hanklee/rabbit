@@ -109,23 +109,34 @@ public class MongoDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(DBObject obj, final String table) throws DBException {
+    public DBObject getObject(final String table, Object... objs) throws DBException {
+        Class objclazz = DBObjectManager.getClassByTable(table);
+        if (objclazz == null) {
+            throw new DBException("not found table class");
+        }
+        DBObject obj = null;
+        try {
+            obj = (DBObject) objclazz.newInstance();
+        } catch (Exception e) {
+            throw new DBException("wrong table class:" + objclazz.toString());
+        }
+
         Field idf = DBObjectManager.getClazzField(obj.getClass()).get("_id");
         if (idf == null) {
             throw new DBException("NOT Found Id");
         }
-        ObjectId objId;
-        try {
-            Object value = idf.get(obj);
-            if (value instanceof ObjectId) {
-                objId = (ObjectId) value;
-            } else if (value instanceof String) {
-                objId = new ObjectId((String) value);
-            } else
-                throw new DBException("NOT Found Id");
-        } catch (IllegalAccessException e) {
-            throw new DBException(e.getMessage());
-        }
+        ObjectId objId = new ObjectId((String) objs[0]);
+//        try {
+//            Object value = idf.get(obj);
+//            if (value instanceof ObjectId) {
+//                objId = (ObjectId) value;
+//            } else if (value instanceof String) {
+//                objId = new ObjectId((String) value);
+//            } else
+//                throw new DBException("NOT Found Id");
+//        } catch (IllegalAccessException e) {
+//            throw new DBException(e.getMessage());
+//        }
         MongoDatabase db = this.client.getDatabase(obj.getDatasource());
         MongoCollection<Document> docs = db.getCollection(table);
         Document myDoc = docs.find(eq("_id", objId)).first();

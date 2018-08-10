@@ -179,16 +179,30 @@ public class RedisDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(final DBObject obj, final String table) throws DBException {
+    public DBObject getObject(final String table, final Object... objs) throws DBException {
         return new JedisExecute<DBObject>(pool) {
             @Override
             public DBObject execute(Object con) throws DBException {
                 Jedis connection = (Jedis) con;
                 try {
-                    String value = connection.get(obj.toKeyString(table));
+                    Class objclazz = DBObjectManager.getClassByTable(table);
+                    if (objclazz == null) {
+                        throw new DBException("not found table class");
+                    }
+                    DBObject obj = null;
+                    try {
+                        obj = (DBObject) objclazz.newInstance();
+                    } catch (Exception e) {
+                        throw new DBException("wrong table class:" + objclazz.toString());
+                    }
+                    String keyString = table;
+                    for (Object o : objs) {
+                        keyString = keyString + ":" + String.valueOf(o);
+                    }
+                    String value = connection.get(keyString);
                     if (value == null)
                         throw new DBException("not found!");
-                    return obj.cloneObj((JSONObject) JSONObject.parse(value));
+                    return obj.cloneObj(JSONObject.parseObject(value));
                 } catch (DBException e) {
                     throw e;
                 }

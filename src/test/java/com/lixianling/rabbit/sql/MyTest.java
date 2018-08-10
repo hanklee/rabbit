@@ -68,7 +68,7 @@ public class MyTest extends TestCase {
         System.out.println("Get    performance ... , number: " + testNum);
         cTime = System.currentTimeMillis();
         for (MyTestData tmp : list) {
-            dao.getObject(tmp);
+            dao.getObject("myTest", tmp.a, tmp.b);
         }
         System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
         System.out.println("Update performance ... , number: " + testNum);

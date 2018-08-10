@@ -109,17 +109,29 @@ public class ElasticDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(DBObject obj, String table) throws DBException {
-        Field idf = DBObjectManager.getClazzField(obj.getClass()).get("_id");
-        if (idf == null) {
-            throw new DBException("NOT Found Id");
+    public DBObject getObject(final String table, Object... objs) throws DBException {
+        Class objclazz = DBObjectManager.getClassByTable(table);
+        if (objclazz == null) {
+            throw new DBException("not found table class");
         }
-        String value;
+        DBObject obj = null;
         try {
-            value = (String) idf.get(obj);
-        } catch (IllegalAccessException e) {
-            throw new DBException(e.getMessage());
+            obj = (DBObject) objclazz.newInstance();
+        } catch (Exception e) {
+            throw new DBException("wrong table class:" + objclazz.toString());
         }
+
+//        Field idf = DBObjectManager.getClazzField(obj.getClass()).get("_id");
+//        if (idf == null) {
+//            throw new DBException("NOT Found Id");
+//        }
+        String value = (String) objs[0];
+//        try {
+////            value = (String) idf.get(obj);
+//
+//        } catch (IllegalAccessException e) {
+//            throw new DBException(e.getMessage());
+//        }
         GetResponse response = client.prepareGet(obj.getDatasource(), table, value).get();
         Map<String, Object> source = response.getSourceAsMap();
         if (source == null || source.keySet().size() == 0) {

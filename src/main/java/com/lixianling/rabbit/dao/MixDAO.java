@@ -18,11 +18,7 @@ public abstract class MixDAO extends DAO {
 
     // SYNC operation
 
-    public void syncObject(DBObject obj)throws DBException {
-        syncObject(obj,obj.getTableName());
-    }
-
-    public abstract void syncObject(DBObject obj, String table) throws DBException;
+    public abstract void syncObject(String table,Object ... objs) throws DBException;
 
     public abstract void syncTable(String table) throws DBException;
 

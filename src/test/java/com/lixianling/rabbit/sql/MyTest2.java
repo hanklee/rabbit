@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class MyTest2 extends TestCase {
 
-    public void testAdd(){
+    public void testAdd() {
         DAO dao = new SQLDAO();
         MyTestData2 test = new MyTestData2();
 
@@ -36,7 +36,7 @@ public class MyTest2 extends TestCase {
 
     }
 
-    public void test100(){
+    public void test100() {
         try {
             test_Performance(100);
         } catch (Exception e) {
@@ -44,7 +44,7 @@ public class MyTest2 extends TestCase {
         }
     }
 
-    public void test1000(){
+    public void test1000() {
         try {
             test_Performance(1000);
         } catch (Exception e) {
@@ -75,7 +75,7 @@ public class MyTest2 extends TestCase {
         System.out.println("Get    performance ... , number: " + testNum);
         cTime = System.currentTimeMillis();
         for (MyTestData2 tmp : list) {
-            dao.getObject(tmp);
+            dao.getObject("myTest", tmp.a, tmp.b);
         }
         System.out.println("run:" + (System.currentTimeMillis() - cTime) + " ms");
         System.out.println("Update performance ... , number: " + testNum);

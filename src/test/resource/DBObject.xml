@@ -23,7 +23,7 @@
 
     -->
     <dbobject datasource="test" mode="mysql">
-        <class_name>com.lixianling.rabbit.sql.MyTest</class_name>
+        <class_name mark="true">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
         <!--
 
         mark true : the class will refer to the table name

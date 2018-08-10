@@ -16,13 +16,12 @@ import org.apache.commons.dbutils.QueryRunner;
 import java.util.Collection;
 
 /**
- *
  * @author Xianling Li(hanklee)
  * $Id: RedisMixDAO.java 39 2016-01-08 12:04:37Z hank $
  */
 public class RedisMixDAO extends MixDAO {
 
-//    protected CacheDAO cacheDao; // cache operation interface
+    //    protected CacheDAO cacheDao; // cache operation interface
     private DAO dao;
     private DAO backDao;
 
@@ -39,18 +38,18 @@ public class RedisMixDAO extends MixDAO {
     @Override
     public void delete(DBObject obj, String table) throws DBException {
         this.dao.delete(obj, table);
-        this.backDao.delete(obj,table);
+        this.backDao.delete(obj, table);
     }
 
     @Override
     public void insert(DBObject obj, String table) throws DBException {
         this.dao.insert(obj, table);
-        this.backDao.insert(obj,table);
+        this.backDao.insert(obj, table);
     }
 
     @Override
-    public DBObject getObject(DBObject obj, String table) throws DBException {
-        return this.dao.getObject(obj,table);
+    public DBObject getObject(final String table, final Object... objs) throws DBException {
+        return this.dao.getObject(table, objs);
     }
 
     @Override
@@ -74,9 +73,9 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
-    public void syncObject(DBObject obj, String table) throws DBException {
-        DBObject nobj = this.dao.getObject(obj);
-        this.backDao.update(nobj,table);
+    public void syncObject(String table, Object... objs) throws DBException {
+        DBObject nobj = this.dao.getObject(table, objs);
+        this.backDao.update(nobj, table);
     }
 
     @Override
