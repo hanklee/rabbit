@@ -47,7 +47,10 @@
 
         -->
         <dbobject>
-            <class_name mark="true" sources="test">com.lixianling.rabbit.sql.MyTest$MyTestData</class_name>
+            <class_name mark="true"
+                        sources="test">
+                com.lixianling.rabbit.sql.MyTest$MyTestData
+            </class_name>
             <!--
 
             mark true : the class will refer to the table name

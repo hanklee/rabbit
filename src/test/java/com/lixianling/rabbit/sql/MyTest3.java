@@ -34,7 +34,7 @@ public class MyTest3 extends TestCase {
     public void test_v1() {
         List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(TestData6.class, null);
         printFieldInfos(fieldInfoList);
-        RabbitManager.register();
+        RabbitManager.register(); //  need register to load config file and initiate
         DAO dao = new SQLDAO();
         final TestData6 td6 = new TestData6();
         td6.setName("name");
@@ -73,6 +73,7 @@ public class MyTest3 extends TestCase {
     }
 
     public void test_v2() {
+        RabbitManager.register(); // need register to load config file and initiate
         DAO dao = new SQLDAO();
         final TestData7 td7 = new TestData7();
         td7.setName("name");

@@ -8,6 +8,7 @@ import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
 import com.lixianling.rabbit.manager.DBObjectManager;
+import com.lixianling.rabbit.manager.RabbitManager;
 import junit.framework.TestCase;
 
 import java.util.Set;
@@ -18,6 +19,7 @@ import java.util.Set;
 public class InsertTableTest extends TestCase {
 
     public void test_v1() {
+        RabbitManager.register();
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey("test", "test1");
         Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr("test", "test1");
         System.out.println(primary_keys);

@@ -59,6 +59,20 @@ public class SQLBuilder {
         return SQLCACHE.get(source + ":" + table + OP_GETOBJ);
     }
 
+    public static String makeGetObjectsSQL(String table, String[] fields) {
+        StringBuilder s = new StringBuilder("SELECT * FROM ").append(table);
+        s.append(" WHERE ");
+        int key_size = fields.length;
+        int kye_i = 1;
+        for (String primary_key : fields) {
+            s.append('`').append(primary_key).append("` = ? ");
+            if (kye_i != key_size)
+                s.append(" AND ");
+            kye_i++;
+        }
+        return s.toString();
+    }
+
     /**
      * PRIVATE METHODS
      */

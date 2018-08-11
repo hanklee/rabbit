@@ -9,6 +9,7 @@ import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.IdGenerator;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Xianling Li(hanklee)
@@ -61,7 +62,43 @@ public abstract class DAO {
 
     public abstract void insert(DBObject obj, String table) throws DBException;
 
-    public abstract DBObject getObject(String table, Object... objs) throws DBException;
+    /**
+     *
+     *  get object through table key value
+     *
+     * @param table table name
+     * @param objs  key value
+     * @param <T> return Object type
+     * @return a object
+     * @throws DBException db exception
+     */
+    public abstract <T extends DBObject> T getObject(String table, Object... objs) throws DBException;
+
+    /**
+     *
+     *  get object through table fields and their value
+     *
+     * @param table table name
+     * @param fields fields name
+     * @param objs  key value
+     * @param <T> return Object type
+     * @return a object
+     * @throws DBException db exception
+     */
+    public abstract <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException;
+
+    /**
+     *
+     * get list of object through table fields and their value
+     *
+     * @param table table name
+     * @param fields fields name
+     * @param objs  key value
+     * @param <T> return Object type
+     * @return a object
+     * @throws DBException db exception
+     */
+    public abstract <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException;
 
     /*
 

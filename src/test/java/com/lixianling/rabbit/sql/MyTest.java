@@ -46,10 +46,9 @@ public class MyTest extends TestCase {
     }
 
 
-    public void test_Performance(int testNum) throws Exception {
-        RabbitManager.register();
+    private void test_Performance(int testNum) throws Exception {
+        RabbitManager.register(); // need register to load config file and initiate
         DAO dao = new SQLDAO();
-
 
 //        System.out.println(tmp.toDBJson().toString());
         List<MyTestData> list = new ArrayList<MyTestData>();

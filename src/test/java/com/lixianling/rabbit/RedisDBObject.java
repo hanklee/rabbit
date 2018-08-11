@@ -239,10 +239,7 @@ public class RedisDBObject extends TestCase {
         RedisDAO dao = new RedisDAO();
 
 //        testDelete(dao,"hank2.dev@gmail.com");
-
-
 //        testInsert(obj,dao);
-
 //        obj = testQuery(dao,"hank1.dev@gmail.com");
 //        obj.email = "hank.dev@gmail.com";
 //        testUpdate(obj,dao);
@@ -253,12 +250,8 @@ public class RedisDBObject extends TestCase {
 //        obj2.id = 6;
 //
 //        System.out.println(dao.getObject(obj2));
-
 //        dao.update(obj1);
-
 //        System.out.println(dao.get(obj2));
-
-
 //        dao.delete(dao.getObject(obj2));
     }
 }

@@ -19,7 +19,7 @@ import java.util.List;
 public class MyTest2 extends TestCase {
 
     public void testAdd() {
-//        RabbitManager.register();
+        RabbitManager.register(); // need register to load config file and initiate
         DAO dao = new SQLDAO();
         MyTestData2 test = new MyTestData2();
 
@@ -55,7 +55,7 @@ public class MyTest2 extends TestCase {
     }
 
     public void test_Performance(int testNum) throws Exception {
-        RabbitManager.register();
+        RabbitManager.register();// need register to load config file and initiate
         DAO dao = new SQLDAO();
 
 

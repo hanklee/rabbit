@@ -20,6 +20,7 @@ import org.elasticsearch.rest.RestStatus;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
@@ -112,6 +113,11 @@ public class ElasticDAO extends DAO {
     }
 
     @Override
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return null;
+    }
+
+    @Override
     public DBObject getObject(final String table, Object... objs) throws DBException {
         Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
@@ -141,6 +147,11 @@ public class ElasticDAO extends DAO {
             return null;
         }
         return obj.cloneObj(source);
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
+        return null;
     }
 
     @Override

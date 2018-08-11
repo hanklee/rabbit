@@ -14,6 +14,7 @@ import com.lixianling.rabbit.manager.RedisManager;
 import org.apache.commons.dbutils.QueryRunner;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Xianling Li(hanklee)
@@ -24,16 +25,16 @@ public class RedisMixDAO extends MixDAO {
     private DAO dao;
     private DAO backDao;
 
-    public RedisMixDAO(String source, final QueryRunner queryRunner) {
+    public RedisMixDAO(String source) {
         super(source);
         dao = new RedisDAO(RedisManager.getPool());
-        backDao = new SQLDAO(source, queryRunner);
+        backDao = new SQLDAO(source);
     }
 
-    public RedisMixDAO(String source,String dbsource, final QueryRunner queryRunner) {
+    public RedisMixDAO(String source, String dbsource) {
         super(source);
         dao = new RedisDAO(RedisManager.getPool());
-        backDao = new SQLDAO(dbsource, queryRunner);
+        backDao = new SQLDAO(dbsource);
     }
 
     @Override
@@ -54,8 +55,18 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return null;
+    }
+
+    @Override
     public DBObject getObject(final String table, final Object... objs) throws DBException {
         return this.dao.getObject(table, objs);
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
+        return null;
     }
 
     @Override

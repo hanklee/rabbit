@@ -18,6 +18,7 @@ import redis.clients.jedis.Pipeline;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.List;
 
 import static com.lixianling.rabbit.DBException.CODE_EXIST_VALUE;
 import static com.lixianling.rabbit.DBException.CODE_NOTFOUND;
@@ -160,6 +161,11 @@ public class RedisDAO extends DAO {
     }
 
     @Override
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return null;
+    }
+
+    @Override
     public void update(Collection<? extends DBObject> objs, final String table_name) throws DBException {
         for (DBObject obj : objs) {
             update(obj, table_name);
@@ -211,6 +217,11 @@ public class RedisDAO extends DAO {
             }
         }.run();
 
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
+        return null;
     }
 
     public <T> T execute(final DAOHandler<T> handler) throws DBException {

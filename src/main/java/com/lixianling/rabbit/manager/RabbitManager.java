@@ -86,42 +86,40 @@ public final class RabbitManager {
             Document dd = parseXML(RABBIT_CONF_FILE, false);
 
             NodeList list = dd.getElementsByTagName("datasource");
-            String defaultName = null;
             for (int i = 0; i < list.getLength(); i++) {
                 Element tE = (Element) list.item(i);
                 String name = tE.getAttribute("name");
                 String def = tE.getAttribute("default");
                 DataSourceConfig df = new DataSourceConfig();
                 df.name = name;
-                if (def != null && "true".equals(def)) {
+                if ("true".equals(def)) {
                     df._default = true;
-                    defaultName = name;
                 }
                 NodeList subList = tE.getElementsByTagName("url");
                 if (subList.getLength() > 0) {
-                    df.url = subList.item(0).getTextContent();
+                    df.url = subList.item(0).getTextContent().trim();
                 }
 
                 subList = tE.getElementsByTagName("user");
                 if (subList.getLength() > 0) {
-                    df.user = subList.item(0).getTextContent();
+                    df.user = subList.item(0).getTextContent().trim();
                 }
 
                 subList = tE.getElementsByTagName("password");
                 if (subList.getLength() > 0) {
-                    df.password = subList.item(0).getTextContent();
+                    df.password = subList.item(0).getTextContent().trim();
                 }
 
                 subList = tE.getElementsByTagName("driver");
                 if (subList.getLength() > 0) {
-                    df.driver = subList.item(0).getTextContent();
+                    df.driver = subList.item(0).getTextContent().trim();
                 }
                 rabbitConfig.dataSources.put(name, df);
             }
 
             list = dd.getElementsByTagName("mode");
             if (list.getLength() > 0) {
-                String model = list.item(0).getTextContent();
+                String model = list.item(0).getTextContent().trim();
                 rabbitConfig.mode = model;
                 // if ("REDIS".equals(model)) {
                 //     rabbitConfig.mode = RabbitConfig.Mode.REDIS;
@@ -134,8 +132,8 @@ public final class RabbitManager {
 
             list = dd.getElementsByTagName("source");
             if (list.getLength() > 0) {
-                String source = list.item(0).getTextContent();
-                rabbitConfig.sources = source;
+                String source = list.item(0).getTextContent().trim();
+                rabbitConfig.source = source;
             }
 
             RedisConfig redisConfig = new RedisConfig();
@@ -147,7 +145,6 @@ public final class RabbitManager {
 
                 NodeList subList = tE.getElementsByTagName("cluster");
                 redisConfig.cluster = subList.getLength() > 0 && "true".equals(subList.item(0).getTextContent());
-
 
                 redisConfig.hosts = new ArrayList<RedisConfig.Host>();
                 subList = tE.getElementsByTagName("host");
@@ -179,8 +176,8 @@ public final class RabbitManager {
                 NodeList subList = tE.getElementsByTagName("setting");
                 for (int i = 0; i < subList.getLength(); i++) {
                     Element setE = (Element) subList.item(i);
-                    String key = setE.getElementsByTagName("name").item(0).getTextContent();
-                    String value = setE.getElementsByTagName("value").item(0).getTextContent();
+                    String key = setE.getElementsByTagName("name").item(0).getTextContent().trim();
+                    String value = setE.getElementsByTagName("value").item(0).getTextContent().trim();
                     elasticConfig.settings.put(key, value);
                 }
 
@@ -189,7 +186,7 @@ public final class RabbitManager {
                     ElasticConfig.Host host = new ElasticConfig.Host();
                     Element hostE = (Element) subList.item(i);
                     host.port = Integer.valueOf(hostE.getAttribute("port"));
-                    host.host = hostE.getTextContent();
+                    host.host = hostE.getTextContent().trim();
                     elasticConfig.hosts.add(host);
                 }
             }
@@ -205,7 +202,7 @@ public final class RabbitManager {
                     MongoConfig.Host host = new MongoConfig.Host();
                     Element hostE = (Element) subList.item(i);
                     host.port = Integer.valueOf(hostE.getAttribute("port"));
-                    host.host = hostE.getTextContent();
+                    host.host = hostE.getTextContent().trim();
                     mongoConfig.hosts.add(host);
                 }
             }
@@ -229,8 +226,8 @@ public final class RabbitManager {
                     String cMark = classE.getAttribute("mark");
                     String sources = classE.getAttribute("sources");
                     String tMark = tableE.getAttribute("mark");
-                    dbset.class_name = class_name;
-                    dbset.table_name = table_name;
+                    dbset.class_name = class_name.trim();
+                    dbset.table_name = table_name.trim();
                     dbset.table_sources = sources;
                     dbset.mark_class = cMark;
                     dbset.mark_table = tMark;
@@ -246,33 +243,33 @@ public final class RabbitManager {
                 NodeList subList = tE.getElementsByTagName("table_name");
                 if (subList.getLength() > 0) {
                     Element tableE = (Element) subList.item(0);
-                    jTable.table_name = tableE.getTextContent();
+                    jTable.table_name = tableE.getTextContent().trim();
                 }
 
                 NodeList subList3 = tE.getElementsByTagName("table_field");
                 if (subList3.getLength() > 0) {
-                    jTable.table_field = subList3.item(0).getTextContent();
+                    jTable.table_field = subList3.item(0).getTextContent().trim();
                 } else {
                     jTable.table_field = "";
                 }
 
                 subList3 = tE.getElementsByTagName("table_source");
                 if (subList3.getLength() > 0) {
-                    jTable.table_source = subList3.item(0).getTextContent();
+                    jTable.table_source = subList3.item(0).getTextContent().trim();
                 } else {
                     jTable.table_source = "";
                 }
 
                 subList3 = tE.getElementsByTagName("incr_field");
                 if (subList3.getLength() > 0) {
-                    jTable.incr_field = subList3.item(0).getTextContent();
+                    jTable.incr_field = subList3.item(0).getTextContent().trim();
                 } else {
                     jTable.incr_field = "";
                 }
 
                 subList3 = tE.getElementsByTagName("key_field");
                 if (subList3.getLength() > 0) {
-                    jTable.key_field = subList3.item(0).getTextContent();
+                    jTable.key_field = subList3.item(0).getTextContent().trim();
                 } else {
                     jTable.key_field = "";
                 }

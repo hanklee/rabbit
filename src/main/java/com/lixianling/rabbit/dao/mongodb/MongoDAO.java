@@ -18,6 +18,7 @@ import org.bson.types.ObjectId;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -110,6 +111,11 @@ public class MongoDAO extends DAO {
     }
 
     @Override
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return null;
+    }
+
+    @Override
     public DBObject getObject(final String table, Object... objs) throws DBException {
         Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
@@ -157,6 +163,11 @@ public class MongoDAO extends DAO {
             }
             return clone;
         }
+        return null;
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
         return null;
     }
 

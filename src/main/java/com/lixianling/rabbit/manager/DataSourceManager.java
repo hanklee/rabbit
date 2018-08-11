@@ -27,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class DataSourceManager {
     private static final DataSourceManager INSTANCE = new DataSourceManager();
 
-
-
     private Map<String, DataSource> dataSources = new ConcurrentHashMap<String, DataSource>(10);
 
     private DataSource dataSource = null;
@@ -53,7 +51,6 @@ public final class DataSourceManager {
                         String table_name = rs.getString(3);
                         DBObjectManager.registerMySQLTable(key, table_name);
                     }
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -115,9 +112,8 @@ public final class DataSourceManager {
 //                boneCPDataSource.setConnectionTestStatement("/* ping */ SELECT 1");
                 if (dataSourceConf._default) {
                     dataSource = ds;
-//                    defaultName = name;
+                    defaultName = name;
                 }
-                defaultName = name;
                 dataSources.put(name, ds);
             } catch (Exception e) {
                 e.printStackTrace();

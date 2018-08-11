@@ -18,7 +18,7 @@ public final class RabbitConfig {
     public Map<String, DataSourceConfig> dataSources;
     public RedisConfig redisConfig;
     public String mode;
-    public String sources;
+    public String source;
     public DBObjectConfig dbObjectConfig;
     public ElasticConfig elasticConfig;
     public MongoConfig mongoConfig;

@@ -80,15 +80,11 @@ public final class DBObjectManager {
         try {
             md = MessageDigest.getInstance("MD5");
             idGenerator = new IdGenerator.DefaultIdGenerator();
-            registerSources(config);
+            defaultSource = config.source;
             registerTables(config);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private static void registerSources(RabbitConfig config) {
-        defaultSource = config.sources;
     }
 
     /**

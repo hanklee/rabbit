@@ -18,6 +18,7 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -26,35 +27,28 @@ import java.util.Set;
  */
 public class SQLDAO extends DAO {
 
-    private QueryRunner innerRunner;
+    private final QueryRunner innerRunner;
 
     public SQLDAO() {
-        super(RabbitManager.RABBIT_CONFIG.sources);
+        super(DataSourceManager.getDefaultName());
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
-            setQueryRunner(DataSourceManager.getQueryRunner());
-
+            innerRunner = DataSourceManager.getQueryRunner();
         } else {
-            throw new RuntimeException("must config the data source in rabbit.xml file.");
+            throw new RuntimeException("must config the mysql datasource in rabbit.xml file.");
         }
     }
 
     public SQLDAO(String source) {
         super(source);
         if (RabbitManager.RABBIT_CONFIG.mode.contains("mysql")) {
-            setQueryRunner(DataSourceManager.getQueryRunner(source));
-
+            innerRunner = DataSourceManager.getQueryRunner(source);
         } else {
             throw new RuntimeException("must config the data source in rabbit.xml file.");
         }
     }
 
-    public SQLDAO(String source, QueryRunner queryRunner) {
-        super(source);
-        innerRunner = queryRunner;
-    }
-
-    public void setQueryRunner(QueryRunner queryRunner) {
-        innerRunner = queryRunner;
+    public QueryRunner getQueryRunner() {
+        return innerRunner;
     }
 
     /**
@@ -171,19 +165,19 @@ public class SQLDAO extends DAO {
     }
 
     @Override
-    public DBObject getObject(String table, Object... objs) throws DBException {
+    public <T extends DBObject> T getObject(String table, Object... objs) throws DBException {
         String sql = SQLBuilder.getObjectSQLByTable(source, table);
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
-        Class<DBObject> objclazz = DBObjectManager.getClassByTable(source, table);
+        Class<T> objclazz = DBObjectManager.getClassByTable(source, table);
         if (objclazz == null) {
             throw new DBException("not found table class");
         }
-        DBObject obj = null;
-        try {
-            obj = (DBObject) objclazz.newInstance();
-        } catch (Exception e) {
-            throw new DBException("wrong table class:" + objclazz.toString());
-        }
+//        T obj = null;
+//        try {
+//            obj = objclazz.newInstance();
+//        } catch (Exception e) {
+//            throw new DBException("wrong table class:" + objclazz.toString());
+//        }
         if (primary_keys.size() == 0) {
             throw new DBException("Not support table has not primary key.");
         }
@@ -194,7 +188,29 @@ public class SQLDAO extends DAO {
 //            count++;
 //        }
         try {
-            return innerRunner.query(sql, MapToDBObject.newRsHandler(obj.getClass()), objs);
+            return innerRunner.query(sql, MapToDBObject.newRsHandler(objclazz), objs);
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        String sql = SQLBuilder.makeGetObjectsSQL(table, fields);
+        Class<T> objclazz = DBObjectManager.getClassByTable(source, table);
+        try {
+            return innerRunner.query(sql, MapToDBObject.newRsHandler(objclazz), objs);
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
+        String sql = SQLBuilder.makeGetObjectsSQL(table, fields);
+        Class<T> objclazz = DBObjectManager.getClassByTable(source, table);
+        try {
+            return innerRunner.query(sql, MapToDBObject.newListHandler(objclazz), objs);
         } catch (SQLException e) {
             throw new DBException(e.getMessage());
         }
@@ -252,11 +268,19 @@ public class SQLDAO extends DAO {
         return daoHandler.handle(this.innerRunner);
     }
 
-    public <T> T executeTransaction(final DAOHandler<T> daoHandler) throws DBException {
-        return new SQLExecute<T>(this.innerRunner) {
+    /**
+     * sql Transaction handle
+     *
+     * @param daoHandler implement implements SQLDAOTransitionHandler
+     * @param <T>        template class
+     * @return obj
+     * @throws DBException db exception
+     */
+    public <T> T executeTransaction(final SQLDAOTransitionHandler<T> daoHandler) throws DBException {
+        return new SQLDAOTransitionExecute<T>(this.innerRunner) {
             @Override
-            public T execute(Object con) throws DBException {
-                return daoHandler.handle(con);
+            T execute(Connection conn) throws DBException {
+                return daoHandler.handle(conn);
             }
         }.run();
     }
@@ -364,38 +388,27 @@ public class SQLDAO extends DAO {
      */
 
     public void update(Connection conn, DBObject obj) throws DBException {
-        update(innerRunner, conn, obj, obj.getTableName());
+        update(conn, obj, obj.getTableName());
     }
 
-    public void update(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
-        update(queryRunner, conn, obj, obj.getTableName());
+    public void update(Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.update(this, conn, obj, table);
     }
 
-    public void update(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.update(this, queryRunner, conn, obj, table);
-    }
 
     public void insert(Connection conn, DBObject obj) throws DBException {
-        insert(innerRunner, conn, obj, obj.getTableName());
+        insert(conn, obj, obj.getTableName());
     }
 
-    public void insert(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
-        insert(queryRunner, conn, obj, obj.getTableName());
-    }
-
-    public void insert(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.insert(this, queryRunner, conn, obj, table);
+    public void insert(Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.insert(this, conn, obj, table);
     }
 
     public void delete(Connection conn, DBObject obj) throws DBException {
-        delete(innerRunner, conn, obj, obj.getTableName());
+        delete(conn, obj, obj.getTableName());
     }
 
-    public void delete(QueryRunner queryRunner, Connection conn, DBObject obj) throws DBException {
-        delete(queryRunner, conn, obj, obj.getTableName());
-    }
-
-    public void delete(QueryRunner queryRunner, Connection conn, DBObject obj, String table) throws DBException {
-        SQLTransaction.delete(this, queryRunner, conn, obj, table);
+    public void delete(Connection conn, DBObject obj, String table) throws DBException {
+        SQLTransaction.delete(this, conn, obj, table);
     }
 }
