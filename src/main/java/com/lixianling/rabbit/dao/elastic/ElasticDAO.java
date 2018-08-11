@@ -156,7 +156,7 @@ public class ElasticDAO extends DAO {
 
     @Override
     public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
-        
+
     }
 
     @Override
