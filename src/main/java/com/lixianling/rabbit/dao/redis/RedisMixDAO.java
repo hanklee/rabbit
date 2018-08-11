@@ -70,6 +70,11 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
+    public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
+
+    }
+
+    @Override
     public void update(Collection<? extends DBObject> objs, String table_name) throws DBException {
         this.dao.update(objs, table_name);
     }

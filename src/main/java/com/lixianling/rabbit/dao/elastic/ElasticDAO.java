@@ -155,6 +155,11 @@ public class ElasticDAO extends DAO {
     }
 
     @Override
+    public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
+        
+    }
+
+    @Override
     public void update(Collection<? extends DBObject> objs, String table_name) throws DBException {
         for (DBObject obj : objs) {
             update(obj, table_name);

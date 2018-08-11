@@ -224,6 +224,11 @@ public class RedisDAO extends DAO {
         return null;
     }
 
+    @Override
+    public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
+
+    }
+
     public <T> T execute(final DAOHandler<T> handler) throws DBException {
         return new JedisExecute<T>(pool) {
             @Override

@@ -63,42 +63,51 @@ public abstract class DAO {
     public abstract void insert(DBObject obj, String table) throws DBException;
 
     /**
-     *
-     *  get object through table key value
+     * get object through table key value
      *
      * @param table table name
      * @param objs  key value
-     * @param <T> return Object type
+     * @param <T>   return Object type
      * @return a object
      * @throws DBException db exception
      */
     public abstract <T extends DBObject> T getObject(String table, Object... objs) throws DBException;
 
     /**
+     * get object through table fields and their value
      *
-     *  get object through table fields and their value
-     *
-     * @param table table name
+     * @param table  table name
      * @param fields fields name
-     * @param objs  key value
-     * @param <T> return Object type
+     * @param objs   key value
+     * @param <T>    return Object type
      * @return a object
      * @throws DBException db exception
      */
     public abstract <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException;
 
     /**
-     *
      * get list of object through table fields and their value
      *
-     * @param table table name
+     * @param table  table name
      * @param fields fields name
-     * @param objs  key value
-     * @param <T> return Object type
+     * @param objs   key value
+     * @param <T>    return Object type
      * @return a object
      * @throws DBException db exception
      */
     public abstract <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException;
+
+    /**
+     *
+     *  delete objects
+     *
+     * @param table table name
+     * @param fields fields name
+     * @param objs fields value
+     * @throws DBException db exception
+     */
+    public abstract void deleteObjects(String table, String[] fields, Object... objs) throws DBException;
+
 
     /*
 

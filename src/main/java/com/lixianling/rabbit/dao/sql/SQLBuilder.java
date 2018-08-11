@@ -73,6 +73,21 @@ public class SQLBuilder {
         return s.toString();
     }
 
+    public static String makeDeleteObjectsSQL(String table, String[] fields) {
+        StringBuilder s = new StringBuilder("DELETE FROM ");
+        s.append(table).append(" WHERE ");
+
+        int key_size = fields.length;
+        int kye_i = 1;
+        for (String primary_key : fields) {
+            s.append('`').append(primary_key).append("` = ? ");
+            if (kye_i != key_size)
+                s.append(" AND ");
+            kye_i++;
+        }
+        return s.toString();
+    }
+
     /**
      * PRIVATE METHODS
      */

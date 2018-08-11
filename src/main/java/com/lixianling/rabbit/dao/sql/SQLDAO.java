@@ -216,6 +216,20 @@ public class SQLDAO extends DAO {
         }
     }
 
+    @Override
+    public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
+        String sql = SQLBuilder.makeDeleteObjectsSQL(table, fields);
+        int mount;
+        try {
+            mount = innerRunner.update(sql, objs);
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+        if (mount < 1) {
+            throw new DBException("No data delete." + sql + "\n" + objs);
+        }
+    }
+
     /**
      * delete table object's data method
      *
