@@ -20,7 +20,7 @@ public abstract class SQLDAOTransitionExecute<T> {
         this.innerRunner = queryRunner;
     }
 
-   abstract T execute(Connection conn) throws DBException;
+    abstract T execute(Connection conn) throws DBException;
 
     public T run() throws DBException {
         Connection conn = null;

@@ -31,12 +31,10 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class ElasticDAO extends DAO {
 
     private TransportClient client;
-    private final String source;
 
     public ElasticDAO(String source) {
         super(source);
         client = ElasticManager.getInstance().getClient();
-        this.source = source;
     }
 
     @Override
@@ -94,7 +92,6 @@ public class ElasticDAO extends DAO {
 
     @Override
     public void insert(final DBObject obj, final String table) throws DBException {
-
         try {
             obj.beforeInsert(this, table, client);
             IndexResponse response = client.prepareIndex(source, table)
@@ -110,6 +107,11 @@ public class ElasticDAO extends DAO {
         } catch (Exception e) {
             throw new DBException(e.getMessage());
         }
+    }
+
+    @Override
+    public void update(DBObject obj, String table, String[] fields) throws DBException {
+
     }
 
     @Override

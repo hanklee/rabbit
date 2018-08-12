@@ -37,6 +37,30 @@ public class SQLBuilder {
         return makeUpdateSQL(source, table, excludes);
     }
 
+    public static String makeUpdateWithFieldsSQL(String source, final String table, String[] fields) {
+        Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+        StringBuilder s = new StringBuilder("update ").append(table).append(" set ");
+        int size = fields.length;
+        for (String column : fields) {
+            if (--size == 0) {
+                // last item
+                s.append('`').append(column).append("`=? ");
+            } else {
+                s.append('`').append(column).append("`=?, ");
+            }
+        }
+        s.append(" where ");
+        int key_size = primary_keys.size();
+        int kye_i = 1;
+        for (String primary_key : primary_keys) {
+            s.append('`').append(primary_key).append("` = ? ");
+            if (kye_i != key_size)
+                s.append(" AND ");
+            kye_i++;
+        }
+        return s.toString();
+    }
+
     /*
 
     SQL CACHE BUILDER

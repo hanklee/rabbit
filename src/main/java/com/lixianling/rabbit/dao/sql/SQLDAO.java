@@ -59,7 +59,7 @@ public class SQLDAO extends DAO {
      * @throws DBException db Exception
      */
     public void update(DBObject obj, String table) throws DBException {
-        update(obj, table, null);
+        updateExcludes(obj, table, null);
     }
 
     /**
@@ -70,7 +70,7 @@ public class SQLDAO extends DAO {
      * @param excludes do not update columns
      * @throws DBException db operation exception
      */
-    public void update(DBObject obj, String table, final Set<String> excludes) throws DBException {
+    public void updateExcludes(DBObject obj, String table, final Set<String> excludes) throws DBException {
         try {
             Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
             Set<String> columns = DBObjectManager.getTableAllColumnsNoKey(source, table);
@@ -158,6 +158,33 @@ public class SQLDAO extends DAO {
                 DbUtils.close(conn);
             }
             obj.afterInsert(this, table, innerRunner);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void update(DBObject obj, String table, String[] fields) throws DBException {
+        try {
+            Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
+            Object[] objs = new Object[fields.length + primary_keys.size()];
+            int count = 0;
+            for (String column : fields) {
+                objs[count] = obj.getValueByField(column);
+                count++;
+            }
+            for (String primary_key : primary_keys) {
+                objs[count] = obj.getValueByField(primary_key);
+                count++;
+            }
+            String sql = SQLBuilder.makeUpdateWithFieldsSQL(source, table, fields);
+            obj.beforeUpdate(this, table, innerRunner);
+            int mount = innerRunner.update(sql, objs);
+            if (mount < 1) {
+                throw new SQLException("No data update." + sql + "\n" + obj);
+            }
+            obj.afterUpdate(this, table, innerRunner);
         } catch (Exception e) {
             e.printStackTrace();
             throw new DBException(e.getMessage());

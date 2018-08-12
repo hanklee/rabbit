@@ -55,23 +55,28 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
-    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
-        return null;
+    public void update(DBObject obj, String table, String[] fields) throws DBException {
+
     }
 
     @Override
-    public DBObject getObject(final String table, final Object... objs) throws DBException {
+    public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return dao.getObject(table, fields, objs);
+    }
+
+    @Override
+    public <T extends DBObject> T getObject(final String table, final Object... objs) throws DBException {
         return this.dao.getObject(table, objs);
     }
 
     @Override
     public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
-        return null;
+        return dao.getObjects(table, fields, objs);
     }
 
     @Override
     public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
-
+        dao.deleteObjects(table, fields, objs);
     }
 
     @Override
