@@ -63,18 +63,19 @@ public abstract class DAO {
     public abstract void insert(DBObject obj, String table) throws DBException;
 
     /**
-     *
      * update object data in what you want fields
      *
-     * @param obj obj data
+     * @param obj    obj data
      * @param fields update fields
      * @throws DBException db Exception
      */
-    public void update(DBObject obj, String[] fields)throws DBException{
-        update(obj,obj.getTableName(),fields);
+    public void update(DBObject obj, String[] fields) throws DBException {
+        update(obj, obj.getTableName(), fields);
     }
 
     public abstract void update(DBObject obj, String table, String[] fields) throws DBException;
+
+    public abstract void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException;
 
     /**
      * get object through table key value
@@ -112,12 +113,11 @@ public abstract class DAO {
     public abstract <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException;
 
     /**
+     * delete objects
      *
-     *  delete objects
-     *
-     * @param table table name
+     * @param table  table name
      * @param fields fields name
-     * @param objs fields value
+     * @param objs   fields value
      * @throws DBException db exception
      */
     public abstract void deleteObjects(String table, String[] fields, Object... objs) throws DBException;

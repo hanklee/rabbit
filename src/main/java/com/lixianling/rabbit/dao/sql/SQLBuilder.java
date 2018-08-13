@@ -61,6 +61,29 @@ public class SQLBuilder {
         return s.toString();
     }
 
+    public static String makeUpdateWithAllFieldsSQL(final String table, String[] fields, String[] whereFields) {
+        StringBuilder s = new StringBuilder("update ").append(table).append(" set ");
+        int size = fields.length;
+        for (String column : fields) {
+            if (--size == 0) {
+                // last item
+                s.append('`').append(column).append("`=? ");
+            } else {
+                s.append('`').append(column).append("`=?, ");
+            }
+        }
+        s.append(" where ");
+        int key_size = whereFields.length;
+        int kye_i = 1;
+        for (String primary_key : whereFields) {
+            s.append('`').append(primary_key).append("` = ? ");
+            if (kye_i != key_size)
+                s.append(" AND ");
+            kye_i++;
+        }
+        return s.toString();
+    }
+
     /*
 
     SQL CACHE BUILDER

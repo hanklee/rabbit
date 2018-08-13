@@ -115,6 +115,11 @@ public class ElasticDAO extends DAO {
     }
 
     @Override
+    public void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException {
+
+    }
+
+    @Override
     public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
         return null;
     }

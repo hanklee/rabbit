@@ -192,6 +192,30 @@ public class SQLDAO extends DAO {
     }
 
     @Override
+    public void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException {
+        try {
+            Object[] objs = new Object[valueObjs.length + whereObjs.length];
+            int count = 0;
+            for (Object valueObj : valueObjs) {
+                objs[count] = valueObj;
+                count++;
+            }
+            for (Object valueObj : whereObjs) {
+                objs[count] = valueObj;
+                count++;
+            }
+            String sql = SQLBuilder.makeUpdateWithAllFieldsSQL(table, fields, whereFields);
+            int mount = innerRunner.update(sql, objs);
+            if (mount < 1) {
+                throw new SQLException("No data update." + sql);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
     public <T extends DBObject> T getObject(String table, Object... objs) throws DBException {
         String sql = SQLBuilder.getObjectSQLByTable(source, table);
         Set<String> primary_keys = DBObjectManager.getTablePrimaryKey(source, table);
