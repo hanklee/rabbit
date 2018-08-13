@@ -9,6 +9,7 @@ import com.lixianling.rabbit.DBException;
 import com.lixianling.rabbit.DBObject;
 import com.lixianling.rabbit.dao.DAO;
 import com.lixianling.rabbit.dao.sql.SQLDAO;
+import com.lixianling.rabbit.manager.RabbitManager;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
@@ -24,7 +25,7 @@ public class TestObj4 extends TestCase {
     public void test_v1(){
 //        List<FieldInfo> fieldInfoList = TypeUtils.computeGetters(TestData5.class, null);
 //        printFieldInfos(fieldInfoList);
-
+        RabbitManager.register();
         TestData5 t5 = new TestData5();
         t5.setName("test");
         DAO dao = new SQLDAO();
