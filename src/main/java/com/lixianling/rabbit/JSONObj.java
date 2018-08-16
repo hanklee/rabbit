@@ -160,7 +160,7 @@ public abstract class JSONObj implements Serializable {
                     field.set(this, o);
                 } else if (value instanceof String) {
                     Object o = type.newInstance();
-                    ((JSONObj) o).JsonToObj((JSONObject) JSONObject.parse((String) value));
+                    ((JSONObj) o).JsonToObj(JSONObject.parseObject((String) value));
                     field.set(this, o);
                 } else if (value instanceof Map) {
                     Object o = type.newInstance();
@@ -237,7 +237,7 @@ public abstract class JSONObj implements Serializable {
      * <p/>
      * the attribute value, which is array, exclude .
      *
-     * @return
+     * @return Object
      */
     public <T extends JSONObj> T cloneObj() {
         T obj = null;
@@ -273,15 +273,18 @@ public abstract class JSONObj implements Serializable {
 
 
     /**
-     * clone Object , do not copy this object data
+     * create template object by class, inject the map data
      *
-     * @param <T> Object
-     * @return
+     * @param clazz Class of object
+     * @param data  JSONObj json obj
+     * @param <T>   template object
+     * @return object
      */
-    public <T extends JSONObj> T newObj() {
+    public static <T extends JSONObj> T newDataObj(Class<T> clazz, JSONObj data) {
         T obj = null;
         try {
-            obj = (T) this.getClass().newInstance();
+            obj = clazz.newInstance();
+            obj.JsonToObj(data.toJson());
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -290,23 +293,12 @@ public abstract class JSONObj implements Serializable {
         return obj;
     }
 
-    public <T extends JSONObj> T newObj(Map<String, Object> map) {
-        T obj = newObj();
-        obj.MapToObj(map);
-        return obj;
-    }
-
-    public <T extends JSONObj> T newObj(JSONObject data) {
-        T obj = newObj();
-        obj.JsonToObj(data);
-        return obj;
-    }
-
     /**
-     *  create template object by class, inject the map data
+     * create template object by class, inject the map data
+     *
      * @param clazz Class of object
-     * @param data json data
-     * @param <T> template object
+     * @param data  json data
+     * @param <T>   template object
      * @return object
      */
     public static <T extends JSONObj> T newDataObj(Class<T> clazz, JSONObject data) {
@@ -323,10 +315,11 @@ public abstract class JSONObj implements Serializable {
     }
 
     /**
-     *  create template object by class, inject the map data
+     * create template object by class, inject the map data
+     *
      * @param clazz Class of object
-     * @param map data
-     * @param <T> template object
+     * @param map   data
+     * @param <T>   template object
      * @return object
      */
     public static <T extends JSONObj> T newDataObj(Class<T> clazz, Map<String, Object> map) {
