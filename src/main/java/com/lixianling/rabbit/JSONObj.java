@@ -350,13 +350,18 @@ public abstract class JSONObj implements Serializable {
 
     private void __getObjectValue(final Object setObj, final Object getObj) {
         try {
-            Map<String, Field> allFields = getAllFields();
+            Map<String, Field> setFields = getAllFields();
+            Map<String, Field> getFields = setFields;
             if (!setObj.getClass().isAssignableFrom(getObj.getClass()))
-                allFields = DBObjectManager.getClazzField(getObj.getClass());
-            for (Field field : allFields.values()) {
-                Object value = field.get(getObj);
-                if (value != null && !"table_name".equals(field.getName())) {
-                    field.set(setObj, value);
+                getFields = DBObjectManager.getClazzField(getObj.getClass());
+            for (String keyField : getFields.keySet()) {
+                Field getField = getFields.get(keyField);
+                Field setField = setFields.get(keyField);
+                if (setField != null) {
+                    Object value = getField.get(getObj);
+                    if (value != null && !"table_name".equals(getField.getName())) {
+                        setField.set(setObj, value);
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -372,30 +377,31 @@ public abstract class JSONObj implements Serializable {
      */
     private void __mergeObjectValue(final Object setObj, final Object getObj) {
         try {
-            Map<String, Field> allFields = getAllFields();
+            Map<String, Field> setFields = getAllFields();
+            Map<String, Field> getFields = setFields;
             if (!setObj.getClass().isAssignableFrom(getObj.getClass()))
-                allFields = DBObjectManager.getClazzField(getObj.getClass());
-            for (Field field : allFields.values()) {
-                Object value = field.get(getObj);
-                if (value != null && !"table_name".equals(field.getName())) {
-                    Class type = field.getType();
-
-                    if (Integer.TYPE == type
-                            || Double.TYPE == type
-                            || Float.TYPE == type
-                            || Short.TYPE == type
-                            || Long.TYPE == type) {
-                        Number number = (Number) value;
-                        if (number.intValue() != 0)
-                            field.set(setObj, value);
-                    } else if (value instanceof String) {
-                        field.set(setObj, value);
-                    } else if (Boolean.TYPE == type) {
-                        if ((Boolean) value)
-                            field.set(setObj, true);
+                getFields = DBObjectManager.getClazzField(getObj.getClass());
+            for (String keyField : getFields.keySet()) {
+                Field getField = getFields.get(keyField);
+                Field setField = setFields.get(keyField);
+                if (setField != null) {
+                    Object value = getField.get(getObj);
+                    Object value2 = setField.get(setObj);
+                    if (value != null && value2 == null && !"table_name".equals(getField.getName())) {
+                        setField.set(setObj, value);
+                    } else if (value != null && value2 != null && !"table_name".equals(getField.getName())) {
+                        Class type = setField.getType();
+                        if (Integer.TYPE == type
+                                || Double.TYPE == type
+                                || Float.TYPE == type
+                                || Short.TYPE == type
+                                || Long.TYPE == type) {
+                            Number number = (Number) value2;
+                            if (number.intValue() == 0)
+                                setField.set(setObj, value);
+                        }
                     }
                 }
-
             }
         } catch (Exception ex) {
             ex.printStackTrace();
