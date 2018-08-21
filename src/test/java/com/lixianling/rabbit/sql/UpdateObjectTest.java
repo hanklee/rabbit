@@ -1,5 +1,5 @@
 /**
- * Create time: 2018-08-11
+ * Create time: 2018-08-21
  */
 package com.lixianling.rabbit.sql;
 
@@ -17,9 +17,9 @@ import java.util.Map;
 /**
  * @author Xianling Li
  */
-public class GetObjectTest extends TestCase {
+public class UpdateObjectTest extends TestCase {
 
-    public void testGetobjs() throws Exception {
+    public void testUpdateobjs() throws Exception {
         RabbitManager.register(); // need register to load config file and initiate
         DAO dao = new SQLDAO();
 
@@ -36,12 +36,14 @@ public class GetObjectTest extends TestCase {
             list.add(test);
         }
 
-        List<MyTest.MyTestData> list2 = dao.getObjects("myTest", new String[]{"b"}, 3);
-        Assert.assertEquals(list.size(), list2.size());
-
+        Map<String, Object> valueObjs = new HashMap<String, Object>();
+        valueObjs.put("d", 7);
+        valueObjs.put("c", 8);
         Map<String, Object> whereObjs = new HashMap<String, Object>();
         whereObjs.put("b", 3);
-        List<MyTest.MyTestData> list3 = dao.getObjects("myTest", whereObjs);
+        dao.update("myTest", valueObjs, whereObjs);
+
+        List<MyTest.MyTestData> list3 = dao.getObjects("myTest", valueObjs);
         Assert.assertEquals(list.size(), list3.size());
 
         for (MyTest.MyTestData tmp : list3) {
@@ -49,5 +51,4 @@ public class GetObjectTest extends TestCase {
         }
 
     }
-
 }

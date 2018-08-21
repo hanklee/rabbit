@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -192,6 +193,37 @@ public class SQLDAO extends DAO {
     }
 
     @Override
+    public void update(String table, Map<String, Object> valueObj, Map<String, Object> whereObj) throws DBException {
+        try {
+            String[] fields = new String[valueObj.size()];
+            String[] whereFields = new String[whereObj.size()];
+
+            fields = valueObj.keySet().toArray(fields);
+            whereFields = whereObj.keySet().toArray(whereFields);
+
+            Object[] objs = new Object[fields.length + whereFields.length];
+            int count = 0;
+            for (Object obj : valueObj.values()) {
+                objs[count] = obj;
+                count++;
+            }
+
+            for (Object obj : whereObj.values()) {
+                objs[count] = obj;
+                count++;
+            }
+            String sql = SQLBuilder.makeUpdateWithAllFieldsSQL(table, fields, whereFields);
+            int mount = innerRunner.update(sql, objs);
+            if (mount < 1) {
+                throw new SQLException("No data update." + sql);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    @Override
     public void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException {
         try {
             Object[] objs = new Object[valueObjs.length + whereObjs.length];
@@ -223,21 +255,9 @@ public class SQLDAO extends DAO {
         if (objclazz == null) {
             throw new DBException("not found table class");
         }
-//        T obj = null;
-//        try {
-//            obj = objclazz.newInstance();
-//        } catch (Exception e) {
-//            throw new DBException("wrong table class:" + objclazz.toString());
-//        }
         if (primary_keys.size() == 0) {
             throw new DBException("Not support table has not primary key.");
         }
-//        Object[] objs = new Object[primary_keys.size()];
-//        int count = 0;
-//        for (String primary_key : primary_keys) {
-//            objs[count] = obj.getValueByField(primary_key);
-//            count++;
-//        }
         try {
             return innerRunner.query(sql, MapToDBObject.newRsHandler(objclazz), objs);
         } catch (SQLException e) {
@@ -257,6 +277,19 @@ public class SQLDAO extends DAO {
     }
 
     @Override
+    public <T extends DBObject> T getObject(String table, Map<String, Object> whereObj) throws DBException {
+        String[] fields = new String[whereObj.size()];
+        fields = whereObj.keySet().toArray(fields);
+        Object[] objs = new Object[fields.length];
+        int count = 0;
+        for (Object obj : whereObj.values()) {
+            objs[count] = obj;
+            count++;
+        }
+        return getObject(table, fields, objs);
+    }
+
+    @Override
     public <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException {
         String sql = SQLBuilder.makeGetObjectsSQL(table, fields);
         Class<T> objclazz = DBObjectManager.getClassByTable(source, table);
@@ -265,6 +298,19 @@ public class SQLDAO extends DAO {
         } catch (SQLException e) {
             throw new DBException(e.getMessage());
         }
+    }
+
+    @Override
+    public <T extends DBObject> List<T> getObjects(String table, Map<String, Object> whereObj) throws DBException {
+        String[] fields = new String[whereObj.size()];
+        fields = whereObj.keySet().toArray(fields);
+        Object[] objs = new Object[fields.length];
+        int count = 0;
+        for (Object obj : whereObj.values()) {
+            objs[count] = obj;
+            count++;
+        }
+        return getObjects(table, fields, objs);
     }
 
     @Override
@@ -279,6 +325,19 @@ public class SQLDAO extends DAO {
         if (mount < 1) {
             throw new DBException("No data delete." + sql + "\n" + objs);
         }
+    }
+
+    @Override
+    public void deleteObjects(String table, Map<String, Object> whereObj) throws DBException {
+        String[] fields = new String[whereObj.size()];
+        fields = whereObj.keySet().toArray(fields);
+        Object[] objs = new Object[fields.length];
+        int count = 0;
+        for (Object obj : whereObj.values()) {
+            objs[count] = obj;
+            count++;
+        }
+        deleteObjects(table, fields, objs);
     }
 
     /**

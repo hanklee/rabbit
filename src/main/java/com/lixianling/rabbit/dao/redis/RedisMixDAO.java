@@ -15,6 +15,7 @@ import org.apache.commons.dbutils.QueryRunner;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Xianling Li(hanklee)
@@ -60,6 +61,11 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
+    public void update(String table, Map<String, Object> valueObj, Map<String, Object> whereObj) throws DBException {
+
+    }
+
+    @Override
     public void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException {
 
     }
@@ -67,6 +73,11 @@ public class RedisMixDAO extends MixDAO {
     @Override
     public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
         return dao.getObject(table, fields, objs);
+    }
+
+    @Override
+    public <T extends DBObject> T getObject(String table, Map<String, Object> whereObj) throws DBException {
+        return null;
     }
 
     @Override
@@ -80,8 +91,18 @@ public class RedisMixDAO extends MixDAO {
     }
 
     @Override
+    public <T extends DBObject> List<T> getObjects(String table, Map<String, Object> whereObj) throws DBException {
+        return null;
+    }
+
+    @Override
     public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
         dao.deleteObjects(table, fields, objs);
+    }
+
+    @Override
+    public void deleteObjects(String table, Map<String, Object> whereObj) throws DBException {
+
     }
 
     @Override

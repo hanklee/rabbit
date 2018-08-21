@@ -19,6 +19,7 @@ import org.bson.types.ObjectId;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -116,12 +117,22 @@ public class MongoDAO extends DAO {
     }
 
     @Override
+    public void update(String table, Map<String, Object> valueObj, Map<String, Object> whereObj) throws DBException {
+
+    }
+
+    @Override
     public void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException {
 
     }
 
     @Override
     public <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException {
+        return null;
+    }
+
+    @Override
+    public <T extends DBObject> T getObject(String table, Map<String, Object> whereObj) throws DBException {
         return null;
     }
 
@@ -182,7 +193,17 @@ public class MongoDAO extends DAO {
     }
 
     @Override
+    public <T extends DBObject> List<T> getObjects(String table, Map<String, Object> whereObj) throws DBException {
+        return null;
+    }
+
+    @Override
     public void deleteObjects(String table, String[] fields, Object... objs) throws DBException {
+
+    }
+
+    @Override
+    public void deleteObjects(String table, Map<String, Object> whereObj) throws DBException {
 
     }
 

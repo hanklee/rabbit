@@ -10,6 +10,7 @@ import com.lixianling.rabbit.IdGenerator;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Xianling Li(hanklee)
@@ -75,6 +76,8 @@ public abstract class DAO {
 
     public abstract void update(DBObject obj, String table, String[] fields) throws DBException;
 
+    public abstract void update(String table, Map<String, Object> valueObj, Map<String, Object> whereObj) throws DBException;
+
     public abstract void update(String table, String[] fields, Object[] valueObjs, String[] whereFields, Object[] whereObjs) throws DBException;
 
     /**
@@ -100,6 +103,8 @@ public abstract class DAO {
      */
     public abstract <T extends DBObject> T getObject(String table, String[] fields, Object... objs) throws DBException;
 
+    public abstract <T extends DBObject> T getObject(String table, Map<String, Object> whereObj) throws DBException;
+
     /**
      * get list of object through table fields and their value
      *
@@ -112,6 +117,8 @@ public abstract class DAO {
      */
     public abstract <T extends DBObject> List<T> getObjects(String table, String[] fields, Object... objs) throws DBException;
 
+    public abstract <T extends DBObject> List<T> getObjects(String table, Map<String, Object> whereObj) throws DBException;
+
     /**
      * delete objects
      *
@@ -122,6 +129,7 @@ public abstract class DAO {
      */
     public abstract void deleteObjects(String table, String[] fields, Object... objs) throws DBException;
 
+    public abstract void deleteObjects(String table, Map<String, Object> whereObj) throws DBException;
 
     /*
 
