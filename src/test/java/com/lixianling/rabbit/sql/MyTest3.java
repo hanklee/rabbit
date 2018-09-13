@@ -17,14 +17,14 @@ import junit.framework.TestCase;
 import org.apache.commons.dbutils.QueryRunner;
 import org.junit.Assert;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 import static com.lixianling.rabbit.obj.TestObj2.printFieldInfos;
 
 /**
- *
- *  两个继承类(表)的操作
+ * 两个继承类(表)的操作
  *
  * @author Xianling Li
  */
@@ -144,7 +144,12 @@ public class MyTest3 extends TestCase {
         public void beforeInsert(DAO dao, String table, Object ignored) throws DBException {
             if (!table.equals("test1")) {
 //                System.out.println("insert:.............."+table);
-                dao.insert(this, "test1");
+                if (dao instanceof SQLDAO && ignored instanceof Connection) {
+                    ((SQLDAO)dao).insert((Connection) ignored,this,"test1");
+                } else {
+                    dao.insert(this, "test1");
+                }
+                System.out.println("after insert:.............." + getId());
             }
         }
 

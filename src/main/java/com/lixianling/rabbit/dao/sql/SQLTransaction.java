@@ -78,6 +78,7 @@ public final class SQLTransaction {
      */
     public static void insert(SQLDAO dao, Connection conn, DBObject obj, String table) throws DBException {
         try {
+            obj.beforeInsert(dao, table, conn);
             Field keyField = DBObjectManager.getInsertIncrKeyField(dao.getSource(), table, obj);
             Set<String> columns = DBObjectManager.getTableAllColumnsNoIncr(dao.getSource(), table); // true means if it is not auto increase then add key's column
             Object[] objs = new Object[columns.size()];
@@ -88,7 +89,6 @@ public final class SQLTransaction {
             }
             QueryRunner queryRunner = dao.getQueryRunner();
             String sql = SQLBuilder.getInsertSQLByTable(dao.getSource(), table);
-            obj.beforeInsert(dao, table, conn);
             //int mount = queryRunner.insert(con,obj, keyField, sql, objs);
             PreparedStatement stmt = null;
             int rows = 0;
