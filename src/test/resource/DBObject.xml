@@ -65,6 +65,14 @@
             <table_name mark="true">test2</table_name>
         </dbobject>
 
+        <dbobject>
+            <class_name  mark="true"
+                         sources="test">
+                com.lixianling.rabbit.sql.DateObjectTest$MyTestDate
+            </class_name>
+            <table_name mark="true">myDate</table_name>
+        </dbobject>
+
         <!-- redis dbobject -->
         <!--
 

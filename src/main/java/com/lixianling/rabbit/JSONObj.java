@@ -12,10 +12,7 @@ import com.lixianling.rabbit.manager.DBObjectManager;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 //import org.json.JSONArray;
 //import org.json.JSONObject;
@@ -167,6 +164,8 @@ public abstract class JSONObj implements Serializable {
                     ((JSONObj) o).MapToObj((Map) value);
                     field.set(this, o);
                 }
+            } else if (Date.class.isAssignableFrom(type)) {
+                field.set(this, value);
             }
 //            else {
 //                field.set(this, value);
