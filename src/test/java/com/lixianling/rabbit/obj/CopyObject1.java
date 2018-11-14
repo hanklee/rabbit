@@ -150,4 +150,20 @@ public class CopyObject1 extends TestCase {
         Assert.assertEquals(100, hObj.getExp());
 
     }
+
+    public void test_v2() {
+        PrivObject2 pObj2 = new PrivObject2();
+        PrivObject1 pObj1 = new PrivObject1();
+        pObj1.setId(1);
+        pObj1.setTime(100);
+        pObj1.setName("obj1");
+
+        pObj2.copy(pObj1);
+
+        Assert.assertEquals(pObj1.getId(),pObj2.getId());
+        Assert.assertEquals(pObj1.getTime(),pObj2.getTime());
+        Assert.assertEquals(pObj1.getName(),pObj2.getName());
+
+        System.out.println(pObj2.toJson());
+    }
 }
